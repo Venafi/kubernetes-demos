@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: my-third-isolated-cert
+  namespace: venafi-tpp
+spec:
+  isCA: false
+  commonName: my-third-isolated-cert
+  privateKey:
+    rotationPolicy: Always
+  duration: 1h
+  secretName: my-third-isolated-cert
+  issuerRef:
+    name: "anythingatall"
+    group: "isolated-issuer.jetstack.io"
+  dnsNames:
+  - foo.example.com
+  - bar.example.com
+

@@ -1,0 +1,45 @@
+bootstrap:
+  remote:
+  # first, we need to configure our CSR for our intermediate
+    csr:
+      duration: 48h
+      commonName: isolated-venafi-tpp-issuer.svc.cluster.local
+      privateKey:
+        algorithm: RSA
+        size: 2048
+      subject:
+        organizations:
+        - venafi.com
+        - jetstack.io
+        countries:
+        - US
+        organizationalUnits:
+        - infosec
+        localities:
+        - Dallas
+        provinces:
+        - Texas
+        streetAddresses:
+        - 123 Anytown
+        postalCodes:
+        - 12345
+    venafi:
+     zone: "${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}"
+     #Certificates\\SKI\\Automation\\Kubernetes\\ICA
+     tpp:
+      url: ${JS_VENAFI_TPP_URL}
+      #https://tpp.example.com/vedsdk
+      accessToken: ${JS_VENAFI_TPP_ACCESS_TOKEN}
+      #ibmwias3fsafFlaaa%af==
+signer:
+  # we use the simplest, in-memory signer, which requires no further configuration
+  inMemory: true
+controller:
+  # finally, we configure our controller. note that the groupName must match the
+  # one which was defined in the CRD and RBAC role
+  leaderElectionNamespace: cert-manager
+  maxCSRDuration: 48h
+  cert-manager:
+    groupName: "isolated-issuer.jetstack.io"
+    caFile: artifacts/isolated-issuer/venafi/venafi-ca.pem
+    #./venafi-ca.pem
