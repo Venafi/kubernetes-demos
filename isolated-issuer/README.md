@@ -2,7 +2,7 @@
 
 ## Assumptions
 - You have access to the binary that allows you to the isolated issuer. isolated-issuer is available as a docker image in addtion to a binary that can run on many operating systems. 
-- cert-manager is already installed on the cluster
+- cert-manager is already installed on the cluster. Instructions to install Enterprise cert-manager can be found [here](../enterprise-cert-manager/README.md) 
 
 ## Instructions
 If you prefer to manually execute the commands of the Makefile , you can do so. If you prefer to run the Makefile, first step is to 

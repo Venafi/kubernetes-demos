@@ -1,0 +1,39 @@
+global:
+  ## Reference to one or more secrets to be used when pulling images
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ##
+  imagePullSecrets:
+  - name: gcr-json-key
+
+installCRDs: true
+image:
+  #repository: quay.io/jetstack/cert-manager-controller
+  #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller
+  #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller-fips
+  repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller
+  pullPolicy: IfNotPresent
+
+webhook:  
+  image:
+    #repository: quay.io/jetstack/cert-manager-webhook
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook-fips
+    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook
+    pullPolicy: IfNotPresent
+  
+cainjector:
+  image:
+    #repository: quay.io/jetstack/cert-manager-cainjector
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector-fips
+    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector
+    pullPolicy: IfNotPresent
+    
+startupapicheck:
+  image:
+    #repository: quay.io/jetstack/cert-manager-ctl
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
+    #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl-fips
+    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
+    pullPolicy: IfNotPresent
+    

@@ -6,3 +6,4 @@ isolated-issuer/config/venafi/venafi-ca.pem
 settings.sh
 isolated-issuer/kubeconfig-for-isolated-issuer
 isolated-issuer/kubeconfig-for-isolated-issuer.lock
+sa-key.json
