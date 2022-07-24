@@ -1,0 +1,34 @@
+# Venafi TPP URL
+#url: https://venafi-tpp.example.com/vedsdk
+
+#Venafi TPP Policy folder for copying certs from Kubernetes to Venafi
+#zone: Certificates\\SKI\\Kuberenetes\\Discovered 
+
+# Access token configuration to access Venafi TPP installation
+#secret:
+#   name: venafi-access-token
+#   key: access_token
+
+## Reference to one or more secrets to be used when pulling images
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+##
+imagePullSecrets:
+ - name: venafi-jetstack-enterprise-key
+
+image:
+  #repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
+  #repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi-fips
+  repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 50Mi
+
+ 
