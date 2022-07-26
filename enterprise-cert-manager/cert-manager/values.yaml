@@ -3,7 +3,7 @@ global:
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   ##
   imagePullSecrets:
-  - name: gcr-json-key
+  - name: venafi-jetstack-enterprise-key
 
 installCRDs: true
 image:

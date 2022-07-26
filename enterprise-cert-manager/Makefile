@@ -22,7 +22,7 @@ create-namespace:
 configure-namespace:
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'cert-manager' create secret docker-registry gcr-json-key \
+	@kubectl -n 'cert-manager' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ../sa-key.json)" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
 		--docker-server='eu.gcr.io' \
