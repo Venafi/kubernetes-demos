@@ -20,14 +20,14 @@ mkdirs:
 	@mkdir -p artifacts/isolated-issuer/venafi
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
-prep-kubernetes: make-namespaces create-crds
+init: mkdirs make-namespaces create-crds
 
 make-namespaces:
 	@kubectl apply -f namespaces/venafi-tpp.yaml
 
 create-crds:
-	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/v0.0.1-alpha.2/cert-manager-isolated-issuer-crd.yaml
-	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/v0.0.1-alpha.2/cert-manager-isolated-issuer-rbac.yaml
+	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-crd.yaml
+	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-rbac.yaml
 
 
 create-kubeconfig:

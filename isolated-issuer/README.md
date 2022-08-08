@@ -12,7 +12,7 @@ The file settings.sh sets up the environment variables and loads it in the Makef
 If you are working on Kubernetes, there is nothing to set the environment variables. You can safely ignore values and proceed to look at the section relevant to Kubernetes in the Makefile
 
 ### For the platform team operating Kubernetes  
-- prep-kubernetes target is for someone who has access to Kubernetes 
+- `init` target is for someone who has access to Kubernetes 
    - Running it will create a namespace where we will eventually create certificates 
    - It will also create the required CRD's and RBACS for managing certificate requests from the cluster.
 - Addtionally, create a copy of ~/.kube/config as it will be used by isolated issuer from a remote machine to connect to the cluster.

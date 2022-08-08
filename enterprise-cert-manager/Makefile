@@ -16,13 +16,15 @@ SHELL := /bin/sh
 
 ########################################################################################################################
 
-create-namespace:
+init: create-namespaces configure-namespace
+
+create-namespaces:
 	@kubectl apply -f namespaces/cert-manager.yaml
 
 configure-namespace:
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'cert-manager' create secret docker-registry venafi-jetstack-enterprise-key \
+	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ../sa-key.json)" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
 		--docker-server='eu.gcr.io' \
@@ -38,7 +40,7 @@ install-cert-manager:
 
 	@helm upgrade \
 	    --install -f cert-manager/values.yaml cert-manager jetstack/cert-manager \
-  		--namespace cert-manager \
+  		--namespace jetstack-secure \
   		--version ${JS_CERT_MANAGER_VERSION}
 
 create-cert:
@@ -48,8 +50,8 @@ remove-cert:
 	@kubectl delete -f cert-manager/sample-cert.yaml
 
 remove-cert-manager:
-	@helm uninstall -n cert-manager cert-manager
-	@kubectl delete ns cert-manager
+	@helm uninstall -n jetstack-secure cert-manager
+	@kubectl delete -f namespaces/cert-manager.yaml
 
 renew-cert:
 	@cmctl -n sandbox renew test-cert
@@ -58,6 +60,4 @@ renew-cert:
 
 install: create-namespace configure-namespace install-cert-manager
 
-test: create-cert 
-
-cleanup: remove-cert remove-cert-manager
+clean: remove-cert remove-cert-manager

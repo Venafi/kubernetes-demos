@@ -13,11 +13,12 @@
 ## Install instructions
 
 - Make a copy of settings-template.sh and create settings.sh if your preferred method to install and configure is Makefile. Alternatively review the Makefile and adapt it as you see fit.
-- Run `create-namespace` to create the cert-manager namespace . If you prefer cert-manager to be installed in a different namespace, you can.
-- Run `configure-namespace` to create the `docker-registry-secret`. Review before you run. The file referred in the command `sa-key.json` does not exist in the repo. Enterprise customers have access to the secret. 
-- Run `install-cert-manager` to install cert-manager. Once installation is complete validate that the pods are in Running and Ready state in the `cert-manager` namespace. 
+- Run `make init` to create `jetstack-secure` namespace and configure the `docker-registry-secret`. Always review targets before you run. The file referred in the command `sa-key.json` does not exist in the repo. Enterprise customers have access to the secret.
+- Run `install-cert-manager` to install cert-manager. Once installation is complete validate that the pods are in Running and Ready state in the `jetstack-secure` namespace. 
 
 ## Testing the install
 - Simply run `make create-cert` to create a certificate in the `sandbox` namespace. 
 - Validate that the certificate's status is `True`. The test certificate is created with a self-signed issuer. Create new issuers as needed and create certificates and put them to use. 
 
+## Cleanup 
+- Run `make clean` to remove certs, issuers and cert-manager.

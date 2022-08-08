@@ -88,3 +88,5 @@ remove-tls-secret2:
 
 remove-tls-secret1:
 	@kubectl -n sandbox delete secret sandbox-cert1 || true
+
+install-configure: mkdirs create-namespaces configure-namespace create-venafi-tpp-access-secret install-certificate-sync-module
