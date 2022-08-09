@@ -54,8 +54,18 @@ Events:
 
 - Run `make create-certificate2`. The template for this is located at `templates/sample-cert2.yaml`. 
 - Validate that the certificate was successfully issued. Both the `Approved` and `Ready` flags will be `true`.
+```
+NAMESPACE   NAME                             APPROVED   DENIED   READY   ISSUER                      REQUESTOR                                            AGE
+sandbox     sample-cert2.example.com-6mlvl   True                True    sandbox-venafi-tpp-issuer   system:serviceaccount:jetstack-secure:cert-manager   9s
+```
 - At this time, you should have 2 `CertificateRequest` resources and both will have it's `Approved` and `Ready` flag set to true.
 - Additionally, run `make create-certificate3`. The template for this is located at `templates/sample-cert3.yaml`. The template has an addtional string at the end of DNS and will fail unless the Venafi policy is completely open. 
 - Check the `CertificateRequest` resource and you will see `Denied` flag set to `true` and `Ready` flag set to `False`
+```
+NAMESPACE   NAME                                 APPROVED   DENIED   READY   ISSUER                      REQUESTOR                                            AGE
+sandbox     sample-cert1.example.com-djwz6       True                True    sandbox-venafi-tpp-issuer   system:serviceaccount:jetstack-secure:cert-manager   6m57s
+sandbox     sample-cert2.example.com-6mlvl       True                True    sandbox-venafi-tpp-issuer   system:serviceaccount:jetstack-secure:cert-manager   77s
+sandbox     sample-cert3.example.com.foo-jx2fh              True     False   sandbox-venafi-tpp-issuer   system:serviceaccount:jetstack-secure:cert-manager   3s
 
+```
 The policy itself is defined in the Venafi platform. However, the enforcement happens in-cluster allowing security teams to enable local policies. 
