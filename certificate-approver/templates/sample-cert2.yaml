@@ -1,0 +1,20 @@
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sample-cert2.${JS_JETSTACKER_DOMAIN_NAME}
+  namespace: sandbox
+spec:
+  secretName: sample-cert2.${JS_JETSTACKER_DOMAIN_NAME}
+  duration: 24h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - sample-cert2.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: sample-cert2.${JS_JETSTACKER_DOMAIN_NAME}
+  issuerRef:
+    name: sandbox-venafi-tpp-issuer
+    kind: Issuer
+    group: cert-manager.io
+--- 

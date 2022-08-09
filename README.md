@@ -12,3 +12,6 @@ Click [here](cert-sync-to-venafi/README.md) for instructions to install and conf
 
 Click [here](isolated-issuer/README.md) for instructions to configure and run Jetstack isolated issuer with Venafi Trust Protection Platform. 
 
+## Create in cluster policy approver that utilizes policies defined in Venafi TPP for local policy enforcement
+
+Click [here](approver-policy/README.md) for instructions to configure and run Jetstack Policy Approver with Venafi Trust Protection Platform. 
