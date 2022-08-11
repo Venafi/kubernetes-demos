@@ -8,3 +8,6 @@ isolated-issuer/kubeconfig-for-isolated-issuer
 isolated-issuer/kubeconfig-for-isolated-issuer.lock
 sa-key.json
 certificate-approver/approver-policy/ca.crt
+service-mesh/istio/.DS_Store
+service-mesh/istio/Makefile
+service-mesh/istio/common/.DS_Store

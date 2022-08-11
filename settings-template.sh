@@ -40,6 +40,10 @@ export JS_VENAFI_PEM_ENCODED_CA_CHAIN_FILE_FOR_ISOLATED_ISSUER :=REPLACE_ME
 
 export JS_DOCKER_EMAIL :=REPLACE_ME
 
+#DNS Specific variables
+export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME
+export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
+
 #Component versions
 # cert-manager
 export JS_CERT_MANAGER_VERSION :=v1.9.1
@@ -49,41 +53,35 @@ export JS_VENAFI_CERT_SYNC_VERSION :=v0.1.0
 export JS_POLICY_APPROVER_VERSION :=v0.4.0-0
 # Isolated issuer version
 export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2
-
-#DNS Specific variables
-export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME
+# cert-manager-CSI-driver version
+export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.5.0
+# cert-manager-istio-csr version
+export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
+# Istio version
+export JS_ISTIO_VERSION :=1.14.1
+export JS_ISTIO_SHORT_VERSION :=1.14
 
 #ISTIO CSR Helm Chart Settings
-
-#Default cert manager API Group 
-export JS_CERT_MANAGER_DEF_ISSUER_GROUP :=cert-manager.io
-export JS_CERT_MANAGER_DEF_ISSUER_KIND :=Issuer
-#Google CAS issuer API Group 
-export JS_CERT_MANAGER_CAS_ISSUER_GROUP :=cas-issuer.jetstack.io
-export JS_CERT_MANAGER_CAS_ISSUER_KIND :=GoogleCASIssuer
-#AWS PCA issuer API Group 
-export JS_CERT_MANAGER_PCA_ISSUER_GROUP :=awspca.cert-manager.io
-export JS_CERT_MANAGER_PCA_ISSUER_KIND :=AWSPCAIssuer
-
+export JS_ISTIO_CSR_TRUST_DOMAIN_NAME :=cluster.local
 export JS_ISTIO_CSR_PRESERVE_CERT_REQUESTS :=true
 export JS_ISTIO_CSR_CERT_DURATION :=1h
-export JS_ISTIO_CSR_WORKLOAD_CERT_DURATION :=1h
-export JS_ISTIO_CSR_ISTIOD_CERT_DURATION :=1h
-export JS_ISTIO_CSR_ISTIOD_CERT_RENEW_BEFORE :=30m
-export JS_ISTIO_CSR_ISTIOD_CERT_MAX_CERT_DURATION :=2h
+export JS_ISTIO_CSR_CERT_RENEW_BEFORE :=30m
+export JS_ISTIO_CSR_CERT_PROVIDER :=cert-manager-istio-csr.jetstack-secure.svc
 #ISTIO CSR Helm Chart Settings
-
 
 #Google CAS Specific Settings 
 export JS_GCP_PROJECT_ID :=REPLACE_ME
 export JS_GCP_ZONE :=REPLACE_ME
+export JS_GCP_REGION :=us-central1
+
+
 export JS_GCP_CAS_POOL_TIER :=devops
-export JS_GCP_CAS_POOL_NAME :=jetstack-ca-pool-devops
-export JS_GCP_CAS_NAME :=jetstack-google-cas-aug-01-2022-1
+export JS_GCP_CAS_POOL_NAME :=my-ca-pool
+export JS_GCP_CAS_NAME :=my-google-cas
 
 #AWS Specific Variables
-export JS_AWS_PROFILE_NAME :=REPLACE_ME
-export JS_AWS_PCA_REGION :=us-east-1
+export JS_AWS_PROFILE_NAME :=REPLACE_ME #set to none to use default
+export JS_AWS_REGION :=us-east-1
 export JS_AWS_PCA_ACCESS_KEY :=REPLACE_ME
 export JS_AWS_PCA_SECRET_ACCESS_KEY :=REPLACE_ME
 # arn:aws:acm-pca:us-east-2:1234567890000:certificate-authority\\/eeddd208-aa3b-bb4b-cc2c-zzzyyyxxxwwww

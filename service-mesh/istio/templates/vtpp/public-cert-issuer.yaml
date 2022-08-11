@@ -1,0 +1,26 @@
+# Create secret to access Venafi TPP with token
+# Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tpp-auth-secret
+  namespace: istio-system
+stringData:
+  access-token: ${JS_VENAFI_TPP_ACCESS_TOKEN}
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vtpp-public-issuer
+  namespace: istio-system
+spec:
+  venafi:
+    zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+    tpp:
+      url: ${JS_VENAFI_TPP_URL} # Change this to the URL of your TPP instance
+      caBundle: ${JS_VENAFI_TPP_BASE64_ENCODED_CACERT}
+      credentialsRef:
+        name: tpp-auth-secret
