@@ -21,10 +21,9 @@ mkdirs:
 	@mkdir -p artifacts/cert-sync/test-certs
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
-prep-kubernetes: make-namespaces
+init: mkdirs make-namespaces configure-namespace
 
-
-create-namespaces:
+make-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
 	@kubectl apply -f namespaces/sandbox.yaml
 
@@ -56,7 +55,6 @@ install-certificate-sync-module:
 remove-certificate-sync-module:
 	@echo 'Uninstalling certificate sync module'
 	@helm uninstall -n jetstack-secure cert-sync-to-venafi
-
 
 create-tls-secrets: create-tls-secret1 create-tls-secret2
 

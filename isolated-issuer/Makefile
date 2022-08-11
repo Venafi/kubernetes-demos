@@ -53,7 +53,7 @@ create-bootstrap-config-for-isolated-issuer:
 	@echo "Generating isolated issuer configuration for Venafi TPP................. DONE"
 
 validate-issuer-config:
-	@~/sandbox/GitHub/isolated-issuer/bin/isolated-issuer \
+	@~/tmp/isolated-issuer/isolated-issuer \
 	--disable-mlock \
 	validate \
 	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml \
@@ -61,7 +61,7 @@ validate-issuer-config:
 
 print-run-command-for-isolated-issuer: validate-issuer-config
 	@echo "After validation is successful, start the isolated issuer simply by running the following"
-	@echo "~/sandbox/GitHub/isolated-issuer/bin/isolated-issuer \
+	@echo "~/tmp/isolated-issuer/isolated-issuer \
 	--disable-mlock \
 	run \
 	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml" \
