@@ -24,9 +24,9 @@ export JS_VENAFI_CERT_SYNC_POLICY_FOLDER := REPLACE-ME # E.g. Certificates\\\\Ku
 # Venafi API Key. Register for an account on ui.venafi.cloud for a key.
 export JS_VENAFI_CLOUD_API_KEY :=REPLACE-ME
 
-# Due to escaping \\ becomes one \, so Demo\\\\demo becomes Demo\\demo
-export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID1 :=Demo\\\\demo
-export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID2 :=Demo\\\\demo
+# Figure out escaping on your own !!. Using \\ here. Had to use \\\\ For Venafi TPP.
+export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID1 :=Demo\\demo
+export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID2 :=Demo\\demo
 
 # Venafi Zone ID for CSI driver specific usecases.
 # Due to escaping \\ becomes one \, so Demo\\\\demo becomes Demo\\demo
@@ -38,7 +38,9 @@ export JS_VENAFI_TPP_PASSWORD := REPLACE-ME # E.g. userpass
 
 export JS_VENAFI_PEM_ENCODED_CA_CHAIN_FILE_FOR_ISOLATED_ISSUER :=REPLACE_ME
 
+# Email for creating docker registry secret that holds Jetstack Secure enterprise access token
 export JS_DOCKER_EMAIL :=REPLACE_ME
+export JS_EMAIL_ID_FOR_LE_CERT :=${JS_DOCKER_EMAIL} #for LE certs
 
 #DNS Specific variables
 export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME

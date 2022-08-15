@@ -15,8 +15,13 @@ if [[ $(echo ${dns} | grep "storefront-vaas.${DNS_NAME}") ]]; then
     gcloud dns record-sets transaction remove --zone=${ZONE} --name="storefront-vaas.${DNS_NAME}" --ttl 60  --type A $(dig +short storefront-vaas.${DNS_NAME})
 fi
 
+if [[ $(echo ${dns} | grep "sayhello.${DNS_NAME}") ]]; then
+    gcloud dns record-sets transaction remove --zone=${ZONE} --name="sayhello.${DNS_NAME}" --ttl 60  --type A $(dig +short sayhello.${DNS_NAME})
+fi
+
 gcloud dns record-sets transaction add --zone=${ZONE} --name="storefront-vaas.${DNS_NAME}" --ttl 60 --type A $(kubectl get services --namespace istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
 gcloud dns record-sets transaction add --zone=${ZONE} --name="storefront-vtpp.${DNS_NAME}" --ttl 60 --type A $(kubectl get services --namespace istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
+gcloud dns record-sets transaction add --zone=${ZONE} --name="sayhello.${DNS_NAME}" --ttl 60 --type A $(kubectl get services --namespace istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
 gcloud dns record-sets transaction execute --zone ${ZONE}
 echo "DNS records created"
 

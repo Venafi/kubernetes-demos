@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
+  namespace: istio-system
+spec:
+  secretName: storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
+  duration: 72h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
+  issuerRef:
+    name: vaas-public-issuer
+    kind: Issuer
+    group: cert-manager.io
+--- 

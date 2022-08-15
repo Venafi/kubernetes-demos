@@ -49,17 +49,6 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
-install-cert-manager:
-	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
-	@helm repo update
-	@echo 'Installing Jetstack cert-manager.....'
-
-	@helm upgrade \
-	    --install -f cert-manager/values.yaml cert-manager jetstack/cert-manager \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION}
-
 install-jetstack-istio-csr:
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
@@ -71,14 +60,7 @@ install-jetstack-istio-csr:
   		--namespace jetstack-secure \
   		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION}
 
-########## MAIN TARGETS FOR DEMO ################
-vault-demo: vault-step0
-vtpp-demo:  vtpp-step0
-vaas-demo:  vaas-step0
-google-cas-demo:  google-cas-step0
-awspca-demo:  awspca-step0
-########## MAIN TARGETS FOR DEMO ################
-
+#### Venafi TPP Specific Targets #######
 vtpp-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
 vtpp-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
 vtpp-step0: print_str=Venafi TPP
@@ -111,8 +93,78 @@ _create-vtpp-public-certificate:
      > artifacts/istio-csr/vtpp/public-cert.yaml
 	@kubectl apply -f artifacts/istio-csr/vtpp/public-cert.yaml
 
-_create_gateway_resources_with_vtpp: HOST_NAME=storefront-vtpp.${JS_JETSTACKER_DOMAIN_NAME}
-_create_gateway_resources_with_vtpp: _create_gateway
+#### Venafi TPP Specific Targets #######
+
+### Vault Specific targets to support Jetstack Istio-CSR
+vault-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
+vault-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vault-step0: print_str=Hashicorp Vault
+vault-step0: configure-istio-csr-template
+
+vault-step1:  _create-vault-issuer
+vault-step2: install-jetstack-istio-csr
+vault-step3: _install-and-configure-istio
+vault-step4: _create-peer-authentication
+vault-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+vault-step6: _create_entry_in_GCP_CloudDNS
+vault-step7: _install-sample-app _create_gateway_resources_with_vaas
+vault-step8: _install-istio-tools
+
+_create-vault-issuer:
+	@echo 'Creating Vault Issuer as jetstack-istio-ca. All mesh workloads will be signed by Vault CA'
+	@kubectl apply -f templates/vault/ica-issuer.yaml
+
+### Vault Specific targets to support Jetstack Istio-CSR
+
+### Venafi as a Service specific targets to support Jetstack Istio-CSR
+vaas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
+vaas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vaas-step0: print_str=Venafi TPP
+vaas-step0: configure-istio-csr-template
+
+vaas-step1: _create-vaas-ica-issuer _create-vaas-intermediate-cert
+vaas-step2: install-jetstack-istio-csr
+vaas-step3: _install-and-configure-istio
+vaas-step4: _create-peer-authentication
+vaas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+vaas-step6: _create_entry_in_GCP_CloudDNS
+vaas-step7: _install-sample-app _create_gateway_resources_with_vaas
+vaas-step8: _install-istio-tools
+
+_create-vaas-ica-issuer:
+	@echo "Vaas ICA issuer"
+
+_create-vaas-intermediate-cert:
+	@echo "Vaas intermediate cert will be created by connecting to a VSatellite worker via VSatellite"
+
+_create-vaas-public-cert-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vaas/public-cert-issuer.yaml \
+     > artifacts/istio-csr/vaas/public-cert-issuer.yaml
+	@kubectl apply -f artifacts/istio-csr/vaas/public-cert-issuer.yaml
+
+_create-vaas-public-certificate:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vaas/public-cert.yaml \
+     > artifacts/istio-csr/vaas/public-cert.yaml
+	@kubectl apply -f artifacts/istio-csr/vaas/public-cert.yaml
+
+### Venafi as a Service specific targets to support Jetstack Istio-CSR
+
+### Google CAS Specific targets to support Jetstack Istio-CSR
+google-cas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(CAS_ISSUER_GROUP)
+google-cas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(CAS_ISSUER_KIND)
+google-cas-step0: print_str=Google CAS
+google-cas-step0: configure-istio-csr-template
+
+google-cas-step1: _install_google-cas-issuer _create-google-cas-issuer
+google-cas-step2: install-jetstack-istio-csr
+google-cas-step3: _install-and-configure-istio
+google-cas-step4: _create-peer-authentication
+google-cas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+google-cas-step6: _create_entry_in_GCP_CloudDNS
+google-cas-step7: _install-sample-app _create_gateway_resources_with_vtpp
+google-cas-step8: _install-istio-tools
+### Google CAS Specific targets to support Jetstack Istio-CSR
+
 
 _create_entry_in_GCP_CloudDNS:
 	@$(MAKE) -C ../../scripts map-mesh-gateway-ip-to-dns --warn-undefined-variables
@@ -130,6 +182,12 @@ _create-peer-authentication:
 	@echo 'Creating PeerAuthentication resource with mTLS=STRICT globally'
 	@kubectl apply -f common/peerauthentication.yaml
 
+_create_gateway_resources_with_vtpp: HOST_NAME=storefront-vtpp.${JS_JETSTACKER_DOMAIN_NAME}
+_create_gateway_resources_with_vtpp: _create_gateway
+
+_create_gateway_resources_with_vaas: HOST_NAME=storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
+_create_gateway_resources_with_vaas: _create_gateway
+
 _create_gateway:
 	@cat templates/istio-manifests.yaml | sed -e "s/REPLACE_WITH_HOST_NAME/${HOST_NAME}/g" > artifacts/istio-csr/istio-manifests.yaml
 	@kubectl -n mesh-apps apply -f artifacts/istio-csr/istio-manifests.yaml
@@ -144,26 +202,6 @@ _install-istio-tools:
 	@echo 'Installing Grafana............'
 	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/grafana.yaml
 
-vaas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
-vaas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
-vaas-step0: print_str=Venafi TPP
-vaas-step0: configure-istio-csr-template
-
-vaas-step7: _install-sample-app _create_gateway_resources_with_vaas
-
-_create_gateway_resources_with_vaas: HOST_NAME=storefront-vaas.${JS_JETSTACKER_DOMAIN_NAME}
-_create_gateway_resources_with_vaas: _create_gateway
-
-
-vault-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
-vault-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
-vault-step0: print_str=Hashicorp Vault
-vault-step0: configure-istio-csr-template
-
-google-cas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(CAS_ISSUER_GROUP)
-google-cas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(CAS_ISSUER_KIND)
-google-cas-step0: print_str=Google CAS
-google-cas-step0: configure-istio-csr-template
 
 awspca-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(PCA_ISSUER_GROUP)
 awspca-step0: JS_CERT_MANAGER_ISSUER_KIND = $(PCA_ISSUER_KIND)
@@ -180,23 +218,17 @@ configure-istio-csr-template:
 	@cat artifacts/istio-csr/values2.yaml | sed -e "s/REPLACE_ISSUER_GROUP/${JS_CERT_MANAGER_ISSUER_GROUP}/g" > artifacts/istio-csr/values.yaml
 	@echo "Setting up values for ${print_str} Istio CSR at artifacts/istio-csr/values.yaml"
 
-### Vault Specific targets to support Jetstack Istio-CSR
+create-policy:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < common/cert-policy-and-rbac.yaml \
+     > artifacts/istio-csr/cert-policy-and-rbac.yaml
+	@echo "Applying policy to process certificate requests in istio-system"
+	@kubectl apply -f artifacts/istio-csr/cert-policy-and-rbac.yaml
 
-prepare-vault:
-	@echo 'Installing Vault...'
-	@helm upgrade --install vault hashicorp/vault -n vault --create-namespace --set "server.dev.enabled=true" --wait
-	@echo 'Setting up port-forward'
-	@kubectl port-forward vault-0 18200:8200 -n vault &
-	@echo 'Running Terraform'
-	@cd vault/terraform && terraform init
-	@cd vault/terraform && terraform apply -auto-approve
-	@echo 'Stopping port-forward'
-	@pkill -f "kubectl port-forward vault-0" || true
-
-remove-cert-manager:
-	@helm uninstall -n jetstack-secure cert-manager
+remove-policy:
+	@echo "Removing policy to process certificate requests in istio-system"
+	@kubectl delete -f artifacts/istio-csr/cert-policy-and-rbac.yaml
 
 remove-cert-manager-istio-csr:
 	@helm uninstall -n jetstack-secure cert-manager-istio-csr
 
-cleanup: remove-cert remove-cert-manager
+cleanup: remove-cert-manager-istio-csr

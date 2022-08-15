@@ -11,3 +11,4 @@ certificate-approver/approver-policy/ca.crt
 service-mesh/istio/.DS_Store
 service-mesh/istio/Makefile
 service-mesh/istio/common/.DS_Store
+scripts/vault/.DS_Store

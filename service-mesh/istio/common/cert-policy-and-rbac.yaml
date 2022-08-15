@@ -1,0 +1,136 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-istio-public-certs
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  plugins:
+    tpp:
+      values:
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
+        zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
+  selector:
+    issuerRef:
+      name: "vtpp-public-issuer"
+      kind: "Issuer"
+      group: "cert-manager.io"
+
+--- 
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-istio-intermediate-certs
+spec:
+  allowed:
+    commonName:
+      value: "*svc.cluster.local"
+    dnsNames:
+      required: false
+      values: ["*"]
+    isCA: true
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
+  plugins:
+    tpp:
+      values:
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
+        zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
+  selector:
+    issuerRef:
+      name: "vtpp-intermediate-issuer"
+      kind: "Issuer"
+      group: "cert-manager.io"
+
+--- 
+# Policy for non venafi signing certificates (For e.g vault)
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-istio-signing-certificates
+spec:
+  allowed:
+    commonName:
+      value: "*istio-system.svc"
+      required: false
+    uris:
+      values:
+      - "spiffe://jetstack-dev/ns/*/sa/*"
+    dnsNames:
+      required: false
+      values:
+      - "*"
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
+  selector:
+    issuerRef:
+      name: "jetstack-istio-ca"
+      kind: "Issuer"
+      group: "cert-manager.io"
+---
+
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-istio-workload-certs
+spec:
+  allowed:
+    uris:
+      values:
+      - "spiffe://jetstack-dev/ns/*/sa/*"
+  selector:
+    issuerRef:
+      name: "jetstack-istio-ca"
+      kind: "Issuer"
+      group: "cert-manager.io"
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-policy:cert-policy-for-istio-service-mesh-certs
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-istio-public-certs", "cert-policy-for-istio-intermediate-certs", "cert-policy-for-istio-signing-certificates", "cert-policy-for-istio-workload-certs"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-policy:cert-policy-for-istio-service-mesh-certs
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-policy:cert-policy-for-istio-service-mesh-certs
+subjects:
+# The users who should be bound to the policies defined.
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
