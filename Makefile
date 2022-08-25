@@ -61,3 +61,16 @@ install-jetstack-approver-policy-module: _install-cert-manager-in-cluster-withou
 
 install-google-cas-issuer-in-cluster:
 	@echo "TBD"
+
+remove-google-cas-issuer-module:
+	@echo "TBD"
+
+remove-jetstack-approver-policy-module:
+	@$(MAKE) -C certificate-approver remove-jetstack-approver-policy-module --warn-undefined-variables
+
+remove-vault:
+	@helm uninstall vault -n vault
+	@kubectl delete ns vault
+
+remove-jetstack-cert-manager: remove-vault 
+	@$(MAKE) -C enterprise-cert-manager remove-cert-manager --warn-undefined-variables

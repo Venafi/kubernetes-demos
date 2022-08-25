@@ -74,7 +74,7 @@ app:
     # -- An optional file location to a PEM encoded root CA that the root CA
     # ConfigMap in all namespaces will be populated with. If empty, the CA
     # returned from cert-manager for the serving certificate will be used.
-    rootCAFile: # /var/certs/ca.pem
+    rootCAFile: REPLACE_PATH_TO_PEM_FILE
     # -- The DNS names to request for the server's serving certificate which is
     # presented to istio-agents. istio-agents must route to istio-csr using one
     # of these DNS names.
@@ -131,15 +131,15 @@ app:
     leaderElectionNamespace: istio-system
 
 # -- Optional extra volumes. Useful for mounting custom root CAs
-volumes: []
-#- name: root-ca
-#  secret:
-#    secretName: root-cert
-
+volumes:
+- name: root-ca
+  secret:
+   secretName: root-cert
+     
 # -- Optional extra volume mounts. Useful for mounting custom root CAs
-volumeMounts: []
-#- name: root-ca
-#  mountPath: /etc/tls
+volumeMounts:
+- name: root-ca
+  mountPath: /var/cert-manager
 
 
 resources: {}

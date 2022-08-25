@@ -12,6 +12,7 @@ CAS_ISSUER_GROUP =cas-issuer.jetstack.io
 CAS_ISSUER_KIND =GoogleCASIssuer
 PCA_ISSUER_GROUP =awspca.cert-manager.io
 PCA_ISSUER_KIND =AWSPCAIssuer
+PEM_FILE_PATH=\/var\/cert-manager\/ca.pem
 
  # Include personal settings
  include ../../settings.sh
@@ -63,6 +64,7 @@ install-jetstack-istio-csr:
 #### Venafi TPP Specific Targets #######
 vtpp-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
 vtpp-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vtpp-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = \#${PEM_FILE_PATH}
 vtpp-step0: print_str=Venafi TPP
 vtpp-step0: configure-istio-csr-template
 
@@ -98,6 +100,7 @@ _create-vtpp-public-certificate:
 ### Vault Specific targets to support Jetstack Istio-CSR
 vault-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
 vault-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vault-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = ${PEM_FILE_PATH}
 vault-step0: print_str=Hashicorp Vault
 vault-step0: configure-istio-csr-template
 
@@ -211,11 +214,13 @@ awspca-step0: configure-istio-csr-template
 configure-istio-csr-template:
 	@echo "Setting Issuer Kind to ${JS_CERT_MANAGER_ISSUER_KIND}"
 	@echo "Setting Issuer Group to ${JS_CERT_MANAGER_ISSUER_GROUP}"
+	@echo "Setting CA PEM File path to ${JS_ISTIO_CSR_PEM_ENCODED_ROOT}" 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
      > artifacts/istio-csr/values1.yaml
 
 	@cat artifacts/istio-csr/values1.yaml | sed -e "s/REPLACE_ISSUER_KIND/${JS_CERT_MANAGER_ISSUER_KIND}/g" > artifacts/istio-csr/values2.yaml
-	@cat artifacts/istio-csr/values2.yaml | sed -e "s/REPLACE_ISSUER_GROUP/${JS_CERT_MANAGER_ISSUER_GROUP}/g" > artifacts/istio-csr/values.yaml
+	@cat artifacts/istio-csr/values2.yaml | sed -e "s/REPLACE_ISSUER_GROUP/${JS_CERT_MANAGER_ISSUER_GROUP}/g" > artifacts/istio-csr/values3.yaml
+	@cat artifacts/istio-csr/values3.yaml | sed -e "s/REPLACE_PATH_TO_PEM_FILE/${JS_ISTIO_CSR_PEM_ENCODED_ROOT}/g" > artifacts/istio-csr/values.yaml
 	@echo "Setting up values for ${print_str} Istio CSR at artifacts/istio-csr/values.yaml"
 
 create-policy:
@@ -232,3 +237,30 @@ remove-cert-manager-istio-csr:
 	@helm uninstall -n jetstack-secure cert-manager-istio-csr
 
 cleanup: remove-cert-manager-istio-csr
+
+
+# Replace mesh-ca requires doing a few specific tasks that potentially could cause some downtime 
+# Step1 -> make init
+# Step2 -> make vault-step0
+# Step3 -> make vault-step1
+# Step4 -> make replace-mesh-ca
+# Step5 -> make restart-sample-app
+
+replace-mesh-ca:
+	@cmctl renew istiod -n istio-system
+	@kubectl rollout restart deployment istiod -n istio-system 
+	@kubectl rollout restart deployment istio-ingressgateway -n istio-system 
+	@kubectl rollout restart deployment istio-egressgateway -n istio-system 
+
+restart-sample-app:
+	@kubectl -n mesh-apps rollout restart deployment adservice
+	@kubectl -n mesh-apps rollout restart deployment cartservice
+	@kubectl -n mesh-apps rollout restart deployment checkoutservice
+	@kubectl -n mesh-apps rollout restart deployment currencyservice
+	@kubectl -n mesh-apps rollout restart deployment emailservice
+	@kubectl -n mesh-apps rollout restart deployment frontend
+	@kubectl -n mesh-apps rollout restart deployment paymentservice
+	@kubectl -n mesh-apps rollout restart deployment productcatalogservice
+	@kubectl -n mesh-apps rollout restart deployment recommendationservice
+	@kubectl -n mesh-apps rollout restart deployment redis-cart
+	@kubectl -n mesh-apps rollout restart deployment shippingservice

@@ -101,6 +101,8 @@ spec:
     uris:
       values:
       - "spiffe://jetstack-dev/ns/*/sa/*"
+    usages:
+     - "client auth"
   selector:
     issuerRef:
       name: "jetstack-istio-ca"
