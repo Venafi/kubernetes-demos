@@ -12,3 +12,5 @@ service-mesh/istio/.DS_Store
 service-mesh/istio/Makefile
 service-mesh/istio/common/.DS_Store
 scripts/vault/.DS_Store
+venafi-tpp-server-ca.crt
+venafi-tpp-server-ca.pem

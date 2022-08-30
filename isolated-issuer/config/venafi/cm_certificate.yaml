@@ -1,36 +1,33 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: cert1-from-remote-isolated-issuer
+  name: cert1-from-remote-isolated-issuer.svc.cluster.local
   namespace: venafi-tpp
 spec:
   isCA: false
-  commonName: cert1-from-remote-isolated-issuer
+  commonName: cert1-from-remote-isolated-issuer.svc.cluster.local
   privateKey:
     rotationPolicy: Always
   duration: 1h
-  secretName: cert1-from-remote-isolated-issuer
+  secretName: cert1-from-remote-isolated-issuer.svc.cluster.local
   issuerRef:
     name: "isolated-issuer-on-vm1"
     group: "isolated-issuer.jetstack.io"
-  dnsNames:
-  - foo.example.com
-  - bar.example.com
 
 --- 
 
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: cert2-from-remote-isolated-issuer
+  name: cert2-from-remote-isolated-issuer.svc.cluster.local
   namespace: venafi-tpp
 spec:
   isCA: false
-  commonName: cert2-from-remote-isolated-issuer
+  commonName: cert2-from-remote-isolated-issuer.svc.cluster.local
   privateKey:
     rotationPolicy: Always
   duration: 1h
-  secretName: cert2-from-remote-isolated-issuer
+  secretName: cert2-from-remote-isolated-issuer.svc.cluster.local
   issuerRef:
     name: "isolated-issuer-on-vm1"
     group: "isolated-issuer.jetstack.io"
@@ -55,7 +52,4 @@ spec:
   issuerRef:
     name: "isolated-issuer-on-vm1"
     group: "isolated-issuer.jetstack.io"
-  dnsNames:
-  - foo.example.com
-  - bar.example.com
 

@@ -68,7 +68,7 @@ vtpp-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = \#${PEM_FILE_PATH}
 vtpp-step0: print_str=Venafi TPP
 vtpp-step0: configure-istio-csr-template
 
-vtpp-step1: _create-vtpp-ica-issuer _create-vtpp-intermediate-cert
+vtpp-step1: _create-vtpp-ica-issuer _create-vtpp-intermediate-cert create-policy
 vtpp-step2: install-jetstack-istio-csr
 vtpp-step3: _install-and-configure-istio
 vtpp-step4: _create-peer-authentication
@@ -104,7 +104,7 @@ vault-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = ${PEM_FILE_PATH}
 vault-step0: print_str=Hashicorp Vault
 vault-step0: configure-istio-csr-template
 
-vault-step1:  _create-vault-issuer
+vault-step1:  _create-vault-issuer create-policy
 vault-step2: install-jetstack-istio-csr
 vault-step3: _install-and-configure-istio
 vault-step4: _create-peer-authentication
@@ -223,7 +223,14 @@ configure-istio-csr-template:
 	@cat artifacts/istio-csr/values3.yaml | sed -e "s/REPLACE_PATH_TO_PEM_FILE/${JS_ISTIO_CSR_PEM_ENCODED_ROOT}/g" > artifacts/istio-csr/values.yaml
 	@echo "Setting up values for ${print_str} Istio CSR at artifacts/istio-csr/values.yaml"
 
-create-policy:
+_create-config-map-with-PEM-to-access-TPP:
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/istio-csr/vtpp/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/istio-csr/vtpp/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+_create-tpp-access-secret-for-policy:
+	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+create-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < common/cert-policy-and-rbac.yaml \
      > artifacts/istio-csr/cert-policy-and-rbac.yaml
 	@echo "Applying policy to process certificate requests in istio-system"
@@ -246,6 +253,8 @@ cleanup: remove-cert-manager-istio-csr
 # Step4 -> make replace-mesh-ca
 # Step5 -> make restart-sample-app
 
+replace-mesh-ca-prep: init vault-step0 vault-step1 vault-step2
+
 replace-mesh-ca:
 	@cmctl renew istiod -n istio-system
 	@kubectl rollout restart deployment istiod -n istio-system 
@@ -264,3 +273,26 @@ restart-sample-app:
 	@kubectl -n mesh-apps rollout restart deployment recommendationservice
 	@kubectl -n mesh-apps rollout restart deployment redis-cart
 	@kubectl -n mesh-apps rollout restart deployment shippingservice
+
+getcr: SVID_NAME=spiffe://jetstack-dev/ns/mesh-apps/sa/storefrontdemo-recommendationservice
+getcr:
+	kubectl get certificaterequests.cert-manager.io \
+		-n istio-system \
+		-o jsonpath='{range .items[?(@.metadata.annotations.istio\.cert-manager\.io/identities=="${SVID_NAME}")]} \
+		{ .metadata.namespace },{ .metadata.name}{"\n"}{end}'
+
+validate-secret: NAMESPACE=mesh-apps
+validate-secret: APP=frontend
+validate-secret: PODNAME=$(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items..metadata.name}' --selector app=${APP}) 
+validate-secret:
+	@echo "Namespace ${NAMESPACE}"
+	@echo "Application is ${APP}"
+	@echo "Pod name is ${PODNAME}"
+
+    #istioctl -n mesh-apps proxy-config secret paymentservice-864d9f4df5-w89z7  \
+	-o json | \
+	jq -r '.dynamicActiveSecrets[0].secret.tlsCertificate.certificateChain.inlineBytes' | \
+	base64 --decode | \
+	openssl x509 -text -noout
+	
+	

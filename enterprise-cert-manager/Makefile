@@ -32,14 +32,21 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
-install-cert-manager:
+_helm_init:
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager.....'
 
+install-cert-manager: _helm_init
 	@helm upgrade \
-	    --install -f cert-manager/values.yaml cert-manager jetstack/cert-manager \
+	    --install -f cert-manager/approver-enabled.yaml cert-manager jetstack/cert-manager \
+  		--namespace jetstack-secure \
+  		--version ${JS_CERT_MANAGER_VERSION}
+
+install-cert-manager-without-auto-approver: _helm_init
+	@helm upgrade \
+	    --install -f cert-manager/approver-disabled.yaml cert-manager jetstack/cert-manager \
   		--namespace jetstack-secure \
   		--version ${JS_CERT_MANAGER_VERSION}
 

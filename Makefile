@@ -23,7 +23,7 @@ _remove-cluster:
 gcp-full-cleanup: clean-up-terraform _remove-cluster
 	@$(MAKE) -C scripts remove-google-cas --warn-undefined-variables
 
-cluster-addons: install-cert-manager-in-cluster install-vault-in-cluster 
+cluster-addons: install-jetstack-approver-policy-module install-vault-in-cluster 
 
 install-vault-in-cluster: clean-up-terraform
 	@echo 'Installing Vault...'
@@ -48,13 +48,14 @@ clean-up-terraform:
 	@rm -rf scripts/vault/terraform/terraform.tfstate
 	@rm -rf scripts/vault/terraform/terraform.tfstate.backup
 
+# Not installed by default. This is a version with auto-approver turned off.
 install-cert-manager-in-cluster:
 	@$(MAKE) -C enterprise-cert-manager init --warn-undefined-variables
 	@$(MAKE) -C enterprise-cert-manager install-cert-manager --warn-undefined-variables
 
 _install-cert-manager-in-cluster-without-auto-approver:
-	@$(MAKE) -C certificate-approver init --warn-undefined-variables
-	@$(MAKE) -C certificate-approver install-cert-manager-without-auto-approver --warn-undefined-variables
+	@$(MAKE) -C enterprise-cert-manager init --warn-undefined-variables
+	@$(MAKE) -C enterprise-cert-manager install-cert-manager-without-auto-approver --warn-undefined-variables
 
 install-jetstack-approver-policy-module: _install-cert-manager-in-cluster-without-auto-approver
 	@$(MAKE) -C certificate-approver install-jetstack-approver-policy-module --warn-undefined-variables

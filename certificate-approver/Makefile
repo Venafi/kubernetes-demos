@@ -39,10 +39,8 @@ configure-namespace:
 		--save-config=true -o yaml | kubectl apply -f -
 
 install-cert-manager-without-auto-approver:
-	@helm upgrade \
-	    --install -f cert-manager/values.yaml cert-manager jetstack/cert-manager \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION}
+	@$(MAKE) -C ../enterprise-cert-manager init --warn-undefined-variables
+	@$(MAKE) -C ../enterprise-cert-manager install-cert-manager-without-auto-approver --warn-undefined-variables
 
 #Temporary config map required at this time. It is empty
 create-config-map:
@@ -72,7 +70,8 @@ create-certificate1:
 	kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml
 
 _create-config-map-with-PEM-to-access-TPP:
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/cert-approver/venafi/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/cert-approver/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 _create-tpp-access-secret-for-policy:
 	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -

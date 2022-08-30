@@ -9,7 +9,7 @@ export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
 #Reference to file that contains CA bundle in PEM format. Referenced file below is in .gitignore 
-export JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE :=./approver-policy/ca.crt
+export JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE :=~/GitHub/demos/venafi-tpp-server-ca.pem
 #Base64 encoding of the above
 export JS_VENAFI_TPP_BASE64_ENCODED_CACERT :=REPLACE_ME
 export JS_VENAFI_TPP_ZONE_PUBLIC_CA1 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public1
@@ -56,9 +56,9 @@ export JS_POLICY_APPROVER_VERSION :=v0.4.0-0
 # Isolated issuer version
 export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2
 # cert-manager-CSI-driver version
-export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.5.0
+export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.4.2 #this is the helm chart version
 # cert-manager-istio-csr version
-export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
+export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0 #this is the helm chart version
 # Istio version
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14

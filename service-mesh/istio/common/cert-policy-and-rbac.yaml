@@ -103,6 +103,10 @@ spec:
       - "spiffe://jetstack-dev/ns/*/sa/*"
     usages:
      - "client auth"
+     - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
   selector:
     issuerRef:
       name: "jetstack-istio-ca"

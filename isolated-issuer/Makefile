@@ -52,26 +52,45 @@ create-bootstrap-config-for-isolated-issuer:
      > artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml
 	@echo "Generating isolated issuer configuration for Venafi TPP................. DONE"
 
+download_isolated_issuer:
+	@echo "Not publicly accessible at this time to download."
+
 validate-issuer-config:
-	@~/tmp/isolated-issuer/isolated-issuer \
-	--disable-mlock \
-	validate \
+	@~/Downloads/isolated-issuer-darwin-arm64/isolated-issuer \
+	--disable-mlock run validate \
 	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml \
 	--kubeconfig kubeconfig-for-isolated-issuer
 
 print-run-command-for-isolated-issuer: validate-issuer-config
 	@echo "After validation is successful, start the isolated issuer simply by running the following"
-	@echo "~/tmp/isolated-issuer/isolated-issuer \
-	--disable-mlock \
+	@echo ~/Downloads/isolated-issuer-darwin-arm64/isolated-issuer \
+	--disable-mlock true \
 	run \
-	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml" \
+	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml \
 	--kubeconfig kubeconfig-for-isolated-issuer
 ################## INSTRUCTIONS FOR SECURITY TEAM #####################
 
+_create-config-map-with-PEM-to-access-TPP:
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/isolated-issuer/venafi/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/isolated-issuer/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
+_create-tpp-access-secret-for-policy:
+	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+create-venafi-tpp-certificate-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy create-rbac-for-cert-request-policy
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/cert-policy.yaml \
+     > artifacts/isolated-issuer/venafi/cert-policy.yaml
+	@kubectl apply -f artifacts/isolated-issuer/venafi/cert-policy.yaml
+
+create-rbac-for-cert-request-policy:
+	@kubectl apply -f config/venafi/cert-policy-rbac.yaml
 
 ################ TESTING CERTIFICATE ISSUANCE ################
-create-certificate:
+create-certificates:
 	@kubectl apply -f config/venafi/cm_certificate.yaml
+
+get-certficate-status:
+
+approve-certififates:
 
 ################ TESTING CERTIFICATE ISSUANCE ################
