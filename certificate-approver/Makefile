@@ -80,10 +80,8 @@ create-venafi-tpp-certificate-policy: _create-config-map-with-PEM-to-access-TPP 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/cert-policy.yaml \
      > artifacts/cert-approver/venafi/cert-policy.yaml
 	@kubectl apply -f artifacts/cert-approver/venafi/cert-policy.yaml
-
-create-rbac-for-cert-request-policy:
 	@kubectl apply -f templates/cert-policy-rbac.yaml
-	
+
 create-certificate2:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/sample-cert2.yaml \
      > artifacts/cert-approver/venafi/sample-cert2.yaml

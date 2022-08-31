@@ -31,6 +31,7 @@ mkdirs:
 	@mkdir -p artifacts/istio-csr
 	@mkdir -p artifacts/istio-csr/vtpp
 	@mkdir -p artifacts/istio-csr/vaas
+	@mkdir -p artifacts/istio-csr/vault
 	@mkdir -p artifacts/istio-csr/google-cas
 	@mkdir -p artifacts/istio-csr/awspca
 	
@@ -69,13 +70,13 @@ vtpp-step0: print_str=Venafi TPP
 vtpp-step0: configure-istio-csr-template
 
 vtpp-step1: _create-vtpp-ica-issuer _create-vtpp-intermediate-cert create-policy
-vtpp-step2: install-jetstack-istio-csr
+vtpp-step2: _create_vtpp_root_ca-cert install-jetstack-istio-csr
 vtpp-step3: _install-and-configure-istio
 vtpp-step4: _create-peer-authentication
 vtpp-step5: _create-vtpp-public-cert-issuer _create-vtpp-public-certificate
 vtpp-step6: _create_entry_in_GCP_CloudDNS
 vtpp-step7: _install-sample-app _create_gateway_resources_with_vtpp
-vtpp-step8: _install-istio-tools
+vtpp-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 
 _create-vtpp-ica-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp/ica-issuer.yaml \
@@ -84,6 +85,13 @@ _create-vtpp-ica-issuer:
 
 _create-vtpp-intermediate-cert: 
 	@kubectl apply -f templates/vtpp/intermediate-cert.yaml
+
+_create_vtpp_root_ca-cert:
+	@cp ${JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE} artifacts/istio-csr/vtpp/venafi-ica-root-ca.pem
+	@kubectl create secret generic root-cert --namespace='jetstack-secure' --from-file=ca.pem=artifacts/istio-csr/vtpp/venafi-ica-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+#Ideally this should be done as below
+#kubectl get secret jetstack-istio-ca.istio-system.svc.cluster.local -n istio-system -o jsonpath="{.data.ca\.crt}" | base64 -d > artifacts/istio-csr/vtpp/venafi-ica-root-ca.pem
+#And then create secret - instead of copying from file system and creating a secret.
 
 _create-vtpp-public-cert-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp/public-cert-issuer.yaml \
@@ -104,18 +112,25 @@ vault-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = ${PEM_FILE_PATH}
 vault-step0: print_str=Hashicorp Vault
 vault-step0: configure-istio-csr-template
 
-vault-step1:  _create-vault-issuer create-policy
-vault-step2: install-jetstack-istio-csr
+vault-step1:  _install_vault _create-vault-issuer create-policy
+vault-step2: _create_vault_root_ca-cert install-jetstack-istio-csr
 vault-step3: _install-and-configure-istio
 vault-step4: _create-peer-authentication
 vault-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
 vault-step6: _create_entry_in_GCP_CloudDNS
 vault-step7: _install-sample-app _create_gateway_resources_with_vaas
-vault-step8: _install-istio-tools
+vault-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
+
+_install_vault:
+	@$(MAKE) -C ../../ install-vault-in-cluster --warn-undefined-variables
 
 _create-vault-issuer:
 	@echo 'Creating Vault Issuer as jetstack-istio-ca. All mesh workloads will be signed by Vault CA'
 	@kubectl apply -f templates/vault/ica-issuer.yaml
+
+_create_vault_root_ca-cert:
+	@cp ../../scripts/vault/terraform/ca.pem artifacts/istio-csr/vault/vault-root-ca.pem
+	@kubectl create secret generic root-cert --namespace='jetstack-secure' --from-file=ca.pem=artifacts/istio-csr/vault/vault-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 ### Vault Specific targets to support Jetstack Istio-CSR
 
@@ -132,7 +147,7 @@ vaas-step4: _create-peer-authentication
 vaas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
 vaas-step6: _create_entry_in_GCP_CloudDNS
 vaas-step7: _install-sample-app _create_gateway_resources_with_vaas
-vaas-step8: _install-istio-tools
+vaas-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 
 _create-vaas-ica-issuer:
 	@echo "Vaas ICA issuer"
@@ -165,7 +180,7 @@ google-cas-step4: _create-peer-authentication
 google-cas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
 google-cas-step6: _create_entry_in_GCP_CloudDNS
 google-cas-step7: _install-sample-app _create_gateway_resources_with_vtpp
-google-cas-step8: _install-istio-tools
+google-cas-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 ### Google CAS Specific targets to support Jetstack Istio-CSR
 
 
@@ -194,6 +209,10 @@ _create_gateway_resources_with_vaas: _create_gateway
 _create_gateway:
 	@cat templates/istio-manifests.yaml | sed -e "s/REPLACE_WITH_HOST_NAME/${HOST_NAME}/g" > artifacts/istio-csr/istio-manifests.yaml
 	@kubectl -n mesh-apps apply -f artifacts/istio-csr/istio-manifests.yaml
+	@echo "####################################################################################################"
+	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
+	@echo "######### Access application using https://${HOSTNAME}                                    ##########"
+	@echo "####################################################################################################"
 
 _install-istio-tools:
 	@echo 'Installing Kiali............'

@@ -8,13 +8,16 @@ export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
 
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
-#Reference to file that contains CA bundle in PEM format. Referenced file below is in .gitignore 
+#Reference to file that contains CA bundle in PEM format. This is the certchain to tpp.mydomain.com. venafi-tpp-server-ca.pem is in .gitignore 
 export JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE :=~/GitHub/demos/venafi-tpp-server-ca.pem
 #Base64 encoding of the above
 export JS_VENAFI_TPP_BASE64_ENCODED_CACERT :=REPLACE_ME
 export JS_VENAFI_TPP_ZONE_PUBLIC_CA1 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public1
 export JS_VENAFI_TPP_ZONE_PUBLIC_CA2 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public2
 
+#Reference to file that contains CA bundle in PEM format for Private PKI. This is the root CA for PKI referenced in PRIVATE_CA$. 
+#venafi-msca-ica-root.pem is in .gitignore 
+export JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE :=~/GitHub/demos/venafi-msca-ica-root.pem
 export JS_VENAFI_TPP_ZONE_PRIVATE_CA1 := REPLACE-ME # E.g. Certificates\\Kubernetes\\Private1
 export JS_VENAFI_TPP_ZONE_PRIVATE_CA2 := REPLACE-ME # E.g. Certificates\\Kubernetes\\Private2
 
@@ -35,8 +38,6 @@ export JS_VENAFI_CLOUD_PRIVATE_ZONE_ID2 :=Demo\\\\demo
 
 export JS_VENAFI_TPP_USERNAME := REPLACE-ME # E.g. user1
 export JS_VENAFI_TPP_PASSWORD := REPLACE-ME # E.g. userpass
-
-export JS_VENAFI_PEM_ENCODED_CA_CHAIN_FILE_FOR_ISOLATED_ISSUER :=REPLACE_ME
 
 # Email for creating docker registry secret that holds Jetstack Secure enterprise access token
 export JS_DOCKER_EMAIL :=REPLACE_ME

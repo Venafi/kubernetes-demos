@@ -41,5 +41,5 @@ controller:
   maxCSRDuration: 48h
   cert-manager:
     groupName: "isolated-issuer.jetstack.io"
-    caFile: artifacts/isolated-issuer/venafi/venafi-ca.pem
-    #./venafi-ca.pem
+    caFile: artifacts/isolated-issuer/venafi/venafi-ica-root-ca.pem
+    #./venafi-ica-root-ca.pem

@@ -20,7 +20,7 @@ mkdirs:
 	@mkdir -p artifacts/isolated-issuer/venafi
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
-init: mkdirs make-namespaces create-crds
+init: mkdirs make-namespaces create-crds create-venafi-tpp-certificate-policy
 
 make-namespaces:
 	@kubectl apply -f namespaces/venafi-tpp.yaml
@@ -39,6 +39,19 @@ create-kubeconfig:
 	@echo "If kubeconfig-for-isolated-issuer has contexts that you do not want to share clean up kubeconfig"
 	@echo "For each context that you do not need , run kubectl config delete-context --kubeconfig kubeconfig-for-isolated-issuer <context-name>"
 
+_create-config-map-with-PEM-to-access-TPP:
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/isolated-issuer/venafi/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/isolated-issuer/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+_create-tpp-access-secret-for-policy:
+	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+create-venafi-tpp-certificate-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/cert-policy.yaml \
+     > artifacts/isolated-issuer/venafi/cert-policy.yaml
+	@kubectl apply -f artifacts/isolated-issuer/venafi/cert-policy.yaml
+	@kubectl apply -f config/venafi/cert-policy-rbac.yaml
+
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
 
 
@@ -46,7 +59,9 @@ create-kubeconfig:
 
 create-bootstrap-config-for-isolated-issuer:
 	@echo "Generating isolated issuer configuration for Venafi TPP."
-	@cp ${JS_VENAFI_PEM_ENCODED_CA_CHAIN_FILE_FOR_ISOLATED_ISSUER} artifacts/isolated-issuer/venafi
+
+	@cp ${JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE} artifacts/isolated-issuer/venafi/venafi-ica-root-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/isolated-issuer/venafi/venafi-ica-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/tpp-isolated_issuer_config-template.yaml \
      > artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml
@@ -70,20 +85,6 @@ print-run-command-for-isolated-issuer: validate-issuer-config
 	--kubeconfig kubeconfig-for-isolated-issuer
 ################## INSTRUCTIONS FOR SECURITY TEAM #####################
 
-_create-config-map-with-PEM-to-access-TPP:
-	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/isolated-issuer/venafi/venafi-server-ca.pem
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/isolated-issuer/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-_create-tpp-access-secret-for-policy:
-	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-create-venafi-tpp-certificate-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy create-rbac-for-cert-request-policy
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/cert-policy.yaml \
-     > artifacts/isolated-issuer/venafi/cert-policy.yaml
-	@kubectl apply -f artifacts/isolated-issuer/venafi/cert-policy.yaml
-
-create-rbac-for-cert-request-policy:
-	@kubectl apply -f config/venafi/cert-policy-rbac.yaml
 
 ################ TESTING CERTIFICATE ISSUANCE ################
 create-certificates:

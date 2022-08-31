@@ -41,7 +41,7 @@ configure-namespace:
 create-venafi-tpp-access-secret:
 	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
-install-certificate-sync-module:
+install-certificate-sync-module: create-venafi-tpp-access-secret
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update

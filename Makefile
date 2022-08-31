@@ -23,7 +23,7 @@ _remove-cluster:
 gcp-full-cleanup: clean-up-terraform _remove-cluster
 	@$(MAKE) -C scripts remove-google-cas --warn-undefined-variables
 
-cluster-addons: install-jetstack-approver-policy-module install-vault-in-cluster 
+cluster-addons: install-jetstack-approver-policy-module
 
 install-vault-in-cluster: clean-up-terraform
 	@echo 'Installing Vault...'
@@ -39,7 +39,7 @@ install-vault-in-cluster: clean-up-terraform
 	@echo 'Stopping port-forward'
 	@pkill -f "kubectl port-forward vault-0" || true
 	@echo 'Creating CA chain secret'
-	@kubectl create secret generic root-cert --from-file=ca.pem=scripts/vault/terraform/ca.pem -n jetstack-secure || true
+	#@kubectl create secret generic root-cert --from-file=ca.pem=scripts/vault/terraform/ca.pem -n jetstack-secure || true
 
 clean-up-terraform:
 	@rm -rf scripts/vault/terraform/.terraform

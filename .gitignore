@@ -2,7 +2,6 @@ artifacts/
 
 *.tmp
 *.log
-isolated-issuer/config/venafi/venafi-ca.pem
 settings.sh
 isolated-issuer/kubeconfig-for-isolated-issuer
 isolated-issuer/kubeconfig-for-isolated-issuer.lock
@@ -14,3 +13,4 @@ service-mesh/istio/common/.DS_Store
 scripts/vault/.DS_Store
 venafi-tpp-server-ca.crt
 venafi-tpp-server-ca.pem
+venafi-msca-ica-root.pem
