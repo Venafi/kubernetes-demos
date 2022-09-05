@@ -60,6 +60,14 @@ _install-cert-manager-in-cluster-without-auto-approver:
 install-jetstack-approver-policy-module: _install-cert-manager-in-cluster-without-auto-approver
 	@$(MAKE) -C certificate-approver install-jetstack-approver-policy-module --warn-undefined-variables
 
+install-cert-sync-to-venafi-module:
+	@$(MAKE) -C cert-sync-to-venafi init --warn-undefined-variables
+	@$(MAKE) -C cert-sync-to-venafi install-certificate-sync-module --warn-undefined-variables
+
+install-cert-manager-CSI-driver:
+	@$(MAKE) -C cert-manager-csi init --warn-undefined-variables
+	@$(MAKE) -C cert-manager-csi install-cert-manager-csi-driver --warn-undefined-variables
+
 install-google-cas-issuer-in-cluster:
 	@echo "TBD"
 

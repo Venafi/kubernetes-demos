@@ -5,7 +5,6 @@ artifacts/
 settings.sh
 isolated-issuer/kubeconfig-for-isolated-issuer
 isolated-issuer/kubeconfig-for-isolated-issuer.lock
-sa-key.json
 certificate-approver/approver-policy/ca.crt
 service-mesh/istio/.DS_Store
 service-mesh/istio/Makefile
@@ -14,3 +13,5 @@ scripts/vault/.DS_Store
 venafi-tpp-server-ca.crt
 venafi-tpp-server-ca.pem
 venafi-msca-ica-root.pem
+js-enterprise-credentials.json
+.DS_Store

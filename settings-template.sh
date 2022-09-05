@@ -1,7 +1,8 @@
+export JS_ENTERPRISE_CREDENTIALS_FILE :=~/GitHub/demos/js-enterprise-credentials.json
+
 ###########################
 # Venafi Specific Variables
 ###########################
-
 
 # Venafi TPP access token. You must have the Venafi platform up and running
 export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
