@@ -16,8 +16,8 @@ endif
 
 mkdirs:
 	@rm -rf artifacts
-	@mkdir -p artifacts/pod-identities
 	@mkdir -p artifacts/csi-driver/venafi
+	@mkdir -p artifacts/pod-identities
 	@mkdir -p artifacts/csi-driver/selfsigned
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
@@ -75,6 +75,27 @@ create-sample-app:
 remove-sample-app:
 	@kubectl delete -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml
 
-deploy-redis-server:
 
-deploy-redis-client:
+_create-issuer-and-policy-for-redis-app:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/issuer-for-redis-app.yaml \
+     > artifacts/csi-driver/venafi/issuer-for-redis-app.yaml
+	kubectl apply -f artifacts/csi-driver/venafi/issuer-for-redis-app.yaml
+
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/redis-certs-policy-and-rbac.yaml \
+     > artifacts/csi-driver/venafi/redis-certs-policy-and-rbac.yaml
+	@kubectl apply -f artifacts/csi-driver/venafi/redis-certs-policy-and-rbac.yaml
+
+deploy-redis-app: _create-issuer-and-policy-for-redis-app
+	@cp templates/redis-server.yaml artifacts/pod-identities/redis-server.yaml
+	@cp templates/redis-client.yaml artifacts/pod-identities/redis-client.yaml
+	@kubectl apply -f artifacts/pod-identities/redis-server.yaml
+	@kubectl apply -f artifacts/pod-identities/redis-client.yaml
+
+_remove-redis-rbac-policy-and-issuer:
+	@kubectl delete -f artifacts/csi-driver/venafi/redis-certs-policy-and-rbac.yaml
+	@kubectl delete -f artifacts/csi-driver/venafi/issuer-for-redis-app.yaml
+
+remove-redis-app: _remove-redis-rbac-policy-and-issuer
+	@kubectl delete -f artifacts/pod-identities/redis-server.yaml
+	@kubectl delete -f artifacts/pod-identities/redis-client.yaml
+	
