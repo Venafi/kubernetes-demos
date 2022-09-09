@@ -49,20 +49,20 @@ export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME
 export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
 
 #Component versions
-# cert-manager
-export JS_CERT_MANAGER_VERSION :=v1.9.1 #this is the helm chart version
-# cert-discovery-venafi
-export JS_VENAFI_CERT_SYNC_VERSION :=v0.1.0 #this is the helm chart version
-# approver policy
-export JS_POLICY_APPROVER_VERSION :=v0.4.0-0 #this is the helm chart version
+# cert-manager helm chart version
+export JS_CERT_MANAGER_VERSION :=v1.9.1
+# cert-discovery-venafi helm chart version
+export JS_VENAFI_CERT_SYNC_VERSION :=v0.1.0
+# approver policy helm chart version
+export JS_POLICY_APPROVER_VERSION :=v0.4.0-0
 # Isolated issuer version
-export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2 #this is the helm chart version
-# cert-manager-CSI-driver version
-export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.4.2 #this is the helm chart version
-# cert-manager-CSI-driver-SPIFFE version
-export JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION :=v0.2.2 #this is the helm chart version
-# cert-manager-istio-csr version
-export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0 #this is the helm chart version
+export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2
+# cert-manager-CSI-driver version helm chart version
+export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.4.2
+# cert-manager-CSI-driver-SPIFFE version helm chart version
+export JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION :=v0.2.2
+# cert-manager-istio-csr version helm chart version
+export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 # Istio version
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
@@ -70,6 +70,7 @@ export JS_ISTIO_SHORT_VERSION :=1.14
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev
 export JS_WORKLOAD_CERT_DURATION :=1h
+export JS_ISOLATED_ISSUER_BINARY :=~/Downloads/isolated-issuer-darwin-arm64/isolated-issuer
 
 # CSI Driver SPIFFE Cluster Issuer Name. This will be a cluster issuer
 # For namespaced issuer, change the HelmChart to define Issuer kind and also update the signer name

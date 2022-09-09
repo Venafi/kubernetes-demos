@@ -20,15 +20,14 @@ mkdirs:
 	@mkdir -p artifacts/isolated-issuer/venafi
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
-init: mkdirs make-namespaces create-crds create-venafi-tpp-certificate-policy
+init: mkdirs make-namespaces create-crds
 
 make-namespaces:
-	@kubectl apply -f namespaces/venafi-tpp.yaml
+	@kubectl apply -f namespaces/sandbox.yaml
 
 create-crds:
 	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-crd.yaml
 	@kubectl apply -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-rbac.yaml
-
 
 create-kubeconfig:
 	@cp ~/.kube/config kubeconfig-for-isolated-issuer
@@ -65,19 +64,20 @@ create-bootstrap-config-for-isolated-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/tpp-isolated_issuer_config-template.yaml \
      > artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml
 	@echo "Generating isolated issuer configuration for Venafi TPP................. DONE"
+	@echo "Config available at artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml"
 
 download_isolated_issuer:
 	@echo "Not publicly accessible at this time to download."
 
 validate-issuer-config:
-	@~/Downloads/isolated-issuer-darwin-arm64/isolated-issuer \
+	@${JS_ISOLATED_ISSUER_BINARY} \
 	--disable-mlock run validate \
 	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml \
 	--kubeconfig kubeconfig-for-isolated-issuer
 
 print-run-command-for-isolated-issuer: validate-issuer-config
 	@echo "After validation is successful, start the isolated issuer simply by running the following"
-	@echo ~/Downloads/isolated-issuer-darwin-arm64/isolated-issuer \
+	@echo ${JS_ISOLATED_ISSUER_BINARY} \
 	--disable-mlock true \
 	run \
 	--config artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml \

@@ -86,9 +86,11 @@ Jetstack cert-manager CSI SPIFFE driver is an addon to cert-manager to provide T
 
 Follow the instructions [here](docs/05.pod-identities-csi-driver-spiffe.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver-spiffe) to setup Jetstack cert-manager CSI SPIFFE driver and validate that SPIFFE SVIDS are injected into the pods
 
-# Issue certificates with an issuer running outside the cluster
+# 06. Issue certificates with an issuer running outside the cluster
 
-The Venafi Jetstack Enterprise issuer for cert-manager provides a mechanism for organizations to run an issuer either in-cluster or isolated from the cluster. 
+The Venafi Jetstack Enterprise issuer for cert-manager provides a mechanism for organizations to run an issuer either in-cluster or isolated from the cluster. The isolated issuer bootstraps itself with an intermediate CA issued by Venafi and keeps it in memory. This is critical for organizaitons that are looking for ways to avoid having to store certificate information including the privateKey as TLS secrets. 
+
+Follow the instructions [here](docs/06.isolated-issuer.md#configuring-and-running-venafi-jetstack-secure-isolated-issuer)
 
 # Use Jetstack cert-mananager and istio-CSR projects to sign mesh workloads
 

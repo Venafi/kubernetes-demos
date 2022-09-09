@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: cert1-from-remote-isolated-issuer.svc.cluster.local
-  namespace: venafi-tpp
+  namespace: sandbox
 spec:
   isCA: false
   commonName: cert1-from-remote-isolated-issuer.svc.cluster.local
@@ -20,7 +20,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: cert2-from-remote-isolated-issuer.svc.cluster.local
-  namespace: venafi-tpp
+  namespace: sandbox
 spec:
   isCA: false
   commonName: cert2-from-remote-isolated-issuer.svc.cluster.local
@@ -41,7 +41,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: cert3-from-remote-isolated-issuer
-  namespace: venafi-tpp
+  namespace: sandbox
 spec:
   isCA: false
   commonName: cert3-from-remote-isolated-issuer

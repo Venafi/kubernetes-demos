@@ -72,6 +72,9 @@ install-cert-manager-csi-driver-spiffe:
 	@$(MAKE) -C cert-manager-csi-spiffe init --warn-undefined-variables
 	@$(MAKE) -C cert-manager-csi-spiffe install-cert-manager-csi-driver-spiffe --warn-undefined-variables
 
+install-jetstack-isolated-issuer-config:
+	@$(MAKE) -C isolated-issuer init --warn-undefined-variables	
+
 install-google-cas-issuer-in-cluster:
 	@echo "TBD"
 
