@@ -37,7 +37,7 @@ cert-manager-webhook-fb6b96c7-wx22d             1/1     Running   0          52s
 # Connecting the cluster to Jetstack Secure Dashboard
 - Log back into Jetstack Secure https://platform.jetstack.io and click on Clusters.
 - For specific instructions and screenshots click [here](docs/jetstack-secure.md#connecting-a-cluster-to-jetstack-secure)
-- Validate that the Jetstack Secure Agent has been installed and running the cluster.
+- Validate that the Jetstack Secure Agent has been installed and running in the cluster.
 - Run `kubectl get pods -n jetstack-secure`
 ```
 ❯ kubectl get pods -n jetstack-secure
