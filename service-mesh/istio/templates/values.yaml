@@ -70,7 +70,7 @@ app:
 
   tls:
     # -- The Istio cluster's trust domain.
-    trustDomain: "${JS_ISTIO_CSR_TRUST_DOMAIN_NAME}"
+    trustDomain: "${JS_CLUSTER_TRUST_DOMAIN_NAME}"
     # -- An optional file location to a PEM encoded root CA that the root CA
     # ConfigMap in all namespaces will be populated with. If empty, the CA
     # returned from cert-manager for the serving certificate will be used.
@@ -84,14 +84,14 @@ app:
     # renewed.
     # Based on NIST 800-204A recommendations (SM-DR13).
     # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
-    certificateDuration: ${JS_ISTIO_CSR_CERT_DURATION}
+    certificateDuration: ${JS_WORKLOAD_CERT_DURATION}
     # -- Requested duration of istio's Certificate. Will be automatically
     # renewed.
     # Based on NIST 800-204A recommendations (SM-DR13).
     # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
     # Warning: cert-manager does not allow a duration on Certificates less than
     # 1 hour.
-    istiodCertificateDuration: ${JS_ISTIO_CSR_CERT_DURATION}
+    istiodCertificateDuration: ${JS_WORKLOAD_CERT_DURATION}
     istiodCertificateRenewBefore: ${JS_ISTIO_CSR_CERT_RENEW_BEFORE}
     # Create the default certificate as part of install.
     istiodCertificateEnable: true
@@ -106,7 +106,7 @@ app:
     # the incoming gRPC CSR.
     # Based on NIST 800-204A recommendations (SM-DR13).
     # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
-    maxCertificateDuration: ${JS_ISTIO_CSR_CERT_DURATION}
+    maxCertificateDuration: ${JS_WORKLOAD_CERT_DURATION}
     serving:
       # -- Container address to serve istio-csr gRPC service.
       address: 0.0.0.0

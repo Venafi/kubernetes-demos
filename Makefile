@@ -68,6 +68,10 @@ install-cert-manager-CSI-driver:
 	@$(MAKE) -C cert-manager-csi init --warn-undefined-variables
 	@$(MAKE) -C cert-manager-csi install-cert-manager-csi-driver --warn-undefined-variables
 
+install-cert-manager-csi-driver-spiffe:
+	@$(MAKE) -C cert-manager-csi-spiffe init --warn-undefined-variables
+	@$(MAKE) -C cert-manager-csi-spiffe install-cert-manager-csi-driver-spiffe --warn-undefined-variables
+
 install-google-cas-issuer-in-cluster:
 	@echo "TBD"
 
@@ -83,3 +87,6 @@ remove-vault:
 
 remove-jetstack-cert-manager: remove-vault 
 	@$(MAKE) -C enterprise-cert-manager remove-cert-manager --warn-undefined-variables
+
+remove-jetstack-cert-manager-csi-driver-spiffe:
+	@$(MAKE) -C cert-manager-csi-spiffe remove-cert-manager-csi-driver-spiffe --warn-undefined-variables

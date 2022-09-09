@@ -75,13 +75,16 @@ To setup the ability to push all TLS secrets to Venafi Trust Protection Platform
 Refresh the Jetstack Secure dashboard to look at new data pushed by the agent. Review the data. Additionally, access the Venafi Trust Protection Platform. Certificates pushed by the cert sync module will show up the folder designated for discovery.
 
 # 04. Create identities for pods with Jetstack cert-manager CSI driver
+
 Jetstack cert-manager CSI driver is an addon to cert-manager to provide TLS indentities to pods running in-cluster. The identities are directly injected into the pod's tmp filesystem thereby avoiding the need to create and manage TLS secrets in Kubernetes.  
 
-Follow the instructions [here](docs/04.pod-identities-csi-driver.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver) to setup cert-manager CSI driver and validate that certs are injected into the pods.
+Follow the instructions [here](docs/04.pod-identities-csi-driver.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver) to setup Jetstack cert-manager CSI driver and validate that certs are injected into the pods.
 
-# Create identities for pods with Jetstack cert-manager SPIFFE driver
+# 05. Create identities for pods with Jetstack cert-manager SPIFFE driver
 
 Jetstack cert-manager CSI SPIFFE driver is an addon to cert-manager to provide TLS indentities to pods running in-cluster using SPIFFE. The identities are directly injected into the pod's tmp filesystem thereby avoiding the need to create and manage TLS secrets in Kubernetes.  
+
+Follow the instructions [here](docs/05.pod-identities-csi-driver-spiffe.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver-spiffe) to setup Jetstack cert-manager CSI SPIFFE driver and validate that SPIFFE SVIDS are injected into the pods
 
 # Issue certificates with an issuer running outside the cluster
 

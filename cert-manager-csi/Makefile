@@ -38,10 +38,6 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
-install-cert-manager:
-	@$(MAKE) -C ../enterprise-cert-manager init --warn-undefined-variables
-	@$(MAKE) -C ../enterprise-cert-manager install-cert-manager --warn-undefined-variables
-
 install-cert-manager-csi-driver: 
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
@@ -52,10 +48,6 @@ install-cert-manager-csi-driver:
 		--install -f csi-driver/values.yaml cert-manager-csi-driver jetstack/cert-manager-csi-driver \
 		--namespace jetstack-secure \
 		 --version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
-
-remove-cert-manager: remove-cert-manager-csi-driver
-	@echo 'Uninstalling Jetstack Enterprise cert-manager'
-	@helm uninstall -n jetstack-secure cert-manager
 
 remove-cert-manager-csi-driver: 
 	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver'
@@ -68,15 +60,20 @@ create-policy-and-rbac:
 remove-policy-and-rbac:
 	@kubectl delete -f artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml
 
-
 create-sample-app:
 	@kubectl apply -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml
 
 remove-sample-app:
 	@kubectl delete -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml
 
+_create-config-map-with-PEM-to-access-TPP:
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/csi-driver/venafi/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/csi-driver/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
-_create-issuer-and-policy-for-redis-app:
+_create-tpp-access-secret-for-policy:
+	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+_create-issuer-and-policy-for-redis-app: _create-tpp-access-secret-for-policy _create-config-map-with-PEM-to-access-TPP
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/issuer-for-redis-app.yaml \
      > artifacts/csi-driver/venafi/issuer-for-redis-app.yaml
 	kubectl apply -f artifacts/csi-driver/venafi/issuer-for-redis-app.yaml

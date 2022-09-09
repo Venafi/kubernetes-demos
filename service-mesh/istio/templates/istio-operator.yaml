@@ -7,7 +7,7 @@ spec:
   hub: gcr.io/istio-release
   meshConfig:
     # Change the following line to configure the trust domain of the Istio cluster.
-    trustDomain: ${JS_ISTIO_CSR_TRUST_DOMAIN_NAME}
+    trustDomain: ${JS_CLUSTER_TRUST_DOMAIN_NAME}
   values:
     global:
       # Change certificate provider to cert-manager istio agent for istio agent

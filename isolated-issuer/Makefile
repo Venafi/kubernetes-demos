@@ -61,7 +61,6 @@ create-bootstrap-config-for-isolated-issuer:
 	@echo "Generating isolated issuer configuration for Venafi TPP."
 
 	@cp ${JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE} artifacts/isolated-issuer/venafi/venafi-ica-root-ca.pem
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/isolated-issuer/venafi/venafi-ica-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/venafi/tpp-isolated_issuer_config-template.yaml \
      > artifacts/isolated-issuer/venafi/tpp-isolated_issuer_config.yaml

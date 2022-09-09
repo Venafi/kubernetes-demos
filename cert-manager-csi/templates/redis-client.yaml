@@ -58,4 +58,4 @@ spec:
               path: redis.conf
 
 
-#redis-cli -h redis-master.sandbox.svc.cluster.local -p 6379 --tls --cacert /redis-client-ssl/certs/ca.crt --cert /redis-client-ssl/certs/tls.crt --key /redis-client-ssl/certs/tls.key ping
+#redis-cli -h redis-server.sandbox.svc.cluster.local -p 6379 --tls --cacert /redis-client-ssl/certs/ca.crt --cert /redis-client-ssl/certs/tls.crt --key /redis-client-ssl/certs/tls.key ping

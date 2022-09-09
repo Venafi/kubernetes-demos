@@ -1,0 +1,62 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-spiffe-intermediate-certs
+spec:
+  allowed:
+    commonName:
+      value: "jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local"
+    dnsNames:
+      required: false
+      values: ["*"]
+    isCA: true
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
+  plugins:
+    tpp:
+      values:
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
+        zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
+  selector:
+    issuerRef:
+      name: "venafi-intermediate-ca-issuer-for-spiffe"
+      kind: "Issuer"
+      group: "cert-manager.io"
+
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jetstack-spiffe-ca-issuer
+  namespace: jetstack-secure
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-spiffe-intermediate-certs"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jetstack-spiffe-ca-issuer
+  namespace: jetstack-secure
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jetstack-spiffe-ca-issuer
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: jetstack-secure

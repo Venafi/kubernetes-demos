@@ -1,0 +1,60 @@
+# Create secret to access Venafi TPP with token
+# Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: venafi-intermediate-ca-issuer-secret-for-spiffe
+  namespace: jetstack-secure
+stringData:
+  access-token: ${JS_VENAFI_TPP_ACCESS_TOKEN}
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: venafi-intermediate-ca-issuer-for-spiffe
+  namespace: jetstack-secure
+spec:
+  venafi:
+    zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+    tpp:
+      url: ${JS_VENAFI_TPP_URL} # Change this to the URL of your TPP instance
+      caBundle: ${JS_VENAFI_TPP_BASE64_ENCODED_CACERT}
+      credentialsRef:
+        name: venafi-intermediate-ca-issuer-secret-for-spiffe
+
+--- 
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local
+  namespace: jetstack-secure
+spec:
+  isCA: true
+  duration: 2160h # 90d
+  secretName: jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local
+  privateKey:
+    rotationPolicy: Always
+  commonName: jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local
+  subject:
+    organizations:
+    - cluster.local
+    - cert-manager
+    - jetstack-dev
+  issuerRef:
+    name: venafi-intermediate-ca-issuer-for-spiffe
+    kind: Issuer
+    group: cert-manager.io
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: jetstack-spiffe-ca-issuer
+spec:
+  ca:
+    secretName: jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local
+
+--- 
