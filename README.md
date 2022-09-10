@@ -92,12 +92,15 @@ The Venafi Jetstack Enterprise issuer for cert-manager provides a mechanism for 
 
 Follow the instructions [here](docs/06.isolated-issuer.md#configuring-and-running-venafi-jetstack-secure-isolated-issuer)
 
-# Use Jetstack cert-mananager and istio-CSR projects to sign mesh workloads
+# 07. Venafi Jetstack Secure cert-manager istio-csr agent to sign Istio mesh workloads 
 
-Jetstack cert-manager istio-csr is a cert-manager addon that provides that ability to sign mesh workloads with a cert-manager issuer.
+Jetstack cert-manager istio-csr is a cert-manager addon that provides that ability to sign mesh workloads with a cert-manager issuer. Various issuers can be configured and setup as `istio-ca` for Istio. More information about istio-csr can be found [here](https://platform.jetstack.io/documentation/installation/istio-csr) 
 
-## Signing mesh workloads with Venafi Trust Protection Platform 
-Sign mesh workloads with Venafi Trust Protection Platform
+Choose one of the following options to install and configure for your service mesh.
+
+## 07a. Signing mesh workloads with Venafi Trust Protection Platform 
+In this scenario, we will walk through the process of configuring Venafi Trust Protection Platform to manage the intermediate that will sign mesh workloads. The policy approver that's running in cluster will enforce policies defined in-cluster. Follow instructions [here](docs/07a.vtpp-istio-service-mesh.md#setting-up-venafi-trust-protection-platform-for-signing-istio-service-mesh-workloads)
+
 
 ## Signing mesh workloads with Venafi TLS Protect Cloud
 Sign mesh workloads with Venafi TLS Protect Cloud

@@ -63,20 +63,20 @@ install-jetstack-istio-csr:
   		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION}
 
 #### Venafi TPP Specific Targets #######
-vtpp-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
-vtpp-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
-vtpp-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = \#${PEM_FILE_PATH}
-vtpp-step0: print_str=Venafi TPP
-vtpp-step0: configure-istio-csr-template
+vtpp-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
+vtpp-step1: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vtpp-step1: JS_ISTIO_CSR_PEM_ENCODED_ROOT = \#${PEM_FILE_PATH}
+vtpp-step1: print_str=Venafi TPP
+vtpp-step1: configure-istio-csr-template
 
-vtpp-step1: _create-vtpp-ica-issuer _create-vtpp-intermediate-cert create-policy
-vtpp-step2: _create_vtpp_root_ca-cert install-jetstack-istio-csr
-vtpp-step3: _install-and-configure-istio
-vtpp-step4: _create-peer-authentication
-vtpp-step5: _create-vtpp-public-cert-issuer _create-vtpp-public-certificate
-vtpp-step6: _create_entry_in_GCP_CloudDNS
-vtpp-step7: _install-sample-app _create_gateway_resources_with_vtpp
-vtpp-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
+vtpp-step2: _create-vtpp-ica-issuer _create-vtpp-intermediate-cert create-policy
+vtpp-step3: _create_vtpp_root_ca-cert install-jetstack-istio-csr
+vtpp-step4: _install-and-configure-istio
+vtpp-step5: _create-peer-authentication
+vtpp-step6: _create-vtpp-public-cert-issuer _create-vtpp-public-certificate
+vtpp-step7: _create_entry_in_GCP_CloudDNS
+vtpp-step8: _install-sample-app _create_gateway_resources_with_vtpp
+vtpp-step9: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 
 _create-vtpp-ica-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp/ica-issuer.yaml \
@@ -106,20 +106,20 @@ _create-vtpp-public-certificate:
 #### Venafi TPP Specific Targets #######
 
 ### Vault Specific targets to support Jetstack Istio-CSR
-vault-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
-vault-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
-vault-step0: JS_ISTIO_CSR_PEM_ENCODED_ROOT = ${PEM_FILE_PATH}
-vault-step0: print_str=Hashicorp Vault
-vault-step0: configure-istio-csr-template
+vault-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
+vault-step1: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vault-step1: JS_ISTIO_CSR_PEM_ENCODED_ROOT = ${PEM_FILE_PATH}
+vault-step1: print_str=Hashicorp Vault
+vault-step1: configure-istio-csr-template
 
-vault-step1:  _install_vault _create-vault-issuer create-policy
-vault-step2: _create_vault_root_ca-cert install-jetstack-istio-csr
-vault-step3: _install-and-configure-istio
-vault-step4: _create-peer-authentication
-vault-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
-vault-step6: _create_entry_in_GCP_CloudDNS
-vault-step7: _install-sample-app _create_gateway_resources_with_vaas
-vault-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
+vault-step2:  _install_vault _create-vault-issuer create-policy
+vault-step3: _create_vault_root_ca-cert install-jetstack-istio-csr
+vault-step4: _install-and-configure-istio
+vault-step5: _create-peer-authentication
+vault-step6: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+vault-step7: _create_entry_in_GCP_CloudDNS
+vault-step8: _install-sample-app _create_gateway_resources_with_vaas
+vault-step9: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 
 _install_vault:
 	@$(MAKE) -C ../../ install-vault-in-cluster --warn-undefined-variables
@@ -135,19 +135,19 @@ _create_vault_root_ca-cert:
 ### Vault Specific targets to support Jetstack Istio-CSR
 
 ### Venafi as a Service specific targets to support Jetstack Istio-CSR
-vaas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
-vaas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
-vaas-step0: print_str=Venafi TPP
-vaas-step0: configure-istio-csr-template
+vaas-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
+vaas-step1: JS_CERT_MANAGER_ISSUER_KIND = $(DEFAULT_ISSUER_KIND)
+vaas-step1: print_str=Venafi TPP
+vaas-step1: configure-istio-csr-template
 
-vaas-step1: _create-vaas-ica-issuer _create-vaas-intermediate-cert
-vaas-step2: install-jetstack-istio-csr
-vaas-step3: _install-and-configure-istio
-vaas-step4: _create-peer-authentication
-vaas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
-vaas-step6: _create_entry_in_GCP_CloudDNS
-vaas-step7: _install-sample-app _create_gateway_resources_with_vaas
-vaas-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
+vaas-step2: _create-vaas-ica-issuer _create-vaas-intermediate-cert
+vaas-step3: install-jetstack-istio-csr
+vaas-step4: _install-and-configure-istio
+vaas-step5: _create-peer-authentication
+vaas-step6: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+vaas-step7: _create_entry_in_GCP_CloudDNS
+vaas-step8: _install-sample-app _create_gateway_resources_with_vaas
+vaas-step9: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 
 _create-vaas-ica-issuer:
 	@echo "Vaas ICA issuer"
@@ -168,19 +168,19 @@ _create-vaas-public-certificate:
 ### Venafi as a Service specific targets to support Jetstack Istio-CSR
 
 ### Google CAS Specific targets to support Jetstack Istio-CSR
-google-cas-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(CAS_ISSUER_GROUP)
-google-cas-step0: JS_CERT_MANAGER_ISSUER_KIND = $(CAS_ISSUER_KIND)
-google-cas-step0: print_str=Google CAS
-google-cas-step0: configure-istio-csr-template
+google-cas-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(CAS_ISSUER_GROUP)
+google-cas-step1: JS_CERT_MANAGER_ISSUER_KIND = $(CAS_ISSUER_KIND)
+google-cas-step1: print_str=Google CAS
+google-cas-step1: configure-istio-csr-template
 
-google-cas-step1: _install_google-cas-issuer _create-google-cas-issuer
-google-cas-step2: install-jetstack-istio-csr
-google-cas-step3: _install-and-configure-istio
-google-cas-step4: _create-peer-authentication
-google-cas-step5: _create-vaas-public-cert-issuer _create-vaas-public-certificate
-google-cas-step6: _create_entry_in_GCP_CloudDNS
-google-cas-step7: _install-sample-app _create_gateway_resources_with_vtpp
-google-cas-step8: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
+google-cas-step2: _install_google-cas-issuer _create-google-cas-issuer
+google-cas-step3: install-jetstack-istio-csr
+google-cas-step4: _install-and-configure-istio
+google-cas-step5: _create-peer-authentication
+google-cas-step6: _create-vaas-public-cert-issuer _create-vaas-public-certificate
+google-cas-step7: _create_entry_in_GCP_CloudDNS
+google-cas-step8: _install-sample-app _create_gateway_resources_with_vtpp
+google-cas-step9: _install-istio-tools #Optional - if you want Kiali , Grafana and Prometheus
 ### Google CAS Specific targets to support Jetstack Istio-CSR
 
 
@@ -225,10 +225,10 @@ _install-istio-tools:
 	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/grafana.yaml
 
 
-awspca-step0: JS_CERT_MANAGER_ISSUER_GROUP=$(PCA_ISSUER_GROUP)
-awspca-step0: JS_CERT_MANAGER_ISSUER_KIND = $(PCA_ISSUER_KIND)
-awspca-step0: print_str=AWS PCA
-awspca-step0: configure-istio-csr-template
+awspca-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(PCA_ISSUER_GROUP)
+awspca-step1: JS_CERT_MANAGER_ISSUER_KIND = $(PCA_ISSUER_KIND)
+awspca-step1: print_str=AWS PCA
+awspca-step1: configure-istio-csr-template
 
 configure-istio-csr-template:
 	@echo "Setting Issuer Kind to ${JS_CERT_MANAGER_ISSUER_KIND}"
@@ -267,12 +267,12 @@ cleanup: remove-cert-manager-istio-csr
 
 # Replace mesh-ca requires doing a few specific tasks that potentially could cause some downtime 
 # Step1 -> make init
-# Step2 -> make vault-step0
-# Step3 -> make vault-step1
+# Step2 -> make vault-step1
+# Step3 -> make vault-step2
 # Step4 -> make replace-mesh-ca
 # Step5 -> make restart-sample-app
 
-replace-mesh-ca-prep: init vault-step0 vault-step1 vault-step2
+replace-mesh-ca-prep: init vault-step1 vault-step2 vault-step3
 
 replace-mesh-ca:
 	@cmctl renew istiod -n istio-system
@@ -300,18 +300,14 @@ getcr:
 		-o jsonpath='{range .items[?(@.metadata.annotations.istio\.cert-manager\.io/identities=="${SVID_NAME}")]} \
 		{ .metadata.namespace },{ .metadata.name}{"\n"}{end}'
 
-validate-secret: NAMESPACE=mesh-apps
-validate-secret: APP=frontend
-validate-secret: PODNAME=$(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items..metadata.name}' --selector app=${APP}) 
+validate-secret: PODNAME=$$(kubectl get pods -n mesh-apps -o jsonpath='{.items..metadata.name}' --selector app=frontend ) 
 validate-secret:
-	@echo "Namespace ${NAMESPACE}"
-	@echo "Application is ${APP}"
 	@echo "Pod name is ${PODNAME}"
-
-    #istioctl -n mesh-apps proxy-config secret paymentservice-864d9f4df5-w89z7  \
+	@istioctl -n mesh-apps proxy-config secret ${PODNAME} \
 	-o json | \
 	jq -r '.dynamicActiveSecrets[0].secret.tlsCertificate.certificateChain.inlineBytes' | \
 	base64 --decode | \
 	openssl x509 -text -noout
+
 	
 	
