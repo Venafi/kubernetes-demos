@@ -37,6 +37,7 @@ cert-manager-approver-policy:
     approveSignerNames:
     - "issuers.cert-manager.io/*"
     - "clusterissuers.cert-manager.io/*"
+    - "issuers.isolated-issuer.jetstack.io/*"
 
     metrics:
       # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
