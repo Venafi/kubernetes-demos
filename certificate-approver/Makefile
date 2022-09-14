@@ -38,10 +38,6 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
-install-cert-manager-without-auto-approver:
-	@$(MAKE) -C ../enterprise-cert-manager init --warn-undefined-variables
-	@$(MAKE) -C ../enterprise-cert-manager install-cert-manager-without-auto-approver --warn-undefined-variables
-
 #Temporary config map required at this time. It is empty
 create-config-map:
 	@kubectl create configmap -n jetstack-secure cert-manager-approver-policy-rego --from-literal=rego= || true
@@ -93,30 +89,25 @@ create-certificate3:
 	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert3.yaml
 
 remove-certificates:
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert2.yaml
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert3.yaml
+	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml || true
+	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert2.yaml || true
+	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert3.yaml || true
 
 remove-issuer:
-	@kubectl delete -f artifacts/cert-approver/venafi/venafi-issuer.yaml
+	@kubectl delete -f artifacts/cert-approver/venafi/venafi-issuer.yaml || true
 
 remove-rbac:
-	@kubectl delete -f templates/cert-policy-rbac.yaml
+	@kubectl delete -f templates/cert-policy-rbac.yaml || true
 
 remove-cert-policy:
-	@kubectl delete -f artifacts/cert-approver/venafi/cert-policy.yaml
+	@kubectl delete -f artifacts/cert-approver/venafi/cert-policy.yaml || true
 
 remove-jetstack-approver-policy-module:
 	@echo 'Uninstalling Venafi Jetstack Certificate Approver Policy Module.....'
-	@helm uninstall -n jetstack-secure cert-manager-approver-policy
+	@helm uninstall -n jetstack-secure cert-manager-approver-policy || true
 
-remove-cert-manager:
-	@echo 'Uninstalling Venafi Jetstack cert-manager.....'
-	@helm uninstall -n jetstack-secure cert-manager
-
-clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-jetstack-approver-policy-module remove-cert-manager
-	@kubectl delete secret access-token -n jetstack-secure
-	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure
-	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure
-	@kubectl delete -f namespaces/sandbox.yaml
+clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-jetstack-approver-policy-module
+	@kubectl delete secret access-token -n jetstack-secure || true
+	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure || true
+	
 

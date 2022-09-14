@@ -89,8 +89,18 @@ print-run-command-for-isolated-issuer: validate-issuer-config
 create-certificates:
 	@kubectl apply -f config/venafi/cm_certificate.yaml
 
-get-certficate-status:
-
-approve-certififates:
-
 ################ TESTING CERTIFICATE ISSUANCE ################
+
+_remove-policy-and-rbac:
+	@kubectl delete -f artifacts/isolated-issuer/venafi/cert-policy.yaml || true
+	@kubectl delete -f config/venafi/cert-policy-rbac.yaml || true
+
+_remove-crds:
+	@kubectl delete -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-crd.yaml || true
+	@kubectl delete -f https://platform.jetstack.io/documentation/installation/isolated-issuer/cert-manager/approve/${JS_ISOLATED_ISSUER_VERSION}/cert-manager-isolated-issuer-rbac.yaml || true
+
+_remove-certificates:
+	@kubectl delete -f config/venafi/cm_certificate.yaml || true
+
+remove-isolated-issuer-config: _remove-certificates _remove-policy-and-rbac  _remove-crds
+

@@ -49,22 +49,12 @@ install-cert-manager-csi-driver:
 		--namespace jetstack-secure \
 		 --version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
 
-remove-cert-manager-csi-driver: 
-	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver'
-	@helm uninstall -n jetstack-secure cert-manager-csi-driver
-
 create-policy-and-rbac:
 	@cp templates/cert-policy-and-rbac-self-signed.yaml artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml
 	@kubectl apply -f artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml
 
-remove-policy-and-rbac:
-	@kubectl delete -f artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml
-
 create-sample-app:
 	@kubectl apply -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml
-
-remove-sample-app:
-	@kubectl delete -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml
 
 _create-config-map-with-PEM-to-access-TPP:
 	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/csi-driver/venafi/venafi-server-ca.pem
@@ -89,10 +79,19 @@ deploy-redis-app: _create-issuer-and-policy-for-redis-app
 	@kubectl apply -f artifacts/pod-identities/redis-client.yaml
 
 _remove-redis-rbac-policy-and-issuer:
-	@kubectl delete -f artifacts/csi-driver/venafi/redis-certs-policy-and-rbac.yaml
-	@kubectl delete -f artifacts/csi-driver/venafi/issuer-for-redis-app.yaml
+	@kubectl delete -f artifacts/csi-driver/venafi/redis-certs-policy-and-rbac.yaml || true
+	@kubectl delete -f artifacts/csi-driver/venafi/issuer-for-redis-app.yaml || true
 
 remove-redis-app: _remove-redis-rbac-policy-and-issuer
-	@kubectl delete -f artifacts/pod-identities/redis-server.yaml
-	@kubectl delete -f artifacts/pod-identities/redis-client.yaml
-	
+	@kubectl delete -f artifacts/pod-identities/redis-server.yaml || true
+	@kubectl delete -f artifacts/pod-identities/redis-client.yaml || true
+
+remove-policy-and-rbac:
+	@kubectl delete -f artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml || true
+
+remove-sample-app:
+	@kubectl delete -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml || true
+
+remove-cert-manager-csi-driver: remove-redis-app _remove-redis-rbac-policy-and-issuer remove-policy-and-rbac remove-sample-app
+	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver'
+	@helm uninstall -n jetstack-secure cert-manager-csi-driver || true

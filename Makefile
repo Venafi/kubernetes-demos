@@ -25,6 +25,7 @@ gcp-full-cleanup: clean-up-terraform _remove-cluster
 
 cluster-addons: install-jetstack-approver-policy-module
 
+# this is called from service-mesh/istio Makefile if you choose Vault as the signer for mesh workloads.
 install-vault-in-cluster: clean-up-terraform
 	@echo 'Installing Vault...'
 	
@@ -38,8 +39,6 @@ install-vault-in-cluster: clean-up-terraform
 	@cd scripts/vault/terraform && terraform apply -auto-approve
 	@echo 'Stopping port-forward'
 	@pkill -f "kubectl port-forward vault-0" || true
-	@echo 'Creating CA chain secret'
-	#@kubectl create secret generic root-cert --from-file=ca.pem=scripts/vault/terraform/ca.pem -n jetstack-secure || true
 
 clean-up-terraform:
 	@rm -rf scripts/vault/terraform/.terraform
@@ -47,11 +46,6 @@ clean-up-terraform:
 	@rm -rf scripts/vault/terraform/ca.pem
 	@rm -rf scripts/vault/terraform/terraform.tfstate
 	@rm -rf scripts/vault/terraform/terraform.tfstate.backup
-
-# Not installed by default. This is a version with auto-approver turned off.
-install-cert-manager-in-cluster:
-	@$(MAKE) -C enterprise-cert-manager init --warn-undefined-variables
-	@$(MAKE) -C enterprise-cert-manager install-cert-manager --warn-undefined-variables
 
 _install-cert-manager-in-cluster-without-auto-approver:
 	@$(MAKE) -C enterprise-cert-manager init --warn-undefined-variables
@@ -81,15 +75,35 @@ install-google-cas-issuer-in-cluster:
 remove-google-cas-issuer-module:
 	@echo "TBD"
 
-remove-jetstack-approver-policy-module:
-	@$(MAKE) -C certificate-approver remove-jetstack-approver-policy-module --warn-undefined-variables
-
 remove-vault:
-	@helm uninstall vault -n vault
-	@kubectl delete ns vault
+	@helm uninstall vault -n vault || true
+	@kubectl delete ns vault || true
 
 remove-jetstack-cert-manager: remove-vault 
-	@$(MAKE) -C enterprise-cert-manager remove-cert-manager --warn-undefined-variables
+	@$(MAKE) -C enterprise-cert-manager clean --warn-undefined-variables
+
+remove-jetstack-approver-policy-module:
+	@$(MAKE) -C certificate-approver clean --warn-undefined-variables
+
+remove-jetstack-venafi-cert-sync-module:
+	@$(MAKE) -C cert-sync-to-venafi remove-certificate-sync-module --warn-undefined-variables
+
+remove-jetstack-cert-manager-csi-driver:
+	@$(MAKE) -C cert-manager-csi remove-cert-manager-csi-driver --warn-undefined-variables
 
 remove-jetstack-cert-manager-csi-driver-spiffe:
 	@$(MAKE) -C cert-manager-csi-spiffe remove-cert-manager-csi-driver-spiffe --warn-undefined-variables
+
+remove-istio-csr-and-demos: 
+	@$(MAKE) -C service-mesh/istio cleanup --warn-undefined-variables
+
+remove-jetstack-isolated-issuer-config:
+	@$(MAKE) -C isolated-issuer remove-isolated-issuer-config --warn-undefined-variables	
+
+reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-jetstack-approver-policy-module remove-jetstack-cert-manager
+	@echo ""
+	@echo ""
+	@echo ""
+	@echo "#####################################################################"
+	@echo "Cluster is reset. Start by running make cluster-addons to start fresh"
+	@echo "#####################################################################"

@@ -52,13 +52,8 @@ install-certificate-sync-module: create-venafi-tpp-access-secret
 		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-discovery-venafi \
         --set url=${JS_VENAFI_TPP_URL} --set zone=${JS_VENAFI_CERT_SYNC_POLICY_FOLDER}
 
-remove-certificate-sync-module:
-	@echo 'Uninstalling certificate sync module'
-	@helm uninstall -n jetstack-secure cert-sync-to-venafi
 
 create-tls-secrets: create-tls-secret1 create-tls-secret2
-
-remove-tls-secrets: remove-tls-secret1 remove-tls-secret2
 
 create-tls-secret1:
 	@openssl req -x509 \
@@ -87,4 +82,10 @@ remove-tls-secret2:
 remove-tls-secret1:
 	@kubectl -n sandbox delete secret sandbox-cert1 || true
 
+remove-tls-secrets: remove-tls-secret1 remove-tls-secret2
+
 install-configure: mkdirs create-namespaces configure-namespace create-venafi-tpp-access-secret install-certificate-sync-module
+
+remove-certificate-sync-module: remove-tls-secrets
+	@echo 'Uninstalling certificate sync module'
+	@helm uninstall -n jetstack-secure cert-sync-to-venafi || true

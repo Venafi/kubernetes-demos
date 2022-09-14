@@ -257,12 +257,45 @@ create-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secr
 
 remove-policy:
 	@echo "Removing policy to process certificate requests in istio-system"
-	@kubectl delete -f artifacts/istio-csr/cert-policy-and-rbac.yaml
+	@kubectl delete -f artifacts/istio-csr/cert-policy-and-rbac.yaml || true
 
 remove-cert-manager-istio-csr:
-	@helm uninstall -n jetstack-secure cert-manager-istio-csr
+	@helm uninstall -n jetstack-secure cert-manager-istio-csr || true
 
-cleanup: remove-cert-manager-istio-csr
+remove-apps:
+	@echo 'Removing Kiali............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/kiali.yaml || true
+	@echo 'Removing Jaeger............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/jaeger.yaml || true
+	@echo 'Removing Prometheus............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/prometheus.yaml || true
+	@echo 'Removing Grafana............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/grafana.yaml || true
+	@echo 'Remvoing gateway resources'
+	@kubectl -n mesh-apps delete -f artifacts/istio-csr/istio-manifests.yaml || true
+	@echo 'Removing sample app'
+	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/master/release/kubernetes-manifests.yaml || true
+
+remove-peerauthentication:
+	@kubectl delete -f common/peerauthentication.yaml || true
+
+remove-cert-specific-resources:
+	@kubectl delete -f artifacts/istio-csr/vtpp/public-cert.yaml || true
+	@kubectl delete -f artifacts/istio-csr/vtpp/public-cert-issuer.yaml || true
+	@kubectl delete -f templates/vtpp/intermediate-cert.yaml || true
+	@kubectl delete -f templates/vtpp/ica-issuer.yaml || true
+	@kubectl delete -f templates/vault/ica-issuer.yaml || true
+	@kubectl delete secret generic root-cert --namespace='jetstack-secure'  || true
+
+remove-istio:
+	@istioctl uninstall -y -f artifacts/istio-csr/istio-operator.yaml || true
+
+remove-namespaces:
+	@kubectl delete -f namespaces/istio-system.yaml || true
+	@kubectl delete -f namespaces/mesh-apps.yaml || true
+
+
+cleanup: remove-apps remove-peerauthentication remove-policy remove-istio remove-cert-manager-istio-csr remove-cert-specific-resources remove-namespaces
 
 
 # Replace mesh-ca requires doing a few specific tasks that potentially could cause some downtime 

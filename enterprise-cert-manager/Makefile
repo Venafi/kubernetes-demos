@@ -19,7 +19,7 @@ SHELL := /bin/sh
 init: create-namespaces configure-namespace
 
 create-namespaces:
-	@kubectl apply -f namespaces/cert-manager.yaml
+	@kubectl apply -f namespaces/jetstack-secure.yaml
 
 configure-namespace:
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
@@ -54,11 +54,11 @@ create-cert:
 	@kubectl apply -f cert-manager/sample-cert.yaml
 
 remove-cert:
-	@kubectl delete -f cert-manager/sample-cert.yaml
+	@kubectl delete -f cert-manager/sample-cert.yaml || true
 
 remove-cert-manager:
-	@helm uninstall -n jetstack-secure cert-manager
-	@kubectl delete -f namespaces/cert-manager.yaml
+	@helm uninstall -n jetstack-secure cert-manager || true
+	@kubectl delete -f namespaces/jetstack-secure.yaml || true
 
 renew-cert:
 	@cmctl -n sandbox renew test-cert
@@ -68,3 +68,5 @@ renew-cert:
 install: create-namespace configure-namespace install-cert-manager
 
 clean: remove-cert remove-cert-manager
+	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure || true
+	@kubectl delete -f namespaces/jetstack-secure.yaml || true

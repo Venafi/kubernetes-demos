@@ -56,10 +56,6 @@ install-cert-manager-csi-driver-spiffe: _create_sourceCA
 		--namespace jetstack-secure \
         --version ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION}
 
-remove-cert-manager-csi-driver-spiffe:
-	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver SPIFFE'
-	@helm uninstall -n jetstack-secure cert-manager-csi-driver-spiffe
-
 _create-config-map-with-PEM-to-access-TPP:
 	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/csi-driver-spiffe/venafi/venafi-server-ca.pem
 	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/csi-driver-spiffe/venafi/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
@@ -84,10 +80,15 @@ deploy-redis-app:
 	@kubectl apply -f artifacts/pod-identities/redis-client.yaml
 
 remove-spiffe-cluster-issuer:
-	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/csi-spiffe-issuer.yaml
-	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml
+	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/csi-spiffe-issuer.yaml || true
+	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml || true
 
 remove-redis-app:
-	@kubectl delete -f artifacts/pod-identities/redis-server.yaml
-	@kubectl delete -f artifacts/pod-identities/redis-client.yaml
+	@kubectl delete -f artifacts/pod-identities/redis-server.yaml || true
+	@kubectl delete -f artifacts/pod-identities/redis-client.yaml || true
 	
+remove-cert-manager-csi-driver-spiffe: remove-redis-app remove-spiffe-cluster-issuer
+	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver SPIFFE'
+	@helm uninstall -n jetstack-secure cert-manager-csi-driver-spiffe || true
+	@kubectl delete secret spiffe-source-ca --namespace='jetstack-secure' || true
+
