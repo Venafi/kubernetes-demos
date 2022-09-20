@@ -115,3 +115,6 @@ Sign mesh workloads with AWS ACM Private Certificate Authority
 
 # 08. Issue certificates with Root CA managed in AWS KMS with cert-manager KMS Issuer  
 In this scenario we will use an external issuer (AWS KMS Issuer) to sign  certificate requests.  Follow instructions [here](docs/08.certs-with-aws-kms-issuer.md#cert-manager-aws-kms-issuer-to-manage-certificates-in-cluster)
+
+# 09. Issue certificates with cert-manager AWS ACM Private Certificate Authority Issuer
+In this scenario we will use an external issuer (AWS PCA Issuer) to sign certificate requests.  Follow instructions [here](docs/09.certs-with-aws-pca-issuer.md#cert-manager-aws-pca-issuer-to-manage-certificates-in-cluster)

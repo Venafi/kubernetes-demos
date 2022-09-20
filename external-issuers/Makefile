@@ -19,7 +19,7 @@ init: mkdirs create-namespaces configure-namespace
 mkdirs:
 	@rm -rf artifacts
 	@mkdir -p artifacts/kms
-	@mkdir -p artifacts/kms/keys
+	@mkdir -p artifacts/pca
 
 create-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
@@ -39,14 +39,18 @@ configure-namespace:
 _helm_init:
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add kms-issuer 'https://skyscanner.github.io/kms-issuer'
+	@helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
 	@helm repo update
+
+## AWS KMS Targets ##
 
 install-kms-issuer: _helm_init
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < kms/templates/values.yaml \
      > artifacts/kms/values.yaml
 	@helm upgrade \
 	    --install -f artifacts/kms/values.yaml kms-issuer kms-issuer/kms-issuer \
-  		--namespace jetstack-secure
+  		--namespace jetstack-secure \
+		--wait
 
 #step 1
 create-kmskey:
@@ -87,3 +91,48 @@ remove-policy-and-rbac:
 	
 #step 6
 clean-kms: remove-certs remove-kms-issuer remove-kmskey remove-policy-and-rbac remove-kms-issuer-module
+
+
+## AWS PCA Targets ##
+
+install-awspca-issuer: _helm_init
+	@cp pca/templates/values.yaml artifacts/pca/values.yaml
+	@helm upgrade \
+	    --install -f artifacts/pca/values.yaml pca awspca/aws-privateca-issuer \
+  		--namespace jetstack-secure \
+		--wait
+
+create-pca-secret:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < pca/templates/aws-secret.yaml \
+     > artifacts/pca/aws-secret.yaml
+	@kubectl apply -f artifacts/pca/aws-secret.yaml
+
+create-pca-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < pca/templates/aws-pca-issuer.yaml \
+     > artifacts/pca/aws-pca-issuer.yaml
+	@kubectl apply -f artifacts/pca/aws-pca-issuer.yaml
+
+create-pca-policy-and-rbac:
+	@kubectl apply -f pca/config/cert-policy-rbac.yaml
+	@kubectl apply -f pca/config/cert-policy.yaml
+
+create-pca-certs:
+	@kubectl apply -f pca/config/sample-certs.yaml
+
+remove-pca-certs:
+	@kubectl delete -f pca/config/sample-certs.yaml || true
+
+remove-pca-policy-and-rbac:
+	@kubectl delete -f pca/config/cert-policy-rbac.yaml || true
+	@kubectl delete -f pca/config/cert-policy.yaml  || true
+
+remove-pca-issuer:
+	@kubectl delete -f artifacts/pca/aws-pca-issuer.yaml  || true
+
+remove-pca-secret:
+	@kubectl delete -f artifacts/pca/aws-secret.yaml || true
+
+remove-awspca-issuer-module:
+	@helm uninstall -n jetstack-secure pca || true
+
+clean-pca: remove-pca-certs remove-pca-issuer remove-pca-secret remove-pca-policy-and-rbac remove-awspca-issuer-module

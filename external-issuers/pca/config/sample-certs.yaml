@@ -1,0 +1,47 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert1-pca-issuer.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: cert1-pca-issuer.svc.cluster.local
+  duration: 24h
+  renewBefore: 4h
+  subject:
+    organizations:
+      - Jetstack Ltd
+  usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  commonName: cert1-pca-issuer.svc.cluster.local
+  uris:
+    - spiffe://jetstack-dev/ns/sandbox/sa/client-app1
+  issuerRef:
+    name: awspca-issuer
+    kind: AWSPCAIssuer
+    group: awspca.cert-manager.io
+
+--- 
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert2-pca-issuer.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: cert2-pca-issuer.svc.cluster.local
+  duration: 24h
+  renewBefore: 4h
+  subject:
+    organizations:
+      - Jetstack Ltd
+  usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  commonName: cert2-pca-issuer.svc.cluster.local
+  issuerRef:
+    name: awspca-issuer
+    kind: AWSPCAIssuer
+    group: awspca.cert-manager.io

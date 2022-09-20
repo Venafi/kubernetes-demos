@@ -98,7 +98,6 @@ export JS_AWS_PROFILE_NAME :=REPLACE_ME #set to none to use default
 export JS_AWS_REGION :=us-east-1
 export JS_AWS_PCA_ACCESS_KEY :=REPLACE_ME
 export JS_AWS_PCA_SECRET_ACCESS_KEY :=REPLACE_ME
-# arn:aws:acm-pca:us-east-2:1234567890000:certificate-authority\\/eeddd208-aa3b-bb4b-cc2c-zzzyyyxxxwwww
-## Add `\\` in front of a `/` to escape. 
+# arn:aws:acm-pca:us-east-2:1234567890000:certificate-authority/eeddd208-aa3b-bb4b-cc2c-zzzyyyxxxwwww
 export JS_AWS_PCA_ARN :=REPLACE_ME
 
