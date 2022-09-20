@@ -72,6 +72,13 @@ install-jetstack-isolated-issuer-config:
 install-google-cas-issuer-in-cluster:
 	@echo "TBD"
 
+install-kms-issuer-in-cluster:
+	@$(MAKE) -C external-issuers init --warn-undefined-variables
+	@$(MAKE) -C external-issuers install-kms-issuer --warn-undefined-variables
+
+remove-kms-issuer-module:
+	@$(MAKE) -C external-issuers clean-kms --warn-undefined-variables
+
 remove-google-cas-issuer-module:
 	@echo "TBD"
 
@@ -100,7 +107,7 @@ remove-istio-csr-and-demos:
 remove-jetstack-isolated-issuer-config:
 	@$(MAKE) -C isolated-issuer remove-isolated-issuer-config --warn-undefined-variables	
 
-reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-jetstack-approver-policy-module remove-jetstack-cert-manager
+reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-jetstack-cert-manager
 	@echo ""
 	@echo ""
 	@echo ""

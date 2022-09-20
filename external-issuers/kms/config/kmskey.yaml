@@ -1,0 +1,12 @@
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSKey
+metadata:
+  name: jetstack-secure-kms-key
+spec:
+  aliasName: alias/jetstack-secure-kms-key
+  description: Sample KMS key for Jetstack Secure demo
+  customerMasterKeySpec: RSA_2048
+  tags:
+    project: kms-issuer
+  deletionPolicy: Delete
+  deletionPendingWindowInDays: 7

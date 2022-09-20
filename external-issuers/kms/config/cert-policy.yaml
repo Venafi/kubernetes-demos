@@ -1,0 +1,29 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: kms-issuer-policy-for-ns-sandbox
+spec:
+  allowed:
+    commonName:
+      value: "*.svc.cluster.local"
+      required: false
+    uris:
+      values:
+      - "spiffe://jetstack-dev/ns/sandbox/sa/*"
+      required: true
+    dnsNames:
+      required: false
+      values:
+      - "*"
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
+  selector:
+    issuerRef:
+      name: "kms-issuer"
+      kind: "KMSIssuer"
+      group: "cert-manager.skyscanner.net"
