@@ -16,7 +16,12 @@ SHELL := /bin/sh
 
 ########################################################################################################################
 
-init: create-namespaces configure-namespace
+init: mkdirs create-namespaces configure-namespace _create-policy-and-rbac
+
+mkdirs:
+	@rm -rf artifacts
+	@mkdir -p artifacts/trust
+	@mkdir -p artifacts/trust/bundles
 
 create-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
@@ -32,42 +37,43 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
+_create-policy-and-rbac:
+	@kubectl apply -f config/cert-policy-rbac.yaml
+	@kubectl apply -f config/cert-policy.yaml
+
+
 _helm_init:
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
-	@echo 'Installing Jetstack cert-manager.....'
+	
+install-cert-manager-trust: _helm_init
+	@echo 'Installing Jetstack cert-manager trust operator.....'
+	@cp templates/values.yaml artifacts/trust/values.yaml 
 
-install-cert-manager: _helm_init
 	@helm upgrade \
-	    --install -f cert-manager/approver-enabled.yaml cert-manager jetstack/cert-manager \
+	    --install -f artifacts/trust/values.yaml cert-manager-trust jetstack/cert-manager-trust \
   		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION}
-
-install-cert-manager-without-auto-approver: _helm_init
-	@helm upgrade \
-	    --install -f cert-manager/approver-disabled.yaml cert-manager jetstack/cert-manager \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION} \
+  		--version ${JS_CERT_MANAGER_TRUST_VERSION} \
 		--wait
 
-create-cert:
-	@kubectl apply -f cert-manager/sample-cert.yaml
+_remove-policy-and-rbac:
+	@kubectl delete -f config/cert-policy-rbac.yaml || true
+	@kubectl delete -f config/cert-policy.yaml || true
 
-remove-cert:
-	@kubectl delete -f cert-manager/sample-cert.yaml || true
+remove-cert-manager-trust:
+	@helm uninstall -n jetstack-secure cert-manager-trust || true
 
-remove-cert-manager:
-	@helm uninstall -n jetstack-secure cert-manager || true
-	@kubectl delete -f namespaces/jetstack-secure.yaml || true
+clean: _remove-policy-and-rbac remove-cert-manager-trust
 
-renew-cert:
-	@cmctl -n sandbox renew test-cert
-	@cmctl -n sandbox status certificate test-cert
-	@cmctl -n sandbox inspect secret test-cert
 
-install: create-namespace configure-namespace install-cert-manager
+foo:
+	@kubectl apply -f config/cert-policy-rbac.yaml
+	@kubectl apply -f config/cert-policy.yaml
+	@kubectl apply -f config/tmp.yaml 
 
-clean: remove-cert remove-cert-manager
-	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure || true
-	@kubectl delete -f namespaces/jetstack-secure.yaml || true
+bar:
+	@kubectl delete -f config/cert-policy-rbac.yaml
+	@kubectl delete -f config/cert-policy.yaml
+	@kubectl delete -f config/tmp.yaml 
+

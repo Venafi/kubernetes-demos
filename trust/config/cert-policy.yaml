@@ -1,0 +1,19 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: policy-for-cert-manager-trust
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  selector:
+    issuerRef:
+      name: "cert-manager-trust"
+      kind: "*"
+      group: "*"

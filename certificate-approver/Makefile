@@ -53,7 +53,8 @@ install-jetstack-approver-policy-module: create-config-map
 		--install -f approver-policy/values.yaml cert-manager-approver-policy \
 		--namespace jetstack-secure \
 		oci://eu.gcr.io/jetstack-secure-enterprise/charts/approver-policy-enterprise \
-	    --version ${JS_POLICY_APPROVER_VERSION}
+	    --version ${JS_POLICY_APPROVER_VERSION} \
+		--wait
 
 create-venafi-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/venafi-issuer.yaml \
@@ -89,9 +90,9 @@ create-certificate3:
 	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert3.yaml
 
 remove-certificates:
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml || true
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert2.yaml || true
-	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert3.yaml || true
+	@kubectl delete -f artifacts/cert-approver/venafi/sample-cert1.yaml || true
+	@kubectl delete -f artifacts/cert-approver/venafi/sample-cert2.yaml || true
+	@kubectl delete -f artifacts/cert-approver/venafi/sample-cert3.yaml || true
 
 remove-issuer:
 	@kubectl delete -f artifacts/cert-approver/venafi/venafi-issuer.yaml || true
