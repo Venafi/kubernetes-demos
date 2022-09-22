@@ -43,12 +43,19 @@ app:
       ca: ca.crt
     # -- Optional extra volumes. Useful for mounting root CAs
     volumes: 
-    - name: root-cas
-      secret:
-        secretName: spiffe-source-ca
+    - name: trust-domain-root
+    # refer the secret directly by attaching a secret to the volume or
+    # use the Bundle resource provided by cert-manager-trust (recommended)
+#      secret:
+#        secretName: spiffe-source-ca
+      configMap:
+        name: ${JS_CLUSTER_TRUST_DOMAIN_NAME}
+        items:
+          - key: ca.crt
+            path: ca.crt
     # -- Optional extra volume mounts. Useful for mounting root CAs
     volumeMounts:
-    - name: root-cas
+    - name: trust-domain-root
       mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
 
     resources: {}

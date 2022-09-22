@@ -1,0 +1,14 @@
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: ${JS_CLUSTER_TRUST_DOMAIN_NAME}
+spec:
+  sources:
+  - secret:
+      name: "spiffe-source-ca"
+      key: "ca.crt"
+  target:
+    # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in
+    # every namespace based on the sources above.
+    configMap:
+      key: "ca.crt"

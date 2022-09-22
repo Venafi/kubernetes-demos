@@ -41,6 +41,9 @@ configure-namespace:
 _create_sourceCA:
 	@cp ${JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE} artifacts/csi-driver-spiffe/venafi/venafi-ica-root-ca.pem
 	@kubectl create secret generic spiffe-source-ca --namespace='jetstack-secure' --from-file=ca.crt=artifacts/csi-driver-spiffe/venafi/venafi-ica-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/trust-bundle.yaml \
+     > artifacts/csi-driver-spiffe/venafi/trust-bundle.yaml
+	kubectl apply -f artifacts/csi-driver-spiffe/venafi/trust-bundle.yaml
 
 install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@echo 'Setting up helm with the correct repos'
@@ -87,7 +90,10 @@ remove-redis-app:
 	@kubectl delete -f artifacts/pod-identities/redis-server.yaml || true
 	@kubectl delete -f artifacts/pod-identities/redis-client.yaml || true
 	
-remove-cert-manager-csi-driver-spiffe: remove-redis-app remove-spiffe-cluster-issuer
+remove-trust-bundle:
+	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/trust-bundle.yaml || true
+
+remove-cert-manager-csi-driver-spiffe: remove-redis-app remove-spiffe-cluster-issuer remove-trust-bundle
 	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver SPIFFE'
 	@helm uninstall -n jetstack-secure cert-manager-csi-driver-spiffe || true
 	@kubectl delete secret spiffe-source-ca --namespace='jetstack-secure' || true
