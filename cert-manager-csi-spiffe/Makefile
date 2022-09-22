@@ -76,18 +76,26 @@ create-spiffe-cluster-issuer: _create-tpp-access-secret-for-policy _create-confi
      > artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml
 	@kubectl apply -f artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml
 
-deploy-redis-app: 
+deploy-redis-app: deploy-redis-server deploy-redis-client
+
+deploy-redis-server:
 	@cp templates/redis-server.yaml artifacts/pod-identities/redis-server.yaml
-	@cp templates/redis-client.yaml artifacts/pod-identities/redis-client.yaml
 	@kubectl apply -f artifacts/pod-identities/redis-server.yaml
+
+deploy-redis-client:
+	@cp templates/redis-client.yaml artifacts/pod-identities/redis-client.yaml
 	@kubectl apply -f artifacts/pod-identities/redis-client.yaml
 
 remove-spiffe-cluster-issuer:
 	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/csi-spiffe-issuer.yaml || true
 	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml || true
 
-remove-redis-app:
+remove-redis-app: remove-redis-server remove-redis-client
+
+remove-redis-server:
 	@kubectl delete -f artifacts/pod-identities/redis-server.yaml || true
+
+remove-redis-client:
 	@kubectl delete -f artifacts/pod-identities/redis-client.yaml || true
 	
 remove-trust-bundle:
