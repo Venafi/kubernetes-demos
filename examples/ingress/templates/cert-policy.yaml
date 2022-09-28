@@ -1,0 +1,27 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-apps-in-sandbox
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  plugins:
+    tpp:
+      values:
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
+        zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
+  selector:
+    issuerRef:
+      name: "sandbox-venafi-tpp-issuer"
+      kind: "Issuer"
+      group: "cert-manager.io"

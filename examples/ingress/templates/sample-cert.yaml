@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: coffee.${JS_JETSTACKER_DOMAIN_NAME}
+  namespace: sandbox
+spec:
+  secretName: coffee.${JS_JETSTACKER_DOMAIN_NAME}
+  duration: 2160h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - coffee.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: coffee.${JS_JETSTACKER_DOMAIN_NAME}
+  issuerRef:
+    name: sandbox-venafi-tpp-issuer
+    kind: Issuer
+    group: cert-manager.io
+---

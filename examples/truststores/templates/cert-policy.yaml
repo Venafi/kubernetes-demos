@@ -1,0 +1,30 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-truststores-in-sandbox
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - signing
+      - digital signature
+      - server auth
+      - client auth
+      - key encipherment
+    isCA: true
+  plugins:
+    tpp:
+      values:
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
+        zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
+  selector:
+    issuerRef:
+      name: "sandbox-venafi-tpp-issuer-truststore"
+      kind: "Issuer"
+      group: "cert-manager.io"
