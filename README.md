@@ -1,4 +1,4 @@
-# Getting started with Jetstack Secure
+# Getting started with Venafi Jetstack Secure
 
 ## Assumptions
 - You are a Venafi Jetstack Secure customer and you have access to credentials to access enterprise builds
