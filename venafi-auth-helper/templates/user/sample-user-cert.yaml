@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: voh.user.${JS_JETSTACKER_DOMAIN_NAME}
+  namespace: sandbox
+spec:
+  secretName: voh.user.${JS_JETSTACKER_DOMAIN_NAME}
+  duration: 2160h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - voh.user.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: voh.user.${JS_JETSTACKER_DOMAIN_NAME}
+  issuerRef:
+    name: voh-venafi-tpp-issuer-user
+    kind: Issuer
+    group: cert-manager.io
+---
