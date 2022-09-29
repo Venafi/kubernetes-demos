@@ -22,7 +22,7 @@ spec:
         caBundleConfigMapName: venafi-tpp-ca-bundle
   selector:
     issuerRef:
-      name: "vtpp-public-issuer"
+      name: "v*-public-issuer"
       kind: "Issuer"
       group: "cert-manager.io"
 
