@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: truststore-config
+  namespace: sandbox
+  labels:
+    app: truststoredemo
+data:
+  KEY_STORE: /opt/secret/keystore.p12
+  TRUST_STORE: /opt/secret/truststore.p12
+  KEY_STORE_TYPE: PKCS12
+
+---         
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: truststoredemo
+  namespace: sandbox
+spec:
+  selector:
+    matchLabels:
+      app: truststoredemo
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: truststoredemo
+    spec:
+      containers:
+      - name: truststoredemo
+        image: "riazvm/jetstackdemos-truststore:1.3"
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+          - name: KEY_STORE
+            valueFrom:
+             configMapKeyRef:
+                name: truststore-config
+                key: KEY_STORE
+          - name: TRUST_STORE
+            valueFrom:
+             configMapKeyRef:
+                name: truststore-config
+                key: TRUST_STORE
+          - name: KEY_STORE_TYPE
+            valueFrom:
+             configMapKeyRef:
+                name: truststore-config
+                key: KEY_STORE_TYPE
+          - name: PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password-key
+                name: jks-password-secret
+        volumeMounts:
+          - mountPath: /opt/secret
+            name: truststore-certs
+      volumes:
+        - name: truststore-certs
+          secret:
+            secretName: java-server-truststore      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: truststoredemo-svc     # Unique name of the resource
+  namespace: sandbox
+  labels:
+    app: truststoredemo
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 8443
+      protocol: TCP
+      name: https
+  selector:
+    app: truststoredemo
+  sessionAffinity: None
+  type: LoadBalancer
