@@ -6,6 +6,8 @@ export JS_ENTERPRISE_CREDENTIALS_FILE :=~/GitHub/demos/js-enterprise-credentials
 
 # Venafi TPP access token. You must have the Venafi platform up and running
 export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
+export JS_VENAFI_TPP_REFRESH_TOKEN :=REPLACE-ME
+export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
 
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
