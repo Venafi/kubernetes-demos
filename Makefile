@@ -87,6 +87,13 @@ install-pca-issuer-in-cluster:
 	@$(MAKE) -C external-issuers init --warn-undefined-variables
 	@$(MAKE) -C external-issuers install-awspca-issuer --warn-undefined-variables
 
+install-js-venafi-enhanced-issuer-module:
+	@$(MAKE) -C venafi-enhanced-issuer init --warn-undefined-variables
+	@$(MAKE) -C venafi-enhanced-issuer install-jetstack-venafi-enhanced-issuer-module --warn-undefined-variables
+
+remove-js-venafi-enhanced-issuer-module:
+	@$(MAKE) -C venafi-enhanced-issuer clean --warn-undefined-variables
+
 remove-pca-issuer-module:
 	@$(MAKE) -C external-issuers clean-pca --warn-undefined-variables
 
