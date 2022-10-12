@@ -1,0 +1,50 @@
+global:
+  imagePullSecrets:
+  - name: venafi-jetstack-enterprise-key
+controllerManager:
+  kubeRbacProxy:
+    image:
+      repository: gcr.io/kubebuilder/kube-rbac-proxy
+      tag: v0.13.0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 5m
+        memory: 64Mi
+  manager:
+    image:
+      repository: eu.gcr.io/jetstack-secure-enterprise/venafi-enhanced-issuer
+      pullPolicy: IfNotPresent
+      #tag: latest
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    trustedCaBundles: []
+    # - configMapName: public-root-certs
+    # - configMapKey: ca-certificates.crt
+  replicas: 1
+kubernetesClusterDomain: ${JS_CLUSTER_TRUST_DOMAIN_NAME}
+managerConfig:
+  controllerManagerConfigYaml:
+    health:
+      healthProbeBindAddress: :8081
+    leaderElection:
+      leaderElect: true
+      resourceName: f8d4bf2e.jetstack.io
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+metricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  type: ClusterIP

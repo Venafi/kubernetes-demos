@@ -41,6 +41,8 @@ cert-manager-approver-policy:
     - "kmsissuers.cert-manager.skyscanner.net/*"
     - "awspcaissuers.awspca.cert-manager.io/*"
     - "awspcaclusterissuers.awspca.cert-manager.io/*"
+    - "venaficlusterissuers.jetstack.io/*"
+    - "venafiissuers.jetstack.io/*"
 
     metrics:
       # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
