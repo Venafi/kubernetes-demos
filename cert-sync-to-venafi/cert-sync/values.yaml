@@ -1,19 +1,21 @@
-# Venafi TPP URL
-#url: https://venafi-tpp.example.com/vedsdk
+ # The Venafi TPP URL. Must end with "/vedsdk".
+#url: https://foo.env.cloudshare.com/vedsdk
 
-#Venafi TPP Policy folder for copying certs from Kubernetes to Venafi
-#zone: Certificates\\SKI\\Kuberenetes\\Discovered 
+# The CA bundle used to trust the Venafi TPP server when connecting over HTTPS.
+# If not enabled, the system root CAs will be used.
+caBundle:
+  {}
+  # configMap:
+  #   name: venafi-tpp-ca-bundle
+  #   key: ca.crt
 
-# Access token configuration to access Venafi TPP installation
+# The TPP zone (also called "policy").
+#zone: TLS/SSL\\Certificates
+
+# The TPP access token.
 #secret:
-#   name: venafi-access-token
-#   key: access_token
-
-## Reference to one or more secrets to be used when pulling images
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-##
-imagePullSecrets:
- - name: venafi-jetstack-enterprise-key
+  #name: access-token
+  #key: access-token
 
 image:
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
@@ -21,7 +23,23 @@ image:
   repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
   pullPolicy: IfNotPresent
 
-replicas: 1
+  # When no tag is given, the apiVersion is used instead.
+  # tag: v0.1.0
+
+# The images in this project are stored in a private GCR registry. You will need
+# to ask for the JSON key to access the registry, and store it in a Secret with
+# the command:
+#
+#   kubectl create secret docker-registry jetstack-secure-enterprise -n cert-discovery-venafi \
+#     --docker-server=https://gcr.io \
+#     --docker-username=_json_key \
+#     --docker-email=unused@example.com \
+#     --docker-password="$(cat json-key.json)"
+#
+# For for information, see:
+# http://docs.heptio.com/content/private-registries/pr-gcr.html
+imagePullSecrets:
+ - name: venafi-jetstack-enterprise-key
 
 resources:
   limits:
@@ -29,6 +47,19 @@ resources:
     memory: 100Mi
   requests:
     cpu: 100m
-    memory: 50Mi
+    memory: 20Mi
 
- 
+replicas: 1
+
+# The /metrics endpoint is reachable through the kube-rbac-proxy on port 8443.
+# You need to bind your Prometheus service account to the ClusterRole
+# cert-discovery-venafi-metrics-reader.
+# See: https://book.kubebuilder.io/reference/metrics.html#protecting-the-metrics
+metrics:
+  enabled: true
+  service:
+    type: ClusterIP
+  kubeRbacProxy:
+    image:
+      repository: gcr.io/kubebuilder/kube-rbac-proxy
+      tag: v0.4.1
