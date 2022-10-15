@@ -38,7 +38,11 @@ configure-namespace:
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
 
-install-jetstack-venafi-enhanced-issuer-module: 
+_create-config-map-with-PEM-to-access-TPP:
+	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/venafi-enhanced/config/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/venafi-enhanced/config/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-access-TPP
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo add jetstack-secure-enterprise gs://jetstack-secure-enterprise-charts --force-update
@@ -55,11 +59,7 @@ install-jetstack-venafi-enhanced-issuer-module:
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 
-_create-config-map-with-PEM-to-access-TPP:
-	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/venafi-enhanced/config/venafi-server-ca.pem
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/venafi-enhanced/config/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-create-venafi-issuer: _create-config-map-with-PEM-to-access-TPP
+create-venafi-issuer: 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/venafi-issuer.yaml \
      > artifacts/venafi-enhanced/config/venafi-issuer.yaml
 	@kubectl apply -f artifacts/venafi-enhanced/config/venafi-issuer.yaml

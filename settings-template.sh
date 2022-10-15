@@ -54,7 +54,7 @@ export JS_CERT_MANAGER_VERSION :=v1.9.1
 # cert-manager-trust helm chart version
 export JS_CERT_MANAGER_TRUST_VERSION=v0.2.0
 # cert-discovery-venafi helm chart version
-export JS_VENAFI_CERT_SYNC_VERSION :=v0.1.0
+export JS_VENAFI_CERT_SYNC_VERSION :=v0.2.0
 # approver policy helm chart version
 export JS_POLICY_APPROVER_VERSION :=v0.4.0-0
 # Isolated issuer version
@@ -69,7 +69,7 @@ export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
-export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.0
+export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.2
 
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev
