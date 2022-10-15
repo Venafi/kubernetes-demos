@@ -16,8 +16,7 @@ controllerManager:
   manager:
     image:
       repository: eu.gcr.io/jetstack-secure-enterprise/venafi-enhanced-issuer
-      pullPolicy: IfNotPresent
-      #tag: latest
+      tag: v0.1.2
     resources:
       limits:
         cpu: 500m
@@ -25,11 +24,17 @@ controllerManager:
       requests:
         cpu: 10m
         memory: 64Mi
+    # The trustedCaBundles allows you to specify additional CA certificate
+    # bundles that will be mounted to /etc/ssl/certs/. Note that Mozilla's CA
+    # certificates are present in the image by default at
+    # /etc/ssl/certs/ca-certificates.crt, and cannot be disabled.
     trustedCaBundles: []
-    # - configMapName: public-root-certs
-    # - configMapKey: ca-certificates.crt
+    # - configMapName: ca-cert-tpp
+    #   configMapKey: ca.crt
+    # - configMapName: ca-cert-vault
+    #   configMapKey: ca.crt
   replicas: 1
-kubernetesClusterDomain: ${JS_CLUSTER_TRUST_DOMAIN_NAME}
+kubernetesClusterDomain: cluster.local
 managerConfig:
   controllerManagerConfigYaml:
     health:
@@ -43,8 +48,8 @@ managerConfig:
       port: 9443
 metricsService:
   ports:
-  - name: https
-    port: 8443
-    protocol: TCP
-    targetPort: https
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: https
   type: ClusterIP
