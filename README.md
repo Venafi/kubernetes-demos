@@ -71,7 +71,7 @@ Refresh the Jetstack Secure dashboard to look at new data pushed by the agent. R
 
 # 03. Pushing certificates for visibility to Venafi Trust Protection Platform 
 
-The Venafi Jetstack Enterprise certificate sync module is an enterprise addon to synchronize TLS secrets that are in cluster into a policy folder defined in Venafi for management. This allows Venafi Administrators to understand the various Certificate Authrorities used for the certificates and define appropriate policies to manage compliance. 
+The Venafi Jetstack Enterprise certificate sync module is an enterprise addon to synchronize TLS secrets that are in cluster into a policy folder defined in Venafi for management. This allows Venafi Administrators to understand the various Certificate Authorities used for the certificates and define appropriate policies to manage compliance. 
 
 To setup the ability to push all TLS secrets to Venafi Trust Protection Platform follow the instructions [here](docs/03.cert-sync-to-venafi.md#push-certificate-data-to-venafi-trust-protection-platform)
 
