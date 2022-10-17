@@ -28,9 +28,9 @@ controllerManager:
     # bundles that will be mounted to /etc/ssl/certs/. Note that Mozilla's CA
     # certificates are present in the image by default at
     # /etc/ssl/certs/ca-certificates.crt, and cannot be disabled.
-    trustedCaBundles: []
-    # - configMapName: ca-cert-tpp
-    #   configMapKey: ca.crt
+    trustedCaBundles:
+     - configMapName: venafi-tpp-ca-bundle
+       configMapKey: ca.crt
     # - configMapName: ca-cert-vault
     #   configMapKey: ca.crt
   replicas: 1
