@@ -20,7 +20,7 @@ Those ingress resources can reference certificates stored as Kubernetes secrets.
 On its own, `ingress-nginx` is unable to create certificates or renew them before they expire.
 That's where `cert-manager` comes in.
 
-![title](../images/nginx-tls.png)
+![title](./images/nginx-tls.png)
 
 ## Prerequisites
 
@@ -129,7 +129,7 @@ echo "------------------------------------------------------------------"
 
 Head over to https://console.aws.amazon.com/route53/v2/hostedzones and create your new DNS record in your hosted zone as shown below.
 
-![title](../images/route53.png)
+![title](./images/route53.png)
 
 Once the DNS record has propagated, the new endpoint will also respond with the familiar "404" status page from `nginx`.
 Wait for this to happen before continuing.
