@@ -59,19 +59,28 @@ install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-a
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 
-create-venafi-issuer: 
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/venafi-issuer.yaml \
-     > artifacts/venafi-enhanced/config/venafi-issuer.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/venafi-issuer.yaml
+create-vtpp-venafi-issuer-secret: 
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-secret-venafi-issuer.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
 
-remove-venafi-issuer:
-	@kubectl delete -f artifacts/venafi-enhanced/config/venafi-issuer.yaml || true
+create-venafi-issuers:
+	@kubectl apply -f templates/vtpp-secret-venafi-issuer.yaml
+
+create-rbac-for-issuers:
+	@kubectl apply -f templates/venafi-enhanced-issuer-rbac.yaml
+
+remove-venafi-issuers:
+	@kubectl delete -f templates/vtpp-secret-venafi-issuer.yaml || true
+
+remove-rbac-for-issuers:
+	@kubectl delete -f templates/venafi-enhanced-issuer-rbac.yaml
 
 remove-jetstack-venafi-enhanced-issuer-module:
 	@echo 'Uninstalling Venafi Enhanced Issuer Module.....'
 	@helm uninstall -n jetstack-secure js || true
 
-clean: remove-venafi-issuer remove-jetstack-venafi-enhanced-issuer-module
+clean: remove-venafi-issuer-secret remove-jetstack-venafi-enhanced-issuer-module
 	@kubectl delete secret vtpp-access-token -n jetstack-secure || true
 	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure || true
 	

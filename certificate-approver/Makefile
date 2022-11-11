@@ -45,7 +45,7 @@ create-config-map:
 install-jetstack-approver-policy-module: create-config-map
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
-	@helm repo add jetstack-secure-enterprise gs://jetstack-secure-enterprise-charts --force-update
+ #   helm repo add jetstack-secure-enterprise gs://jetstack-secure-enterprise-charts --force-update
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Approver Policy Module.....'
 	

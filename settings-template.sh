@@ -69,7 +69,7 @@ export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
-export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.4-alpha.0
+export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.6
 
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev

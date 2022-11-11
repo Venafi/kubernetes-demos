@@ -121,3 +121,9 @@ In this scenario we will use an external issuer (AWS KMS Issuer) to sign  certif
 
 # 09. Issue certificates with cert-manager AWS ACM Private Certificate Authority Issuer
 In this scenario we will use an external issuer (AWS PCA Issuer) to sign certificate requests.  Follow instructions [here](docs/09.certs-with-aws-pca-issuer.md#cert-manager-aws-pca-issuer-to-manage-certificates-in-cluster)
+
+# 10. Issue Machine Identities using the Venafi Enhanced Issuer
+In this scenatio we will create a venafi enhanced issuer that would access Hashi Vault to get credentails required to access the Venafi API's. We will use Venafi Trust Protection Platfor/Venafi As A Service to sign a certificate request. Follow instructions [here](docs/10.certs-with-venafi-enhanced-issuer.md#cert-manager-venafi-enhanced-issuer-to-manage-certificates-in-cluster)
+
+# 11. Examples
+A set of examples , currenty covers Ingress, Openshift Ingress, Openshift Routes, Java Truststores [here](docs/11.certs-manager-samples#Examples)

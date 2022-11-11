@@ -16,7 +16,6 @@ controllerManager:
   manager:
     image:
       repository: eu.gcr.io/jetstack-secure-enterprise/venafi-enhanced-issuer
-      tag: v0.1.2
     resources:
       limits:
         cpu: 500m

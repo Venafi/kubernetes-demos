@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: truststore-config
-  namespace: sandbox
+  namespace: sample-apps
   labels:
     app: truststoredemo
 data:
@@ -15,7 +15,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: truststoredemo
-  namespace: sandbox
+  namespace: sample-apps
 spec:
   selector:
     matchLabels:
@@ -65,7 +65,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: truststoredemo-svc     # Unique name of the resource
-  namespace: sandbox
+  namespace: sample-apps
   labels:
     app: truststoredemo
 spec:

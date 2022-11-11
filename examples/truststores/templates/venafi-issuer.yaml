@@ -5,7 +5,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: tpp-auth-secret
-  namespace: sandbox
+  namespace: sample-apps
 stringData:
   access-token: ${JS_VENAFI_TPP_ACCESS_TOKEN}
 
@@ -14,8 +14,8 @@ stringData:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: sandbox-venafi-tpp-issuer-truststore
-  namespace: sandbox
+  name: venafi-tpp-issuer-truststore
+  namespace: sample-apps
 spec:
   venafi:
     zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}

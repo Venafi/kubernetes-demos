@@ -23,74 +23,88 @@ mkdirs:
 
 create-namespaces:
 
-	@kubectl apply -f namespaces/sandbox.yaml
-
+	@kubectl apply -f namespaces/sample-apps.yaml
 
 ########################################################################################################################
-# Ingress  & ROUTES
+# Ingress
 ########################################################################################################################
 
-create-venafi-issuer-ingress:
+install-sample-app:
+	@kubectl apply -f apps/sample-app.yaml
+
+create-venafi-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/venafi-issuer.yaml \
      > artifacts//ingress/venafi-issuer.yaml
-	kubectl apply -f artifacts//ingress/venafi-issuer.yaml
+	kubectl apply -f artifacts/ingress/venafi-issuer.yaml
 
-_create-config-map-with-PEM-to-access-TPP:
-	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/ingress/venafi-server-ca.pem
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/ingress/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+create-sample-apps-policy:
+	@kubectl apply -f ingress/cert-policy-for-sample-apps.yaml
 
-_create-tpp-access-secret-for-policy:
-	@kubectl create secret generic access-token --namespace='jetstack-secure' --from-literal=access-token='${JS_VENAFI_TPP_ACCESS_TOKEN}' --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-create-venafi-tpp-ingress-certificate-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/cert-policy.yaml \
-     > artifacts/ingress/cert-policy.yaml
-	@kubectl apply -f artifacts/ingress/cert-policy.yaml
-	@kubectl apply -f ingress/templates/cert-policy-rbac.yaml
-
-deploy-app-for-ingress:
-	@kubectl apply -f ingress/templates/sample-app.yaml
-
-create-ingress-certificate:
+create-certificate-for-ingress:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/sample-cert.yaml \
-     > artifacts/ingress/sample-cert.yaml
+     > artifacts//ingress/sample-cert.yaml
 	@kubectl apply -f artifacts/ingress/sample-cert.yaml
 
-create-ingress:
+create-ingress-resource:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/sample-ingress.yaml \
-     > artifacts/ingress/sample-ingress.yaml
-	@kubectl apply -f artifacts/ingress/sample-ingress.yaml
+     > artifacts//ingress/sample-ingress.yaml
+	@kubectl apply -f artifacts/ingress/sample-ingress.yaml	
 
-create-certmanager-oc-resource:
-	@kubectl apply -f https://github.com/cert-manager/openshift-routes/releases/latest/download/cert-manager-openshift-routes.yaml -n cert-manager
+create-openshift-ingress-resource:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < openshift/ingress/templates/openshift-sample-ingress.yaml \
+     > artifacts//ingress/openshift-sample-ingress.yaml
+	@kubectl apply -f artifacts/ingress/openshift-sample-ingress.yaml
 
-create-route:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/sample-route.yaml \
-     > artifacts/ingress/sample-route.yaml
-	@kubectl apply -f artifacts/ingress/sample-route.yaml
+install-cert-manager-openshift-route:
+	@kubectl apply -f namespaces/cert-manager.yaml
+	@kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
 
-remove-ingress:
-	@kubectl delete -f artifacts/ingress/sample-ingress.yaml || true
+create-openshift-route-policy:
+	@kubectl apply -f openshift/routes/cert-policy-for-openshift-route.yaml
 
-remove-ingress-app:
-	@kubectl delete -f artifacts/ingress/sample-app.yaml || true
+create-openshift-route-resource:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < openshift/routes/templates/openshift-sample-route.yaml \
+     > artifacts//ingress/openshift-sample-route.yaml
+	@kubectl apply -f artifacts/ingress/openshift-sample-route.yaml
 
-remove-route:
-	@kubectl delete -f artifacts/ingress/sample-route.yaml || true
+rmdirs:
+	@rm -rf artifacts
+	@rm -rf truststores
 
-remove-ingress-certificates:
+delete-namespaces:
+	@kubectl delete -f namespaces/sample-apps.yaml || true
+
+uninstall-sample-app:
+	@kubectl delete -f apps/sample-app.yaml || true
+
+remove-venafi-issuer:
+	kubectl delete -f artifacts/ingress/venafi-issuer.yaml || true
+
+remove-sample-apps-policy:
+	@kubectl delete -f ingress/cert-policy-for-sample-apps.yaml || true
+
+remove-certificate-for-ingress:
 	@kubectl delete -f artifacts/ingress/sample-cert.yaml || true
 
-remove-ingress-issuer:
-	@kubectl delete -f artifacts/ingress/venafi-issuer.yaml || true
+remove-ingress-resource:
+	@kubectl delete -f artifacts/ingress/sample-ingress.yaml || true
 
-remove-ingress-rbac:
-	@kubectl delete -f ingress/templates/cert-policy-rbac.yaml || true
+remove-openshift-ingress-resource:
+	@kubectl delete -f artifacts/ingress/openshift-sample-ingress.yaml || true
 
-remove-ingress-cert-policy:
-	@kubectl delete -f artifacts/cert-approver/venafi/cert-policy.yaml || true
+remove-openshift-route-policy:
+	@kubectl delete -f openshift/routes/cert-policy-for-openshift-route.yaml || true
 
-clean-ingress: remove-ingress-app remove-ingress-certificates remove-ingress-issuer remove-ingress-rbac remove-ingress-cert-policy remove-ingress remove-route
+remove-openshift-route-resource:
+	@kubectl delete -f artifacts/ingress/openshift-sample-route.yaml || true
+
+uninstall-cert-manager-openshift-route:
+	@kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml || true
+
+clean-route: remove-openshift-route-resource remove-openshift-route-policy remove-venafi-issuer uninstall-sample-app uninstall-cert-manager-openshift-route
+
+clean-ingress: remove-openshift-ingress-resource remove-ingress-resource remove-certificate-for-ingress remove-sample-apps-policy remove-venafi-issuer uninstall-sample-app 
+
 
 ########################################################################################################################
 # Trust Stores 
@@ -101,14 +115,11 @@ create-venafi-issuer-truststore:
      > artifacts//truststores/venafi-issuer.yaml
 	kubectl apply -f artifacts/truststores/venafi-issuer.yaml
 
-create-venafi-tpp-trust-certificate-policy: _create-config-map-with-PEM-to-access-TPP _create-tpp-access-secret-for-policy
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < truststores/templates/cert-policy.yaml \
-     > artifacts/truststores/cert-policy.yaml
-	@kubectl apply -f artifacts/truststores/cert-policy.yaml
-	@kubectl apply -f truststores/templates/cert-policy-rbac.yaml
-
 create-truststore-password:
-	@kubectl create secret generic jks-password-secret --from-literal=password-key=changeit -n sandbox
+	@kubectl create secret generic jks-password-secret --from-literal=password-key=changeit -n sample-apps
+
+create-trustsore-policy:
+	@kubectl apply -f truststores/templates/cert-policy-for-truststores.yaml
 
 create-server-certificate:
 	@kubectl apply -f truststores/templates/sample-server-cert.yaml
@@ -117,7 +128,7 @@ create-client-certificate:
 	@kubectl apply -f truststores/templates/sample-client-cert.yaml
 
 deploy-app-for-truststores:
-	@kubectl apply -f truststores/templates/sample-app.yaml
+	@kubectl apply -f apps/sample-truststore-client-app.yaml
 
 ## TEST APP USING CURL
 test-trust-app-fail:
@@ -130,11 +141,8 @@ test-trust-app:
 	@curl https://<Loadbalancer IP>/trust --cert artifacts/truststores/tls.crt --key artifacts/truststores/tls.key --cacert artifacts/truststores/ca.crt -k
 
 
-remove-truststores-cert-policy:
-	@kubectl delete -f artifacts/truststores/cert-policy.yaml || true
-
-remove-truststores-rbac:
-	@kubectl delete -f artifacts/truststores/cert-policy-rbac.yaml || true
+remove-trustsore-policy:
+	@kubectl delete -f truststores/templates/cert-policy-for-truststores.yaml || true
 
 remove-truststores-certificates:
 	@kubectl delete -f truststores/templates/sample-server-cert.yaml || true
@@ -149,5 +157,7 @@ delete-truststore-password:
 
 remove-app-for-truststores:
 	@kubectl delete -f artifacts/truststores/sample-app.yaml || true
+	
 
-clean-truststores: remove-app-for-truststores remove-truststores-rbac remove-truststores-cert-policy delete-truststore-password remove-truststores-certificates remove-truststores-issuer 
+clean-truststores: remove-app-for-truststores remove-trustsore-policy remove-truststores-certificates delete-truststore-password remove-truststores-certificates remove-truststores-issuer 
+
