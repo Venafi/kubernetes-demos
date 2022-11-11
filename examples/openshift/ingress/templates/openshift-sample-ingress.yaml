@@ -1,12 +1,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: venafi-tpp-ingress-coffee
+  name: venafi-tpp-demo-os-ingress-coffee
   namespace: sample-apps
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - coffee.${JS_JETSTACKER_DOMAIN_NAME}

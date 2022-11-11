@@ -14,4 +14,7 @@ venafi-tpp-server-ca.crt
 venafi-tpp-server-ca.pem
 venafi-msca-ica-root.pem
 js-enterprise-credentials.json
+amplisight-com-chain.pem
+venafi-root-ca.pem
+js-enterprise-credentials.json
 .DS_Store

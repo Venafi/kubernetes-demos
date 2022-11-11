@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: java-client-app-cert
-  namespace: sandbox
+  namespace: sample-apps
 spec:
   secretName: java-client-truststore
   duration: 24h # 90d
@@ -17,6 +17,6 @@ spec:
     - client auth
   commonName: javaclient.svc.cluster.local
   issuerRef:
-    name: sandbox-venafi-tpp-issuer-truststore
+    name: venafi-tpp-issuer-truststore
     kind: Issuer
     group: cert-manager.io
