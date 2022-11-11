@@ -1,0 +1,60 @@
+---
+# create role that allows creating sa tokens for 'sandbox'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-tokens-for-sandbox-issuers
+  namespace: sandbox
+rules:
+- apiGroups: [""]
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+  resourceNames: [ "vtpp-vei-access-token" ]
+---
+# link the controller's service account to the 'create-tokens-for-vault-sa' role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: create-tokens-for-sandbox-issuers-rolebinding
+  namespace: sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: create-tokens-for-sandbox-issuers
+subjects:
+- kind: ServiceAccount
+  name: venafi-enhanced-issuer-controller-manager
+  namespace: sandbox
+
+---
+---
+# create role that allows creating sa tokens for 'sandbox'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-tokens-for-cluster-issuers
+  namespace: jetstack-secure
+rules:
+- apiGroups: [""]
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+  resourceNames: [ "vtpp-vei-access-token" ]
+---
+# link the controller's service account to the 'create-tokens-for-vault-sa' role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: create-tokens-for-sandbox-issuers-rolebinding
+  namespace: jetstack-secure
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: create-tokens-for-cluster-issuers
+subjects:
+- kind: ServiceAccount
+  name: venafi-enhanced-issuer-controller-manager
+  namespace: jetstack-secure
