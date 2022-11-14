@@ -55,9 +55,11 @@ install-cert-manager-csi-driver-spiffe: _create_sourceCA
      > artifacts/csi-driver-spiffe/values.yaml
 
 	@helm upgrade \
-		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe jetstack/cert-manager-csi-driver-spiffe \
+		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe \
 		--namespace jetstack-secure \
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-csi-driver-spiffe \
         --version ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION}
+		--wait
 
 _create-config-map-with-PEM-to-access-TPP:
 	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/csi-driver-spiffe/venafi/venafi-server-ca.pem

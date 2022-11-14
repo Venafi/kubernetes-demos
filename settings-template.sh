@@ -50,9 +50,9 @@ export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
 
 #Component versions
 # cert-manager helm chart version
-export JS_CERT_MANAGER_VERSION :=v1.9.1
+export JS_CERT_MANAGER_VERSION :=v1.10.0
 # cert-manager-trust helm chart version
-export JS_CERT_MANAGER_TRUST_VERSION=v0.2.0
+export JS_CERT_MANAGER_TRUST_VERSION=v0.3.0
 # cert-discovery-venafi helm chart version
 export JS_VENAFI_CERT_SYNC_VERSION :=v0.2.0
 # approver policy helm chart version

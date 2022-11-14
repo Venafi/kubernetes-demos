@@ -45,9 +45,11 @@ install-cert-manager-csi-driver:
 	@echo 'Installing Jetstack cert-manager CSI Driver.....'
 
 	@helm upgrade \
-		--install -f csi-driver/values.yaml cert-manager-csi-driver jetstack/cert-manager-csi-driver \
+		--install -f csi-driver/values.yaml cert-manager-csi-driver \
 		--namespace jetstack-secure \
-		 --version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-csi-driver \
+		--version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
+		--wait
 
 create-policy-and-rbac:
 	@cp templates/cert-policy-and-rbac-self-signed.yaml artifacts/csi-driver/selfsigned/cert-policy-and-rbac-self-signed.yaml

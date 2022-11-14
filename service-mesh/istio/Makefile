@@ -58,8 +58,9 @@ install-jetstack-istio-csr:
 	@echo 'Installing Jetstack ISTIO CSR Agent.....'
 
 	@helm upgrade \
-	    --install -f artifacts/istio-csr/values.yaml cert-manager-istio-csr jetstack/cert-manager-istio-csr \
+	    --install -f artifacts/istio-csr/values.yaml cert-manager-istio-csr \
   		--namespace jetstack-secure \
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-istio-csr \
   		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION}
 
 #### Venafi TPP Specific Targets #######

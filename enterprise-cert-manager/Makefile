@@ -40,15 +40,18 @@ _helm_init:
 
 install-cert-manager: _helm_init
 	@helm upgrade \
-	    --install -f cert-manager/approver-enabled.yaml cert-manager jetstack/cert-manager \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION}
+		--install -f cert-manager/approver-enabled.yaml cert-manager \
+		--namespace jetstack-secure \
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager \
+	    --version ${JS_CERT_MANAGER_VERSION} \
+		--wait
 
 install-cert-manager-without-auto-approver: _helm_init
 	@helm upgrade \
-	    --install -f cert-manager/approver-disabled.yaml cert-manager jetstack/cert-manager \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_VERSION} \
+		--install -f cert-manager/approver-disabled.yaml cert-manager \
+		--namespace jetstack-secure \
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager \
+	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 
 create-cert:
