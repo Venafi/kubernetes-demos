@@ -45,7 +45,6 @@ _create-config-map-with-PEM-to-access-TPP:
 install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-access-TPP
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
-	@helm repo add jetstack-secure-enterprise gs://jetstack-secure-enterprise-charts --force-update
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Venafi Enhanced Issuer Module.....'
 	
