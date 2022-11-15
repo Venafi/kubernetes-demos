@@ -59,29 +59,38 @@ install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-a
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 
-create-vtpp-venafi-issuer-secret: 
+create-rbac-for-issuers:
+	@kubectl apply -f templates/venafi-enhanced-issuer-rbac.yaml
+
+create-vtpp-venafi-issuer-and-secret: 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-secret-venafi-issuer.yaml \
      > artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
 	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
 
-create-venafi-issuers:
-	@kubectl apply -f templates/vtpp-secret-venafi-issuer.yaml
+create-cert-policy:
+	@kubectl apply -f templates/cert-policy-and-rbac.yaml
 
-create-rbac-for-issuers:
-	@kubectl apply -f templates/venafi-enhanced-issuer-rbac.yaml
+create-sample-certs:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/sample-cert.yaml \
+     > artifacts/venafi-enhanced/config/sample-cert.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/sample-cert.yaml
 
-remove-venafi-issuers:
+
+remove-vtpp-venafi-issuer-and-secret:
 	@kubectl delete -f templates/vtpp-secret-venafi-issuer.yaml || true
 
 remove-rbac-for-issuers:
-	@kubectl delete -f templates/venafi-enhanced-issuer-rbac.yaml
+	@kubectl delete -f templates/venafi-enhanced-issuer-rbac.yaml || true
+
+remove-sample-certs:
+	@kubectl delete -f artifacts/venafi-enhanced/config/sample-cert.yaml || true
 
 remove-jetstack-venafi-enhanced-issuer-module:
 	@echo 'Uninstalling Venafi Enhanced Issuer Module.....'
 	@helm uninstall -n jetstack-secure js || true
 
-clean: remove-venafi-issuer-secret remove-jetstack-venafi-enhanced-issuer-module
-	@kubectl delete secret vtpp-access-token -n jetstack-secure || true
-	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure || true
-	
+remove-cert-policy:
+	@kubectl delete -f templates/cert-policy-and-rbac.yaml
+
+clean: remove-rbac-for-issuers remove-vtpp-venafi-issuer-and-secret remove-cert-policy remove-sample-certs remove-jetstack-venafi-enhanced-issuer-module
 

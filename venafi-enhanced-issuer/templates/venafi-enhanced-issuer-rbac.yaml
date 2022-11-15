@@ -3,58 +3,57 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: create-tokens-for-sandbox-issuers
+  name: read-access-secret-role-venafi-issuer
   namespace: sandbox
 rules:
 - apiGroups: [""]
   resources:
-  - serviceaccounts/token
+  - secrets
   verbs:
-  - create
+  - get
   resourceNames: [ "vtpp-vei-access-token" ]
 ---
 # link the controller's service account to the 'create-tokens-for-vault-sa' role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: create-tokens-for-sandbox-issuers-rolebinding
+  name: read-access-secret-role-venafi-issuer
   namespace: sandbox
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: create-tokens-for-sandbox-issuers
+  name: read-access-secret-role-venafi-issuer
 subjects:
 - kind: ServiceAccount
-  name: venafi-enhanced-issuer-controller-manager
-  namespace: sandbox
+  name: js-venafi-enhanced-issuer-controller-manager
+  namespace: jetstack-secure
 
----
 ---
 # create role that allows creating sa tokens for 'sandbox'
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: create-tokens-for-cluster-issuers
+  name: read-userpass-secret-role-venafi-issuer
   namespace: jetstack-secure
 rules:
 - apiGroups: [""]
   resources:
-  - serviceaccounts/token
+  - secrets
   verbs:
-  - create
-  resourceNames: [ "vtpp-vei-access-token" ]
+  - get
+  resourceNames: ["vtpp-vei-user-pass"]
 ---
 # link the controller's service account to the 'create-tokens-for-vault-sa' role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: create-tokens-for-sandbox-issuers-rolebinding
+  name: read-userpass-secret-role-venafi-issuer
   namespace: jetstack-secure
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: create-tokens-for-cluster-issuers
+  name: read-userpass-secret-role-venafi-issuer
 subjects:
 - kind: ServiceAccount
-  name: venafi-enhanced-issuer-controller-manager
+  name: js-venafi-enhanced-issuer-controller-manager
   namespace: jetstack-secure
