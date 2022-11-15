@@ -50,13 +50,6 @@ install-cert-manager-trust: _helm_init
 	@echo 'Installing Jetstack cert-manager trust operator.....'
 	@cp templates/values.yaml artifacts/trust/values.yaml 
  	
-	
-#	@helm upgrade \
-	    --install -f artifacts/trust/values.yaml cert-manager-trust jetstack/cert-manager-trust \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_TRUST_VERSION} \
-		--wait
-
 	@helm upgrade \
 		--install -f templates/values.yaml trust-manager \
 		--namespace jetstack-secure \
@@ -65,11 +58,10 @@ install-cert-manager-trust: _helm_init
 		--wait
 
 _remove-policy-and-rbac:
-	@kubectl delete -f config/cert-policy-rbac.yaml || true
 	@kubectl delete -f config/cert-policy.yaml || true
 
 remove-cert-manager-trust:
-	@helm uninstall -n jetstack-secure cert-manager-trust || true
+	@helm uninstall -n jetstack-secure trust-manager || true
 
 clean: _remove-policy-and-rbac remove-cert-manager-trust
 
