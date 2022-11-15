@@ -1,5 +1,4 @@
 artifacts/
-
 *.tmp
 *.log
 settings.sh
@@ -17,4 +16,6 @@ js-enterprise-credentials.json
 amplisight-com-chain.pem
 venafi-root-ca.pem
 js-enterprise-credentials.json
+venafi-msca-ica-root.pem
 .DS_Store
+jetstack-operator

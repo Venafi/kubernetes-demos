@@ -9,11 +9,42 @@ spec:
     dnsNames:
       values: ["*"]
     usages:
-      - "signing"
-      - "digital signature"
-      - "server auth"
+      - signing
+      - digital signature
+      - server auth
+      - client auth
+      - key encipherment
   selector:
     issuerRef:
-      name: "cert-manager-trust"
-      kind: "*"
-      group: "*"
+      name: "trust-manager"
+      kind: "Issuer"
+      group: "cert-manager.io"
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: trust-manager-issuer
+  namespace: jetstack-secure
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["policy-for-cert-manager-trust"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: trust-manager-issuer
+  namespace: jetstack-secure
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: trust-manager-issuer
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: jetstack-secure

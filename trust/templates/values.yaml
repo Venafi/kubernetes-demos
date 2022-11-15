@@ -2,15 +2,17 @@
 replicaCount: 1
 
 # -- For Private docker registries, authentication is needed. Registry secrets are applied to the service account
-imagePullSecrets: []
+imagePullSecrets:
+  - name: venafi-jetstack-enterprise-key
 
 image:
   # -- Target image repository.
-  repository: quay.io/jetstack/cert-manager-trust
+  #repository: quay.io/jetstack/cert-manager-trust
+  repository: eu.gcr.io/jetstack-secure-enterprise/trust-manager
   # -- Target image version tag.
-  #tag: v0.2.0
+  tag: v0.3.0
   # -- Kubernetes imagePullPolicy on Deployment.
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 app:
   # -- Verbosity of trust logging; takes a value from 1-5, with higher being more verbose

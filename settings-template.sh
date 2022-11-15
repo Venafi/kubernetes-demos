@@ -52,7 +52,7 @@ export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
 # cert-manager helm chart version
 export JS_CERT_MANAGER_VERSION :=v1.10.0
 # cert-manager-trust helm chart version
-export JS_CERT_MANAGER_TRUST_VERSION=v0.2.0
+export JS_CERT_MANAGER_TRUST_VERSION=v0.3.0
 # cert-discovery-venafi helm chart version
 export JS_VENAFI_CERT_SYNC_VERSION :=v0.2.0
 # approver policy helm chart version
@@ -70,6 +70,9 @@ export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
 export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.6
+# Jck secure operator helm chart cersion
+export JS_OPERATOR_VERSION :=v0.0.1-alpha.18
+
 
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev

@@ -38,7 +38,6 @@ configure-namespace:
 		--save-config=true -o yaml | kubectl apply -f -
 
 _create-policy-and-rbac:
-	@kubectl apply -f config/cert-policy-rbac.yaml
 	@kubectl apply -f config/cert-policy.yaml
 
 
@@ -50,19 +49,19 @@ _helm_init:
 install-cert-manager-trust: _helm_init
 	@echo 'Installing Jetstack cert-manager trust operator.....'
 	@cp templates/values.yaml artifacts/trust/values.yaml 
-
+ 	
 	@helm upgrade \
-	    --install -f artifacts/trust/values.yaml cert-manager-trust jetstack/cert-manager-trust \
-  		--namespace jetstack-secure \
-  		--version ${JS_CERT_MANAGER_TRUST_VERSION} \
+		--install -f templates/values.yaml trust-manager \
+		--namespace jetstack-secure \
+		oci://eu.gcr.io/jetstack-secure-enterprise/charts/trust-manager \
+	    --version ${JS_CERT_MANAGER_TRUST_VERSION} \
 		--wait
 
 _remove-policy-and-rbac:
-	@kubectl delete -f config/cert-policy-rbac.yaml || true
 	@kubectl delete -f config/cert-policy.yaml || true
 
 remove-cert-manager-trust:
-	@helm uninstall -n jetstack-secure cert-manager-trust || true
+	@helm uninstall -n jetstack-secure trust-manager || true
 
 clean: _remove-policy-and-rbac remove-cert-manager-trust
 
