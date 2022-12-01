@@ -18,6 +18,12 @@ SHELL := /bin/sh
 
 init: create-namespaces configure-namespace
 
+init: create-namespaces configure-namespace
+
+update-openshift-scc:
+	@oc create -f cert-manager/restricted-seccomp.yaml
+	@oc adm policy add-scc-to-user jetstack-privileged -z default
+
 create-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
 

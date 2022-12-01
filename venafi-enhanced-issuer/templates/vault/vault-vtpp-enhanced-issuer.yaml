@@ -1,0 +1,53 @@
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: application-team-1
+spec:
+  tpp:
+    policyDN: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+    url: ${JS_VENAFI_TPP_URL}
+    accessToken:
+      - serviceAccountToken:
+          name: application-team-1
+          audiences: ["vault.vault.svc.cluster.local"]
+      - hashicorpVaultOAuth:
+          authInputType: OIDC
+          role: application-team-1
+          authPath: /v1/auth/jetstack-secure/login
+          url: http://vault.vault.svc.cluster.local:8200
+      - hashicorpVaultSecret:
+          secretPath: /v1/secret/data/application-team-1/tpp-username-password
+          fields: ["username", "password"]
+          url: http://vault.vault.svc.cluster.local:8200
+      - tppOAuth:
+          authInputType: UsernamePassword
+          clientId: "cert-manager.io"
+          url: ${JS_VENAFI_TPP_URL}
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiIssuer
+metadata:
+  name: application-team-2
+  namespace: sandbox
+spec:
+  tpp:
+    policyDN: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+    url: ${JS_VENAFI_TPP_URL}
+    accessToken:
+      - serviceAccountToken:
+          name: application-team-2
+          audiences: ["vault.vault.svc.cluster.local"]
+      - hashicorpVaultOAuth:
+          authInputType: OIDC
+          role: application-team-2
+          authPath: /v1/auth/jetstack-secure/login
+          url: http://vault.vault.svc.cluster.local:8200
+      - hashicorpVaultSecret:
+          secretPath: /v1/secret/data/application-team-2/tpp-username-password
+          fields: ["username", "password"]
+          url: http://vault.vault.svc.cluster.local:8200
+      - tppOAuth:
+          authInputType: UsernamePassword
+          clientId: "cert-manager.io"
+          url: ${JS_VENAFI_TPP_URL}
+  

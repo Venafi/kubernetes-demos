@@ -1,0 +1,39 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+allowHostPorts: true
+allowPrivilegedContainer: true
+allowHostPID: true
+allowHostNetwork: true
+allowPrivilegeEscalation: flase
+allowHostDirVolumePlugin: true
+metadata:
+  name: jetstack-privileged
+allowedCapabilities:
+  - '*'
+allowedUnsafeSysctls:
+  - '*'
+runAsUser:
+  type: RunAsAny
+seccompProfiles:    
+- runtime/default
+users:
+  - 'system:admin'
+  - 'system:serviceaccount:openshift-infra:build-controller'
+seccompProfiles:
+  - '*'
+allowHostIPC: true
+requiredDropCapabilities:
+- ALL
+seLinuxContext:
+  type: RunAsAny
+readOnlyRootFilesystem: false
+fsGroup:
+  type: RunAsAny
+groups:
+  - 'system:cluster-admins'
+  - 'system:nodes'
+  - 'system:masters'
+supplementalGroups:
+  type: RunAsAny
+volumes:
+  - '*'

@@ -23,6 +23,9 @@ _remove-cluster:
 gcp-full-cleanup: clean-up-terraform _remove-cluster
 	@$(MAKE) -C scripts remove-google-cas --warn-undefined-variables
 
+update-openshift-scc:
+	@$(MAKE) -C enterprise-cert-manager  update-openshift-scc --warn-undefined-variables
+
 cluster-addons: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
 
 # this is called from service-mesh/istio Makefile if you choose Vault as the signer for mesh workloads.
