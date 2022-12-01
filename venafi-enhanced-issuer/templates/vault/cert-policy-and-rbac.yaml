@@ -1,0 +1,98 @@
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-venafi-enhanced-issuer
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  selector:
+    issuerRef:
+      name: "application-team-2"
+      kind: "VenafiIssuer"
+      group: "jetstack.io"
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-venafi-enhanced-cluster-issuer
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  selector:
+    issuerRef:
+      name: "application-team-1"
+      kind: "VenafiClusterIssuer"
+      group: "jetstack.io"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vtpp-enhanced-issuers
+  namespace: sandbox
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-venafi-enhanced-issuer"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vtpp-enhanced-issuers
+  namespace: sandbox
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vtpp-enhanced-issuers
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: jetstack-secure
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vtpp-enhanced-cluster-issuers
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-venafi-enhanced-cluster-issuer"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vtpp-enhanced-cluster-issuers
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vtpp-enhanced-cluster-issuers
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: jetstack-secure

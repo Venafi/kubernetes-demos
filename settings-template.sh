@@ -6,6 +6,8 @@ export JS_ENTERPRISE_CREDENTIALS_FILE :=~/GitHub/demos/js-enterprise-credentials
 
 # Venafi TPP access token. You must have the Venafi platform up and running
 export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
+export JS_VENAFI_TPP_REFRESH_TOKEN :=REPLACE-ME
+export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
 
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
@@ -69,7 +71,7 @@ export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
-export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.6
+export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.7
 # Jck secure operator helm chart cersion
 export JS_OPERATOR_VERSION :=v0.0.1-alpha.18
 
@@ -107,4 +109,5 @@ export JS_AWS_PCA_ACCESS_KEY :=REPLACE_ME
 export JS_AWS_PCA_SECRET_ACCESS_KEY :=REPLACE_ME
 # arn:aws:acm-pca:us-east-2:1234567890000:certificate-authority/eeddd208-aa3b-bb4b-cc2c-zzzyyyxxxwwww
 export JS_AWS_PCA_ARN :=REPLACE_ME
+export JS_KUBERNETES_HOST := REPLACE_ME
 

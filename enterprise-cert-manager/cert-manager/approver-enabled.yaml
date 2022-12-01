@@ -36,4 +36,16 @@ startupapicheck:
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl-fips
     repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
     pullPolicy: IfNotPresent
-    
+
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: false
+    prometheusInstance: default
+    targetPort: 9402
+    path: /metrics
+    interval: 60s
+    scrapeTimeout: 30s
+    labels: {}
+    annotations: {}
+    honorLabels: false

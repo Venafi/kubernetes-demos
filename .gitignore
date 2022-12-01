@@ -1,4 +1,5 @@
 artifacts/
+agent/
 *.tmp
 *.log
 settings.sh
