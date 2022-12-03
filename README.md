@@ -19,6 +19,7 @@ The scripts are written with the assumption that you will be setting up a GKE cl
 ## Configuring your Kubernetes cluster
 
 - Skip this step if you are creating a brand new cluster with `fresh-start`
+- If you are on an openshift environemnt run `make update-openshift-scc`
 - If you are bringing your own cluster then simply run `make cluster-addons` 
 - Jetstack cert-manager along with the policy approver addon will be added to the cluster
 
