@@ -112,7 +112,6 @@ configure-vault:
      policies=application-team-2-readonly \
      ttl=5m
 
-
 configure-vault-policy:
 	@kubectl exec -i -n vault pods/vault-0 -- \
      vault policy write application-team-1-readonly - < templates/vault/vault-policy-team-1.hcl
@@ -126,6 +125,8 @@ mount-tpp-secret:
 	
 	@kubectl exec -n vault pods/vault-0 -- \
      vault kv put -mount=secret application-team-2/tpp-username-password username=${JS_VENAFI_TPP_USERNAME} password=${JS_VENAFI_TPP_PASSWORD}
+
+	 make configure-vault configure-vault-policy mount-tpp-secret
 
 create-service-account-for-vault:
 	@kubectl apply -f templates/vault/vault-service-account.yaml
