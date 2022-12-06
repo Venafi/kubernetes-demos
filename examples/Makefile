@@ -57,7 +57,7 @@ create-openshift-ingress-resource:
 
 install-cert-manager-openshift-route:
 	@kubectl apply -f namespaces/cert-manager.yaml
-	@kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+	@oc apply -f https://github.com/cert-manager/openshift-routes/releases/latest/download/cert-manager-openshift-routes.yaml -n cert-manager
 
 create-openshift-route-policy:
 	@kubectl apply -f openshift/routes/cert-policy-for-openshift-route.yaml
