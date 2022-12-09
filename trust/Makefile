@@ -32,7 +32,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -49,11 +49,13 @@ _helm_init:
 install-cert-manager-trust: _helm_init
 	@echo 'Installing Jetstack cert-manager trust operator.....'
 	@cp templates/values.yaml artifacts/trust/values.yaml 
- 	
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
+     > artifacts/trust/values.yaml
+
 	@helm upgrade \
-		--install -f templates/values.yaml trust-manager \
+		--install -f artifacts/trust/values.yaml trust-manager \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/trust-manager \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/trust-manager \
 	    --version ${JS_CERT_MANAGER_TRUST_VERSION} \
 		--wait
 
@@ -75,4 +77,3 @@ bar:
 	@kubectl delete -f config/cert-policy-rbac.yaml
 	@kubectl delete -f config/cert-policy.yaml
 	@kubectl delete -f config/tmp.yaml 
-

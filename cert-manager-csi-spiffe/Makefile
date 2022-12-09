@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -57,7 +57,7 @@ install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@helm upgrade \
 		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-csi-driver-spiffe \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager-csi-driver-spiffe \
         --version ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION}
 		--wait
 

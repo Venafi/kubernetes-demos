@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -54,7 +54,7 @@ install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-a
 	@helm upgrade \
 		--install -f artifacts/venafi-enhanced/config/values.yaml js \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/venafi-enhanced-issuer \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/venafi-enhanced-issuer \
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 

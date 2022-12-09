@@ -18,7 +18,9 @@ SHELL := /bin/sh
 
 init: create-namespaces configure-namespace
 
-init: create-namespaces configure-namespace
+mkdirs:
+	@rm -rf artifacts
+	@mkdir -p artifacts/cert-manager
 
 update-openshift-scc:
 	@oc create -f cert-manager/restricted-seccomp.yaml
@@ -27,13 +29,14 @@ update-openshift-scc:
 create-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
 
+
 configure-namespace:
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -44,19 +47,23 @@ _helm_init:
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager.....'
 
-install-cert-manager: _helm_init
+install-cert-manager: mkdirs _helm_init
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-manager/approver-enabled.yaml \
+     > artifacts/cert-manager/approver-enabled.yaml
 	@helm upgrade \
-		--install -f cert-manager/approver-enabled.yaml cert-manager \
+		--install -f artifacts/cert-manager/approver-enabled.yaml cert-manager \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager \
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 
-install-cert-manager-without-auto-approver: _helm_init
+install-cert-manager-without-auto-approver: mkdirs _helm_init
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-manager/approver-disabled.yaml \
+     > artifacts/cert-manager/approver-disabled.yaml
 	@helm upgrade \
-		--install -f cert-manager/approver-disabled.yaml cert-manager \
+		--install -f artifacts/cert-manager/approver-disabled.yaml cert-manager \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager \
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 

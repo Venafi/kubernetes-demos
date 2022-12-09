@@ -1,8 +1,8 @@
 image:
   # -- Target image repository.
-  repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-csi-driver
+  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-csi-driver
   # -- Target image version tag.
-  #tag: v0.4.0
+  tag: v0.4.0
   # -- Kubernetes imagePullPolicy on csi-driver.
   pullPolicy: IfNotPresent
 
@@ -11,17 +11,17 @@ imagePullSecrets:
 
 nodeDriverRegistrarImage:
   # -- Target image repository.
-  repository: k8s.gcr.io/sig-storage/csi-node-driver-registrar
+  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/csi-node-driver-registrar
   # -- Target image version tag.
-  tag: v2.5.0
+  tag: v2.6.2
   # -- Kubernetes imagePullPolicy on node-driver.
   pullPolicy: IfNotPresent
 
 livenessProbeImage:
   # -- Target image repository.
-  repository: k8s.gcr.io/sig-storage/livenessprobe
+  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/livenessprobe
   # -- Target image version tag.
-  tag: v2.6.0
+  tag: v2.8.0
   # -- Kubernetes imagePullPolicy on liveness probe.
   pullPolicy: IfNotPresent
 

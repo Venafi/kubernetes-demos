@@ -1,4 +1,5 @@
-export JS_ENTERPRISE_CREDENTIALS_FILE :=~/GitHub/demos/js-enterprise-credentials.json
+export JS_ENTERPRISE_CREDENTIALS_FILE := /Users/riaz.mohamed/sandbox/gitprojects/clean/jetstackdemosv2/demos/js-enterprise-credentials-1.json
+
 
 ###########################
 # Venafi Specific Variables
@@ -62,7 +63,7 @@ export JS_POLICY_APPROVER_VERSION :=v0.4.0-0
 # Isolated issuer version
 export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2
 # cert-manager-CSI-driver version helm chart version
-export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.4.2
+export JS_CERT_MANAGER_CSI_DRIVER_VERSION :=v0.5.0
 # cert-manager-CSI-driver-SPIFFE version helm chart version
 export JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION :=v0.2.2
 # cert-manager-istio-csr version helm chart version

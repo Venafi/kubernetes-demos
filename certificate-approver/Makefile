@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -47,11 +47,14 @@ install-jetstack-approver-policy-module: create-config-map
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Approver Policy Module.....'
+
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < approver-policy/values.yaml \
+     > artifacts/cert-approver/values.yaml
 	
 	@helm upgrade \
-		--install -f approver-policy/values.yaml cert-manager-approver-policy \
+		--install -f artifacts/cert-approver/values.yaml cert-manager-approver-policy \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/approver-policy-enterprise \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/approver-policy-enterprise \
 	    --version ${JS_POLICY_APPROVER_VERSION} \
 		--wait
 

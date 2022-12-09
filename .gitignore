@@ -20,3 +20,5 @@ js-enterprise-credentials.json
 venafi-msca-ica-root.pem
 .DS_Store
 jetstack-operator
+js-dockerconfig.json
+js-enterprise-credentials-1.json
