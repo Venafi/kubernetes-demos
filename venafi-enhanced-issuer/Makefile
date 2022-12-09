@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -54,7 +54,7 @@ install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-a
 	@helm upgrade \
 		--install -f artifacts/venafi-enhanced/config/values.yaml js \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/venafi-enhanced-issuer \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/venafi-enhanced-issuer \
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 
@@ -112,7 +112,6 @@ configure-vault:
      policies=application-team-2-readonly \
      ttl=5m
 
-
 configure-vault-policy:
 	@kubectl exec -i -n vault pods/vault-0 -- \
      vault policy write application-team-1-readonly - < templates/vault/vault-policy-team-1.hcl
@@ -126,6 +125,8 @@ mount-tpp-secret:
 	
 	@kubectl exec -n vault pods/vault-0 -- \
      vault kv put -mount=secret application-team-2/tpp-username-password username=${JS_VENAFI_TPP_USERNAME} password=${JS_VENAFI_TPP_PASSWORD}
+
+	 make configure-vault configure-vault-policy mount-tpp-secret
 
 create-service-account-for-vault:
 	@kubectl apply -f templates/vault/vault-service-account.yaml

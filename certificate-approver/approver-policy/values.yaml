@@ -6,9 +6,9 @@ cert-manager-approver-policy:
   replicaCount: 1
 
   image:
-    repository: eu.gcr.io/jetstack-secure-enterprise/approver-policy-enterprise
+    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/approver-policy-enterprise
     pullPolicy: IfNotPresent
-    #tag: v0.4.0-0
+    tag: v0.4.0-0
 
   # -- Optional secrets used for pulling the approver-policy container image.
   imagePullSecrets: 

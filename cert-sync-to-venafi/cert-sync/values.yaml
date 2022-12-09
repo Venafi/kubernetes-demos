@@ -20,8 +20,9 @@ caBundle:
 image:
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi-fips
-  repository: eu.gcr.io/jetstack-secure-enterprise/cert-discovery-venafi
+  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-discovery-venafi
   pullPolicy: IfNotPresent
+  tag: v0.2.0
 
   # When no tag is given, the apiVersion is used instead.
   # tag: v0.1.0
@@ -61,5 +62,5 @@ metrics:
     type: ClusterIP
   kubeRbacProxy:
     image:
-      repository: gcr.io/kubebuilder/kube-rbac-proxy
-      tag: v0.4.1
+      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/kube-rbac-proxy
+      tag: v0.13.1

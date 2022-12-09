@@ -4,8 +4,8 @@ global:
 controllerManager:
   kubeRbacProxy:
     image:
-      repository: gcr.io/kubebuilder/kube-rbac-proxy
-      tag: v0.8.0
+      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/kube-rbac-proxy
+      tag: v0.13.1
     resources:
       limits:
         cpu: 500m
@@ -15,7 +15,7 @@ controllerManager:
         memory: 64Mi
   manager:
     image:
-      repository: eu.gcr.io/jetstack-secure-enterprise/venafi-oauth-helper
+      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/venafi-oauth-helper
       tag: v0.3.0
     resources:
       limits:

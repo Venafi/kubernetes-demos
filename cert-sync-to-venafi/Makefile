@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -46,10 +46,14 @@ install-certificate-sync-module: create-venafi-tpp-access-secret
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Sync Module.....'
-	helm upgrade \
-		--install -f cert-sync/values.yaml cert-sync-to-venafi  \
+	
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-sync/values.yaml \
+     > artifacts/cert-sync/venafi/values.yaml
+
+	@helm upgrade \
+		--install -f artifacts/cert-sync/venafi/values.yaml cert-sync-to-venafi  \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-discovery-venafi \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-discovery-venafi \
         --set url=${JS_VENAFI_TPP_URL} --set zone=${JS_VENAFI_CERT_SYNC_POLICY_FOLDER}
 
 

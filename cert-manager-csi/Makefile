@@ -33,7 +33,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -43,11 +43,13 @@ install-cert-manager-csi-driver:
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager CSI Driver.....'
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < csi-driver/values.yaml \
+     > artifacts/csi-driver/values.yaml
 
 	@helm upgrade \
-		--install -f csi-driver/values.yaml cert-manager-csi-driver \
+		--install -f artifacts/csi-driver/values.yaml cert-manager-csi-driver \
 		--namespace jetstack-secure \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-csi-driver \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager-csi-driver \
 		--version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
 		--wait
 

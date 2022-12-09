@@ -14,32 +14,37 @@ image:
   #repository: quay.io/jetstack/cert-manager-controller
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller-fips
-  repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller
+  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-controller
   pullPolicy: IfNotPresent
+  tag: v1.10.0
+
 
 webhook:  
   image:
     #repository: quay.io/jetstack/cert-manager-webhook
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook-fips
-    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook
+    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-webhook
     pullPolicy: IfNotPresent
+    tag: v1.10.0
   
 cainjector:
   image:
     #repository: quay.io/jetstack/cert-manager-cainjector
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector-fips
-    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector
+    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-cainjector
     pullPolicy: IfNotPresent
+    tag: v1.10.0
     
 startupapicheck:
   image:
     #repository: quay.io/jetstack/cert-manager-ctl
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl-fips
-    repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
+    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-ctl
     pullPolicy: IfNotPresent
+    tag: v1.10.0
 
 prometheus:
   enabled: true

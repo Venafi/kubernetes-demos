@@ -26,7 +26,7 @@ configure-namespace:
 	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
 		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='eu.gcr.io' \
+		--docker-server='${JS_CONTAINER_REGISTRY}' \
 		--docker-username='_json_key' \
 		--dry-run='client' \
 		--save-config=true -o yaml | kubectl apply -f -
@@ -36,9 +36,12 @@ install-vauth-helper-module: create-venafi-tpp-access-secret
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Sync Module.....'
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < vauth-helper/values.yaml \
+     > artifacts/values.yaml
+
 	@helm upgrade \
-		--install -f vauth-helper/values.yaml vauth \
-		oci://eu.gcr.io/jetstack-secure-enterprise/charts/venafi-oauth-helper \
+		--install -f artifacts/values.yaml vauth \
+		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/venafi-oauth-helper \
 		--wait \
 		--namespace jetstack-secure \
 		--version ${JS_VAUTH_HELPER_VERSION}
