@@ -1,5 +1,5 @@
 artifacts/
-agent/
+
 *.tmp
 *.log
 settings.sh
@@ -14,11 +14,12 @@ venafi-tpp-server-ca.crt
 venafi-tpp-server-ca.pem
 venafi-msca-ica-root.pem
 js-enterprise-credentials.json
-amplisight-com-chain.pem
 venafi-root-ca.pem
-js-enterprise-credentials.json
-venafi-msca-ica-root.pem
-.DS_Store
-jetstack-operator
 js-dockerconfig.json
 js-enterprise-credentials-1.json
+amplisight-com-chain.pem
+dummy.txt
+service-mesh/istio/muti-cluster-istio-csr
+jetstack-operator
+agent
+.DS_Store
