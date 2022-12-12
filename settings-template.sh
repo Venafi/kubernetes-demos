@@ -10,6 +10,8 @@ export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
 
+export JS_CONTAINER_REGISTRY := eu.gcr.io
+
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
 #Reference to file that contains CA bundle in PEM format. This is the certchain to tpp.mydomain.com. venafi-tpp-server-ca.pem is in .gitignore 
@@ -53,7 +55,7 @@ export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
 
 #Component versions
 # cert-manager helm chart version
-export JS_CERT_MANAGER_VERSION :=v1.10.0
+export JS_CERT_MANAGER_VERSION :=v1.10.1
 # cert-manager-trust helm chart version
 export JS_CERT_MANAGER_TRUST_VERSION=v0.3.0
 # cert-discovery-venafi helm chart version
@@ -110,5 +112,6 @@ export JS_AWS_PCA_ACCESS_KEY :=REPLACE_ME
 export JS_AWS_PCA_SECRET_ACCESS_KEY :=REPLACE_ME
 # arn:aws:acm-pca:us-east-2:1234567890000:certificate-authority/eeddd208-aa3b-bb4b-cc2c-zzzyyyxxxwwww
 export JS_AWS_PCA_ARN :=REPLACE_ME
+#kubectl cluster-info
 export JS_KUBERNETES_HOST := REPLACE_ME
 
