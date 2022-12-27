@@ -47,7 +47,7 @@ export JS_VENAFI_TPP_USERNAME := REPLACE-ME # E.g. user1
 export JS_VENAFI_TPP_PASSWORD := REPLACE-ME # E.g. userpass
 
 # Email for creating docker registry secret that holds Jetstack Secure enterprise access token
-export JS_AIRGAPPED := true
+export JS_AIRGAPPED := false
 export JS_DOCKER_REGISTRY_SECRET := venafi-jetstack-enterprise-key
 export JS_DOCKER_REGISTRY_USERNAME := REPLACE_ME
 export JS_DOCKER_REGISTRY_PASSWORD := REPLACE_ME
