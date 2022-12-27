@@ -28,15 +28,20 @@ create-namespaces:
 	@kubectl apply -f namespaces/sandbox.yaml
 
 configure-namespace:
+ifneq (${JS_AIRGAPPED},true)
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
-		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
-		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='${JS_CONTAINER_REGISTRY}' \
-		--docker-username='_json_key' \
-		--dry-run='client' \
-		--save-config=true -o yaml | kubectl apply -f -
+	@kubectl -n 'jetstack-secure' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
+			--docker-email='$(JS_DOCKER_EMAIL)' \
+			--docker-server='${JS_CONTAINER_REGISTRY}' \
+			--docker-username='_json_key' \
+			--dry-run='client' \
+			--save-config=true -o yaml | kubectl apply -f -
+else
+	@(echo "do nothing")
+endif 
+
 
 _create_sourceCA:
 	@cp ${JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE} artifacts/csi-driver-spiffe/venafi/venafi-ica-root-ca.pem
@@ -50,10 +55,8 @@ install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager CSI Driver.....'
-
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
      > artifacts/csi-driver-spiffe/values.yaml
-
 	@helm upgrade \
 		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe \
 		--namespace jetstack-secure \
@@ -107,4 +110,3 @@ remove-cert-manager-csi-driver-spiffe: remove-redis-app remove-spiffe-cluster-is
 	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver SPIFFE'
 	@helm uninstall -n jetstack-secure cert-manager-csi-driver-spiffe || true
 	@kubectl delete secret spiffe-source-ca --namespace='jetstack-secure' || true
-

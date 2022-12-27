@@ -1,16 +1,16 @@
+# -- Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
+imagePullSecrets:
+  - name: ${JS_DOCKER_REGISTRY_SECRET}
+
 image:
   # -- Target image repository.
   repository:
-    driver: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-csi-driver-spiffe
-    approver: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-csi-driver-spiffe-approver
+    driver: ${JS_CONTAINER_REGISTRY}/cert-manager-csi-driver-spiffe
+    approver: ${JS_CONTAINER_REGISTRY}/cert-manager-csi-driver-spiffe-approver
   # -- Target image version tag.
-  tag: v0.2.0
+  tag: ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_IMAGE_VERSION}
   # -- Kubernetes imagePullPolicy on DaemonSet.
   pullPolicy: IfNotPresent
-
-# -- Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
-imagePullSecrets:
-  - name: venafi-jetstack-enterprise-key
 
 app:
   # -- Verbosity of cert-manager-csi-driver logging.
@@ -70,17 +70,17 @@ app:
 
     nodeDriverRegistrarImage:
       # -- Target image repository.
-      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/csi-node-driver-registrar
+      repository: ${JS_CONTAINER_REGISTRY}/csi-node-driver-registrar
       # -- Target image version tag.
-      tag: v2.6.2
+      tag: ${JS_CSI_NODE_DRIVER_REGISTRAR_IMAGE_VERSION}
       # -- Kubernetes imagePullPolicy on node-driver.
       pullPolicy: IfNotPresent
 
     livenessProbeImage:
       # -- Target image repository.
-      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/livenessprobe
+      repository: ${JS_CONTAINER_REGISTRY}/livenessprobe
       # -- Target image version tag.
-      tag: v2.8.0
+      tag: ${JS_LIVENESSPROBE_IMAGE_VERSION}
       # -- Kubernetes imagePullPolicy on liveness probe.
       pullPolicy: IfNotPresent
 

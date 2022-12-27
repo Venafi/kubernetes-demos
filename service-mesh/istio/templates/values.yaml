@@ -3,16 +3,15 @@ replicaCount: 1
 
 image:
   # -- Target image repository.
-  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-istio-csr
+  repository: ${JS_CONTAINER_REGISTRY}/cert-manager-istio-csr
   # -- Target image version tag.
-  #tag: v0.5.0
+  tag: ${JS_CERT_MANAGER_ISTIO_CSR_IMAGE_VERSION}
   # -- Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
 # -- Optional secrets used for pulling the istio-csr container image.
 imagePullSecrets:
-  - name: venafi-jetstack-enterprise-key
-
+- name: ${JS_DOCKER_REGISTRY_SECRET}
 service:
   # -- Service type to expose istio-csr gRPC service.
   type: ClusterIP

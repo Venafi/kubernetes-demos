@@ -31,15 +31,20 @@ create-namespaces:
 
 
 configure-namespace:
+ifneq (${JS_AIRGAPPED},true)
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
-		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
-		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='${JS_CONTAINER_REGISTRY}' \
-		--docker-username='_json_key' \
-		--dry-run='client' \
-		--save-config=true -o yaml | kubectl apply -f -
+	@kubectl -n 'jetstack-secure' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
+			--docker-email='$(JS_DOCKER_EMAIL)' \
+			--docker-server='${JS_CONTAINER_REGISTRY}' \
+			--docker-username='_json_key' \
+			--dry-run='client' \
+			--save-config=true -o yaml | kubectl apply -f -
+else
+	@(echo "do nothing")
+endif 
+
 
 _helm_init:
 	@echo 'Setting up helm with the correct repos'
@@ -53,7 +58,7 @@ install-cert-manager: mkdirs _helm_init
 	@helm upgrade \
 		--install -f artifacts/cert-manager/approver-enabled.yaml cert-manager \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager \
+		oci://${JS_CONTAINER_REGISTRY}/cert-manager \
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 
@@ -63,7 +68,7 @@ install-cert-manager-without-auto-approver: mkdirs _helm_init
 	@helm upgrade \
 		--install -f artifacts/cert-manager/approver-disabled.yaml cert-manager \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager \
+		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager \
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 

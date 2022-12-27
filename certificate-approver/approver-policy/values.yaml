@@ -1,18 +1,17 @@
 # -- cert-manager-approver-policy dependency options.
 cert-manager-approver-policy:
   nameOverride: cert-manager-approver-policy
+  
+  imagePullSecrets:
+  - name: ${JS_DOCKER_REGISTRY_SECRET}
 
   # -- Number of replicas of approver-policy to run.
   replicaCount: 1
 
   image:
-    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/approver-policy-enterprise
+    repository: ${JS_CONTAINER_REGISTRY}/approver-policy-enterprise
     pullPolicy: IfNotPresent
-    tag: v0.4.0-0
-
-  # -- Optional secrets used for pulling the approver-policy container image.
-  imagePullSecrets: 
-  - name: venafi-jetstack-enterprise-key
+    tag: ${JS_APPROVER_POLICY_ENTERPRISE_IMAGE_VERSION}
 
   app:
     # -- Verbosity of approver-policy logging.
