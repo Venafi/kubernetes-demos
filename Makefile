@@ -29,7 +29,9 @@ gcp-full-cleanup: clean-up-terraform _remove-cluster
 update-openshift-scc:
 	@$(MAKE) -C enterprise-cert-manager  update-openshift-scc --warn-undefined-variables
 
-cluster-addons: helm-registry-login install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
+#cluster-addons: helm-registry-login install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
+
+cluster-addons: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
 
 # this is called from service-mesh/istio Makefile if you choose Vault as the signer for mesh workloads.
 install-vault-in-cluster: clean-up-terraform

@@ -1,11 +1,11 @@
 global:
   imagePullSecrets:
-  - name: venafi-jetstack-enterprise-key
+  - name: ${JS_DOCKER_REGISTRY_SECRET}
 controllerManager:
   kubeRbacProxy:
     image:
-      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/kube-rbac-proxy
-      tag: v0.13.0
+      repository: ${JS_CONTAINER_REGISTRY}/kube-rbac-proxy
+      tag: ${JS_KUBE_RBAC_PROXY_IMAGE_VERSION}
     resources:
       limits:
         cpu: 500m
@@ -15,7 +15,8 @@ controllerManager:
         memory: 64Mi
   manager:
     image:
-      repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/venafi-enhanced-issuer
+      repository: ${JS_CONTAINER_REGISTRY}/venafi-enhanced-issuer
+      tag: ${JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION}
     resources:
       limits:
         cpu: 500m

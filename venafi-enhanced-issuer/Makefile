@@ -28,21 +28,26 @@ create-namespaces:
 	@kubectl apply -f namespaces/sandbox.yaml
 
 configure-namespace:
+ifneq (${JS_AIRGAPPED},true)
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
-		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
-		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='${JS_CONTAINER_REGISTRY}' \
-		--docker-username='_json_key' \
-		--dry-run='client' \
-		--save-config=true -o yaml | kubectl apply -f -
+	@kubectl -n 'jetstack-secure' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
+			--docker-email='$(JS_DOCKER_EMAIL)' \
+			--docker-server='${JS_CONTAINER_REGISTRY}' \
+			--docker-username='_json_key' \
+			--dry-run='client' \
+			--save-config=true -o yaml | kubectl apply -f -
+else
+	@(echo "do nothing")
+endif 
+
 
 _create-config-map-with-PEM-to-access-TPP:
 	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/venafi-enhanced/config/venafi-server-ca.pem
 	@kubectl create configmap venafi-tpp-ca-bundle --namespace='jetstack-secure' --from-file=ca.crt=artifacts/venafi-enhanced/config/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
-install-jetstack-venafi-enhanced-issuer-module: _create-config-map-with-PEM-to-access-TPP
+install-jetstack-venafi-enhanced-issuer-module: init _create-config-map-with-PEM-to-access-TPP
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
@@ -162,7 +167,7 @@ remove-service-account-for-vault:
 	@kubectl delete -f templates/vault-service-account.yaml || true
 
 remove-vtpp-venafi-issuer-and-secret:
-	@kubectl delete -f templates/vtpp-secret-venafi-issuer.yaml || true
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml || true
 
 remove-rbac-for-issuers:
 	@kubectl delete -f templates/venafi-enhanced-issuer-rbac.yaml || true

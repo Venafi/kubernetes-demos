@@ -3,43 +3,43 @@ global:
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   ##
   imagePullSecrets:
-  - name: venafi-jetstack-enterprise-key
+  - name: ${JS_DOCKER_REGISTRY_SECRET}
 
 installCRDs: true
 image:
   #repository: quay.io/jetstack/cert-manager-controller
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller
   #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-controller-fips
-  repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-controller
+  repository: ${JS_CONTAINER_REGISTRY}/cert-manager-controller
   pullPolicy: IfNotPresent
-  tag: v1.10.0
+  tag: ${JS_CERT_MANAGER_CONTROLLER_IMAGE_VERSION}
 
 webhook:  
   image:
     #repository: quay.io/jetstack/cert-manager-webhook
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-webhook-fips
-    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-webhook
+    repository: ${JS_CONTAINER_REGISTRY}/cert-manager-webhook
     pullPolicy: IfNotPresent
-    tag: v1.10.0
+    tag: ${JS_CERT_MANAGER_WEBHOOK_IMAGE_VERSION}
   
 cainjector:
   image:
     #repository: quay.io/jetstack/cert-manager-cainjector
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-cainjector-fips
-    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-cainjector
+    repository: ${JS_CONTAINER_REGISTRY}/cert-manager-cainjector
     pullPolicy: IfNotPresent
-    tag: v1.10.0
+    tag: ${JS_CERT_MANAGER_CAINJECTOR_IMAGE_VERSION}
     
 startupapicheck:
   image:
     #repository: quay.io/jetstack/cert-manager-ctl
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl
     #repository: eu.gcr.io/jetstack-secure-enterprise/cert-manager-ctl-fips
-    repository: ${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/cert-manager-ctl
+    repository: ${JS_CONTAINER_REGISTRY}/cert-manager-ctl
     pullPolicy: IfNotPresent
-    tag: v1.10.0
+    tag: ${JS_CERT_MANAGER_CTL_IMAGE_VERSION}
 
 prometheus:
   enabled: true

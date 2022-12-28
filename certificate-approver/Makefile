@@ -28,33 +28,36 @@ create-namespaces:
 	@kubectl apply -f namespaces/sandbox.yaml
 
 configure-namespace:
+ifneq (${JS_AIRGAPPED},true)
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'jetstack-secure' create secret docker-registry venafi-jetstack-enterprise-key \
-		--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
-		--docker-email='$(JS_DOCKER_EMAIL)' \
-		--docker-server='${JS_CONTAINER_REGISTRY}' \
-		--docker-username='_json_key' \
-		--dry-run='client' \
-		--save-config=true -o yaml | kubectl apply -f -
+	@kubectl -n 'jetstack-secure' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
+			--docker-email='$(JS_DOCKER_EMAIL)' \
+			--docker-server='${JS_CONTAINER_REGISTRY}' \
+			--docker-username='_json_key' \
+			--dry-run='client' \
+			--save-config=true -o yaml | kubectl apply -f -
+else
+	@(echo "do nothing")
+endif 
+
 
 #Temporary config map required at this time. It is empty
 create-config-map:
 	@kubectl create configmap -n jetstack-secure cert-manager-approver-policy-rego --from-literal=rego= || true
 
-install-jetstack-approver-policy-module: create-config-map
+install-jetstack-approver-policy-module: init create-config-map
 	@echo 'Setting up helm with the correct repos'
 	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Approver Policy Module.....'
-
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < approver-policy/values.yaml \
      > artifacts/cert-approver/values.yaml
-	
 	@helm upgrade \
 		--install -f artifacts/cert-approver/values.yaml cert-manager-approver-policy \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/approver-policy-enterprise \
+		oci://${JS_CONTAINER_REGISTRY}/charts/approver-policy-enterprise \
 	    --version ${JS_POLICY_APPROVER_VERSION} \
 		--wait
 
