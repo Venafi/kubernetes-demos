@@ -59,7 +59,7 @@ install-jetstack-venafi-enhanced-issuer-module: init _create-config-map-with-PEM
 	@helm upgrade \
 		--install -f artifacts/venafi-enhanced/config/values.yaml js \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/venafi-enhanced-issuer \
+		oci://${JS_CONTAINER_REGISTRY}/charts/venafi-enhanced-issuer \
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
 
