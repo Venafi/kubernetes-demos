@@ -54,7 +54,7 @@ install-cert-manager-csi-driver:
 	@helm upgrade \
 		--install -f artifacts/csi-driver/values.yaml cert-manager-csi-driver \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager-csi-driver \
+		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-csi-driver \
 		--version ${JS_CERT_MANAGER_CSI_DRIVER_VERSION}
 		--wait
 

@@ -11,8 +11,9 @@ apiVersion: security.openshift.io/v1
 defaultAddCapabilities: null
 fsGroup:
   type: MustRunAs
-groups:
-- system:authenticated
+groups: []
+#- jetstack-secure:jetstack-privileged
+#- system:authenticated
 kind: SecurityContextConstraints
 metadata:
   annotations:
@@ -38,7 +39,17 @@ supplementalGroups:
   type: RunAsAny
 seccompProfiles:    
 - runtime/default
-users: []
+users: 
+- system:serviceaccount:jetstack-secure:cert-manager
+- system:serviceaccount:jetstack-secure:cert-manager-approver-policy
+- system:serviceaccount:jetstack-secure:cert-manager-cainjector
+- system:serviceaccount:jetstack-secure:cert-manager-webhook
+- system:serviceaccount:jetstack-secure:trust-manager
+- system:serviceaccount:jetstack-secure:js-venafi-enhanced-issuer-controller-manager
+- system:serviceaccount:jetstack-secure:cert-manager-csi-driver
+- system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe-approver
+- system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe
+- system:serviceaccount:jetstack-secure:cert-sync-to-venafi-cert-discovery-venafi-sa
 volumes:
 - configMap
 - downwardAPI

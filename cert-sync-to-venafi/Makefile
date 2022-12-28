@@ -58,7 +58,7 @@ install-certificate-sync-module: create-venafi-tpp-access-secret
 	@helm upgrade \
 		--install -f artifacts/cert-sync/venafi/values.yaml cert-sync-to-venafi  \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-discovery-venafi \
+		oci://${JS_CONTAINER_REGISTRY}/charts/cert-discovery-venafi \
         --set url=${JS_VENAFI_TPP_URL} --set zone=${JS_VENAFI_CERT_SYNC_POLICY_FOLDER}
 
 
