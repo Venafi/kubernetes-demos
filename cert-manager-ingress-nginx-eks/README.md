@@ -2,6 +2,8 @@
 
 What are the minimum steps required to see `cert-manager` working on Amazon EKS?
 
+[![cert-manager demo using EKS](https://img.youtube.com/vi/Hh0bU3ABJyE/0.jpg)](https://www.youtube.com/watch?v=Hh0bU3ABJyE)
+
 ## Introduction
 
 Your goal here is to enforce secure TLS communication between any browser on the internet and a single containerized workload running in EKS.
