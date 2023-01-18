@@ -10,9 +10,8 @@ export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
 
-export JS_CONTAINER_REGISTRY := eu.gcr.io/jetstack-secure-enterprise
-
 export JS_VENAFI_CLIENTID := cert-manager.io
+export JS_CONTAINER_REGISTRY := eu.gcr.io/jetstack-secure-enterprise
 
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
@@ -57,7 +56,6 @@ export JS_DOCKER_REGISTRY_URL :=REPLACE_ME
 export JS_EMAIL_ID_FOR_LE_CERT :=${JS_DOCKER_EMAIL} #for LE certs
 
 #DNS Specific variables
-
 export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME
 export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
 
@@ -131,7 +129,6 @@ export JS_ISOLATED_ISSUER_BINARY :=~/Downloads/isolated-issuer-darwin-arm64/isol
 # For namespaced issuer, change the HelmChart to define Issuer kind and also update the signer name
 export JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_ISSUER_NAME :=jetstack-spiffe-ca-issuer
 
-
 #ISTIO CSR Helm Chart Settings
 export JS_ISTIO_CSR_PRESERVE_CERT_REQUESTS :=true
 export JS_ISTIO_CSR_CERT_RENEW_BEFORE :=30m
@@ -142,7 +139,6 @@ export JS_ISTIO_CSR_CERT_PROVIDER :=cert-manager-istio-csr.jetstack-secure.svc
 export JS_GCP_PROJECT_ID :=REPLACE_ME
 export JS_GCP_ZONE :=REPLACE_ME
 export JS_GCP_REGION :=us-central1
-
 
 export JS_GCP_CAS_POOL_TIER :=devops
 export JS_GCP_CAS_POOL_NAME :=my-ca-pool
