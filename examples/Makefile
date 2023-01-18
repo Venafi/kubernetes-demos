@@ -22,7 +22,6 @@ mkdirs:
 	@mkdir -p artifacts/truststores
 
 create-namespaces:
-
 	@kubectl apply -f namespaces/sandbox.yaml
 
 install-sample-app:

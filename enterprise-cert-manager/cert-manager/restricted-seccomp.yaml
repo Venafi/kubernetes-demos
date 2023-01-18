@@ -45,11 +45,11 @@ users:
 - system:serviceaccount:jetstack-secure:cert-manager-cainjector
 - system:serviceaccount:jetstack-secure:cert-manager-webhook
 - system:serviceaccount:jetstack-secure:trust-manager
-- system:serviceaccount:jetstack-secure:js-venafi-enhanced-issuer-controller-manager
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe-approver
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe
 - system:serviceaccount:jetstack-secure:cert-sync-to-venafi-cert-discovery-venafi-sa
+- system:serviceaccount:jetstack-secure:venafi-enhanced-issuer
 volumes:
 - configMap
 - downwardAPI

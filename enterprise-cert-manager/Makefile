@@ -36,13 +36,13 @@ ifneq (${JS_AIRGAPPED},true)
 	@echo
 	@kubectl -n 'jetstack-secure' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
 			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
-			--docker-email='$(JS_DOCKER_EMAIL)' \
-			--docker-server='${JS_CONTAINER_REGISTRY}' \
+			--docker-email='$(JS_DOCKER_REGISTRY_EMAIL)' \
+			--docker-server='${JS_CONTAINER_REGISTRY_URL}' \
 			--docker-username='_json_key' \
 			--dry-run='client' \
 			--save-config=true -o yaml | kubectl apply -f -
 else
-	@(echo "do nothing")
+	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} || true
 endif 
 
 
@@ -85,6 +85,10 @@ renew-cert:
 	@cmctl -n sandbox renew test-cert
 	@cmctl -n sandbox status certificate test-cert
 	@cmctl -n sandbox inspect secret test-cert
+
+remove-openshift-scc:
+	@oc delete -f cert-manager/restricted-seccomp.yaml || true
+	@oc adm policy remove-scc-from-user jetstack-privileged -z default
 
 install: create-namespace configure-namespace install-cert-manager
 
