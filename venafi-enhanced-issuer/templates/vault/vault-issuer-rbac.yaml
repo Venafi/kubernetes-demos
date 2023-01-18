@@ -25,7 +25,7 @@ roleRef:
   name: create-tokens-for-application-team-1
 subjects:
 - kind: ServiceAccount
-  name: js-venafi-enhanced-issuer-controller-manager
+  name: venafi-connection
   namespace: jetstack-secure
 ---
 # create role that allows creating sa tokens for 'app-team-1'
@@ -54,6 +54,6 @@ roleRef:
   name: create-tokens-for-application-team-2
 subjects:
 - kind: ServiceAccount
-  name: js-venafi-enhanced-issuer-controller-manager
+  name: venafi-connection
   namespace: jetstack-secure
 ---

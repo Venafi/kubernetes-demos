@@ -48,7 +48,6 @@ _create-policy-and-rbac:
 
 _helm_init:
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	
 install-cert-manager-trust: _helm_init

@@ -4,9 +4,9 @@ metadata:
   name: venafi-route-coffee
   namespace: sample-apps
   annotations:
-    cert-manager.io/issuer-name: venafi-tpp-issuer # This is the only required annotation
-    cert-manager.io/issuer-group: cert-manager.io # Optional, defaults to cert-manager.io
-    cert-manager.io/issuer-kind: Issuer # Optional, defaults to Issuer, could be ClusterIssuer or an External Issuer
+    cert-manager.io/issuer-name: vtpp-enhanced-clusterissuer # This is the only required annotation
+    cert-manager.io/issuer-group: jetstack.io # Optional, defaults to cert-manager.io
+    cert-manager.io/issuer-kind: VenafiClusterIssuer # Optional, defaults to Issuer, could be ClusterIssuer or an External Issuer
     #cert-manager.io/duration: 1h # Optional, defaults to 90 days
     cert-manager.io/renew-before: 30m # Optional, defaults to 1/3 of total certificate duration.
     cert-manager.io/common-name: "coffee.oc.${JS_JETSTACKER_DOMAIN_NAME}" # Optional, no default.

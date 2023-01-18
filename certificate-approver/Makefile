@@ -49,7 +49,6 @@ create-config-map:
 
 install-jetstack-approver-policy-module: init create-config-map
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Approver Policy Module.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < approver-policy/values.yaml \

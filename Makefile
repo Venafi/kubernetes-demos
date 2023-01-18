@@ -33,6 +33,8 @@ update-openshift-scc:
 
 cluster-addons: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
 
+cluster-addons-all-modules: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster install-cert-sync-to-venafi-module install-cert-manager-csi-driver install-cert-manager-csi-driver-spiffe install-js-venafi-enhanced-issuer-module
+
 # this is called from service-mesh/istio Makefile if you choose Vault as the signer for mesh workloads.
 install-vault-in-cluster: clean-up-terraform
 	@echo 'Installing Vault...'

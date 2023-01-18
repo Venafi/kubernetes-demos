@@ -1,18 +1,25 @@
+# The CRDs installed by this chart are annotated with "helm.sh/resource-policy: keep", this
+# prevents them from being accidentally removed by Helm when this chart is deleted. After
+# deleting the installed chart, the user still has to manually remove the remaining CRDs.
+crds:
+  # The 'x-kubernetes-validations' annotation is not supported in Kubernetes 1.22 and below.
+  # This annotation is used by CEL, which is a feature introduced in Kubernetes 1.25 that
+  # improves how validation is performed.
+  # This option allows to force the 'x-kubernetes-validations' annotation to be excluded,
+  # even on Kubernetes 1.25+ clusters.
+  forceRemoveValidationAnnotations: false
 global:
+  kubernetesClusterDomain: cluster.local
   imagePullSecrets:
   - name: ${JS_DOCKER_REGISTRY_SECRET}
-controllerManager:
-  kubeRbacProxy:
-    image:
-      repository: ${JS_CONTAINER_REGISTRY}/kube-rbac-proxy
-      tag: ${JS_KUBE_RBAC_PROXY_IMAGE_VERSION}
-    resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 5m
-        memory: 64Mi
+  # - name: image-pull-secret
+venafiConnection:
+  # When set to false, the rendered output does not contain the
+  # VenafiConnection CRDs and RBAC. This is usefull for when the
+  # Venafi Connection resoures are already installed seperately.
+  include: true
+venafiEnhancedIssuer:
+  replicas: 1
   manager:
     image:
       repository: ${JS_CONTAINER_REGISTRY}/venafi-enhanced-issuer
@@ -31,25 +38,7 @@ controllerManager:
     trustedCaBundles:
      - configMapName: venafi-tpp-ca-bundle
        configMapKey: ca.crt
+    # - configMapName: ca-cert-tpp
+    #   configMapKey: ca.crt
     # - configMapName: ca-cert-vault
     #   configMapKey: ca.crt
-  replicas: 1
-kubernetesClusterDomain: cluster.local
-managerConfig:
-  controllerManagerConfigYaml:
-    health:
-      healthProbeBindAddress: :8081
-    leaderElection:
-      leaderElect: true
-      resourceName: f8d4bf2e.jetstack.io
-    metrics:
-      bindAddress: 127.0.0.1:8080
-    webhook:
-      port: 9443
-metricsService:
-  ports:
-    - name: https
-      port: 8443
-      protocol: TCP
-      targetPort: https
-  type: ClusterIP

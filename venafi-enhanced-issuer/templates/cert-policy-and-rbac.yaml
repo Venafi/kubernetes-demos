@@ -96,3 +96,9 @@ subjects:
 - kind: ServiceAccount
   name: cert-manager
   namespace: jetstack-secure
+
+subjects:
+# The users who should be bound to the policies defined.
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io

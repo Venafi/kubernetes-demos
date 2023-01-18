@@ -17,6 +17,6 @@ spec:
     - client auth
   commonName: javaclient.svc.cluster.local
   issuerRef:
-    name: venafi-tpp-issuer-truststore
-    kind: Issuer
-    group: cert-manager.io
+    name: "vtpp-enhanced-clusterissuer"
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"

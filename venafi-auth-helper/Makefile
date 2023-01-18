@@ -33,7 +33,6 @@ configure-namespace:
 
 install-vauth-helper-module: create-venafi-tpp-access-secret
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Certificate Sync Module.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < vauth-helper/values.yaml \

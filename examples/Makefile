@@ -23,50 +23,48 @@ mkdirs:
 
 create-namespaces:
 
-	@kubectl apply -f namespaces/sample-apps.yaml
+	@kubectl apply -f namespaces/sandbox.yaml
+
+install-sample-app:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < apps/sample-app.yaml \
+     > artifacts/ingress/sample-app.yaml
+	@kubectl apply -f artifacts/ingress/sample-app.yaml
 
 ########################################################################################################################
 # Ingress
 ########################################################################################################################
-
-install-sample-app:
-	@kubectl apply -f apps/sample-app.yaml
-
-create-venafi-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/venafi-issuer.yaml \
-     > artifacts//ingress/venafi-issuer.yaml
-	kubectl apply -f artifacts/ingress/venafi-issuer.yaml
 
 create-sample-apps-policy:
 	@kubectl apply -f ingress/cert-policy-for-sample-apps.yaml
 
 create-certificate-for-ingress:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/sample-cert.yaml \
-     > artifacts//ingress/sample-cert.yaml
+     > artifacts/ingress/sample-cert.yaml
 	@kubectl apply -f artifacts/ingress/sample-cert.yaml
 
 create-ingress-resource:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/sample-ingress.yaml \
-     > artifacts//ingress/sample-ingress.yaml
+     > artifacts/ingress/sample-ingress.yaml
 	@kubectl apply -f artifacts/ingress/sample-ingress.yaml	
 
-create-openshift-ingress-resource:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < openshift/ingress/templates/openshift-sample-ingress.yaml \
-     > artifacts//ingress/openshift-sample-ingress.yaml
-	@kubectl apply -f artifacts/ingress/openshift-sample-ingress.yaml
 
-install-cert-manager-openshift-route:
-	@kubectl apply -f namespaces/cert-manager.yaml
-	@oc apply -f https://github.com/cert-manager/openshift-routes/releases/latest/download/cert-manager-openshift-routes.yaml -n cert-manager
+################################################# OPEN SHIFT INGRESS #######################################################################
 
 create-openshift-route-policy:
 	@kubectl apply -f openshift/routes/cert-policy-for-openshift-route.yaml
 
+create-openshift-ingress-resource:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < openshift/ingress/templates/openshift-sample-ingress.yaml \
+     > artifacts/ingress/openshift-sample-ingress.yaml
+	@kubectl apply -f artifacts/ingress/openshift-sample-ingress.yaml
+
 create-openshift-route-resource:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < openshift/routes/templates/openshift-sample-route.yaml \
-     > artifacts//ingress/openshift-sample-route.yaml
+     > artifacts/ingress/openshift-sample-route.yaml
 	@kubectl apply -f artifacts/ingress/openshift-sample-route.yaml
 
+
+################################################# Clean Up#######################################################################
 rmdirs:
 	@rm -rf artifacts
 	@rm -rf truststores
@@ -77,17 +75,19 @@ delete-namespaces:
 uninstall-sample-app:
 	@kubectl delete -f apps/sample-app.yaml || true
 
-remove-venafi-issuer:
-	kubectl delete -f artifacts/ingress/venafi-issuer.yaml || true
+################################################# Clean Ingress#######################################################################
 
 remove-sample-apps-policy:
 	@kubectl delete -f ingress/cert-policy-for-sample-apps.yaml || true
 
 remove-certificate-for-ingress:
-	@kubectl delete -f artifacts/ingress/sample-cert.yaml || true
+	@kubectl delete  -f artifacts/ingress/sample-cert.yaml || true
 
 remove-ingress-resource:
 	@kubectl delete -f artifacts/ingress/sample-ingress.yaml || true
+
+################################################# Clean Route#######################################################################
+
 
 remove-openshift-ingress-resource:
 	@kubectl delete -f artifacts/ingress/openshift-sample-ingress.yaml || true
@@ -98,12 +98,11 @@ remove-openshift-route-policy:
 remove-openshift-route-resource:
 	@kubectl delete -f artifacts/ingress/openshift-sample-route.yaml || true
 
-uninstall-cert-manager-openshift-route:
-	@kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml || true
+################################################# Cleanup all#######################################################################
 
-clean-route: remove-openshift-route-resource remove-openshift-route-policy remove-venafi-issuer uninstall-sample-app uninstall-cert-manager-openshift-route
+clean-route: remove-openshift-route-resource remove-openshift-route-policy 
 
-clean-ingress: remove-openshift-ingress-resource remove-ingress-resource remove-certificate-for-ingress remove-sample-apps-policy remove-venafi-issuer uninstall-sample-app 
+clean-ingress: remove-openshift-ingress-resource remove-ingress-resource remove-certificate-for-ingress remove-sample-apps-policy 
 
 
 ########################################################################################################################
@@ -153,7 +152,7 @@ remove-truststores-issuer:
 	@kubectl delete -f artifacts/ingress/venafi-issuer.yaml || true
 
 delete-truststore-password:
-	@kubectl delete secret generic jks-password-secret -n sandbox
+	@kubectl delete secret generic jks-password-secret -n sandbox || true
 
 remove-app-for-truststores:
 	@kubectl delete -f artifacts/truststores/sample-app.yaml || true

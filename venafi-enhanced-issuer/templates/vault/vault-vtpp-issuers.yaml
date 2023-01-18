@@ -1,0 +1,19 @@
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiIssuer
+metadata:
+  name: application-team-2
+  namespace: sandbox
+spec:
+  venafiConnectionName: application-team-2
+  zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+---
+
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: application-team-1
+spec:
+  venafiConnectionName: application-team-1
+  zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+---
