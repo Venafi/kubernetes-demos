@@ -65,7 +65,7 @@ install-jetstack-istio-csr:
 	@helm upgrade \
 	    --install -f artifacts/istio-csr/values.yaml cert-manager-istio-csr \
   		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/jetstack-secure-enterprise/charts/cert-manager-istio-csr \
+		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-istio-csr \
   		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION}
 
 #### Venafi TPP Specific Targets #######
