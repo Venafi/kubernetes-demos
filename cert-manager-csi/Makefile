@@ -45,7 +45,6 @@ endif
 
 install-cert-manager-csi-driver: 
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager CSI Driver.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < csi-driver/values.yaml \

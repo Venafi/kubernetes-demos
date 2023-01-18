@@ -2,7 +2,7 @@
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
-  name: cert-policy-for-venafi-enhanced-issuer
+  name: cert-policy-for-vault-venafi-enhanced-issuer
 spec:
   allowed:
     commonName:
@@ -22,7 +22,7 @@ spec:
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
-  name: cert-policy-for-venafi-enhanced-cluster-issuer
+  name: cert-policy-for-vault-venafi-enhanced-cluster-issuer
 spec:
   allowed:
     commonName:
@@ -44,26 +44,26 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: vtpp-enhanced-issuers
+  name: vtpp-vault-enhanced-issuers
   namespace: sandbox
 rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
     verbs: ["use"]
     # Name of the CertificateRequestPolicies to be used.
-    resourceNames: ["cert-policy-for-venafi-enhanced-issuer"]
+    resourceNames: ["cert-policy-for-vault-venafi-enhanced-issuer"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: vtpp-enhanced-issuers
+  name: vtpp-vault-enhanced-issuers
   namespace: sandbox
 roleRef:
 # ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vtpp-enhanced-issuers
+  name: vtpp-vault-enhanced-issuers
 subjects:
 # The users who should be bound to the policies defined.
 - kind: ServiceAccount
@@ -73,24 +73,24 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: vtpp-enhanced-cluster-issuers
+  name: vtpp-vault-enhanced-cluster-issuers
 rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
     verbs: ["use"]
     # Name of the CertificateRequestPolicies to be used.
-    resourceNames: ["cert-policy-for-venafi-enhanced-cluster-issuer"]
+    resourceNames: ["cert-policy-for-vault-venafi-enhanced-cluster-issuer"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: vtpp-enhanced-cluster-issuers
+  name: vtpp-vault-enhanced-cluster-issuers
 roleRef:
 # ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: vtpp-enhanced-cluster-issuers
+  name: vtpp-vault-enhanced-cluster-issuers
 subjects:
 # The users who should be bound to the policies defined.
 - kind: ServiceAccount

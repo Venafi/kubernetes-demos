@@ -20,7 +20,7 @@ mkdirs:
 	@mkdir -p artifacts/venafi-enhanced/config
 
 
-################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
+################## PREP KUBERNETES CLUSTER FOR Venafi Enhanced ISSUER #################
 init: mkdirs create-namespaces configure-namespace
 
 create-namespaces:
@@ -49,7 +49,6 @@ _create-config-map-with-PEM-to-access-TPP:
 
 install-jetstack-venafi-enhanced-issuer-module: init _create-config-map-with-PEM-to-access-TPP
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Venafi Jetstack Venafi Enhanced Issuer Module.....'
 	
@@ -62,28 +61,38 @@ install-jetstack-venafi-enhanced-issuer-module: init _create-config-map-with-PEM
 		oci://${JS_CONTAINER_REGISTRY}/charts/venafi-enhanced-issuer \
 	    --version ${JS_VENAFI_ENHANCED_ISSUER_VERSION} \
 		--wait
+################## END PREP KUBERNETES CLUSTER FOR Venafi Enhanced ISSUER #################
 
-install-hashicorp-vault:
-	@echo 'Setting up helm with the correct repos'
-	@helm repo add vault https://helm.releases.hashicorp.com
-	@helm repo update
-	@echo 'Installing Hashicorp Vault'
+################## CREATE ISSUERS AND CLUSTER ISSUERS USING KUBERNETES SECRETS #################
 
-	@helm upgrade vault vault \
-		--install \
-		--create-namespace \
-		--wait \
-		--namespace vault \
-		--repo https://helm.releases.hashicorp.com \
-		--values templates/vault/vault-values.yaml
+create-rbac-for-connections:
+	@kubectl apply -f templates/vtpp-connection-rbac.yaml
 
-create-rbac-for-issuers:
-	@kubectl apply -f templates/venafi-enhanced-issuer-rbac.yaml
+create-vtpp-secret: 
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-secret.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-secret.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret.yaml
 
-create-vtpp-venafi-issuer-and-secret: 
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-secret-venafi-issuer.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml
+create-venafi-connection-acess-token:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-access-token.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml	
+
+create-venafi-connection-user-password:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-user-pass.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml
+
+create-venafi-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-issuer.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-issuer.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-issuer.yaml
+
+create-venafi-cluster-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-issuer.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
+
 
 create-cert-policy:
 	@kubectl apply -f templates/cert-policy-and-rbac.yaml
@@ -93,6 +102,8 @@ create-sample-certs:
      > artifacts/venafi-enhanced/config/sample-cert.yaml
 	@kubectl apply -f artifacts/venafi-enhanced/config/sample-cert.yaml
 
+
+################## ENHANCED ISSUER WITH VAULT #################
 
 configure-vault:
 	@kubectl exec -n vault pods/vault-0 -- \
@@ -139,11 +150,15 @@ create-service-account-for-vault:
 create-rbac-for-vault-issuers:
 	@kubectl apply -f templates/vault/vault-issuer-rbac.yaml
 
+create-vtpp-venafi-connection-with-vault: 
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/vault-vtpp-connection.yaml \
+     > artifacts/venafi-enhanced/config/vault-vtpp-connection.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vault-vtpp-connection.yaml
 
 create-vtpp-venafi-issuer-with-vault: 
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/vault-vtpp-enhanced-issuer.yaml \
-     > artifacts/venafi-enhanced/config/vault-vtpp-enhanced-issuer.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vault-vtpp-enhanced-issuer.yaml
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/vault-vtpp-issuers.yaml \
+     > artifacts/venafi-enhanced/config/vault-vtpp-issuers.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vault-vtpp-issuers.yaml
 
 
 create-cert-policy-vault:
@@ -154,36 +169,64 @@ create-sample-certs-vault:
      > artifacts/venafi-enhanced/config/sample-cert-vault.yaml
 	@kubectl apply -f artifacts/venafi-enhanced/config/sample-cert-vault.yaml
 
-remove-sample-certs-vault:
-	@kubectl delete -f artifacts/venafi-enhanced/config/sample-cert-vault.yaml || true
 
-remove-vtpp-venafi-issuer-with-vault: 
-	@kubectl delete -f artifacts/venafi-enhanced/config/vault-vtpp-enhanced-issuer.yaml || true
+################## Remove Enhanced Issuer and Connections using Secrets#################
 
-remove-rbac-for-vault-issuers:
-	@kubectl delete -f templates/vault-issuer-rbac.yaml || true
 
-remove-service-account-for-vault:
-	@kubectl delete -f templates/vault-service-account.yaml || true
+remove-rbac-for-connections:
+	@kubectl delete -f templates/vtpp-connection-rbac.yaml || true
 
-remove-vtpp-venafi-issuer-and-secret:
-	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-secret-venafi-issuer.yaml || true
+remove-vtpp-secret: 
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-secret.yaml || true
 
-remove-rbac-for-issuers:
-	@kubectl delete -f templates/venafi-enhanced-issuer-rbac.yaml || true
+remove-venafi-connection-acess-token:
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml || true	
+
+remove-venafi-connection-user-password:
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml || true
+
+remove-venafi-issuer:
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-issuer.yaml || true
+
+remove-venafi-cluster-issuer:
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml || true 
+
 
 remove-sample-certs:
 	@kubectl delete -f artifacts/venafi-enhanced/config/sample-cert.yaml || true
+
+remove-cert-policy:
+	@kubectl delete -f templates/cert-policy-and-rbac.yaml || true
+
+################## Remove Enhanced Issuer and Connections using Vault#################
+
+
+remove-service-account-for-vault:
+	@kubectl delete -f templates/vault/vault-service-account.yaml || true
+
+remove-rbac-for-vault-issuers:
+	@kubectl delete -f templates/vault/vault-issuer-rbac.yaml || true
+
+remove-vtpp-venafi-connection-with-vault: 
+	@kubectl delete -f artifacts/venafi-enhanced/config/vault-vtpp-connection.yaml || true
+
+remove-vtpp-venafi-issuer-with-vault: 
+	@kubectl delete -f artifacts/venafi-enhanced/config/vault-vtpp-issuers.yaml || true
+
+remove-cert-policy-vault:
+	@kubectl delete -f templates/vault/cert-policy-and-rbac.yaml || true
+
+remove-sample-certs-vault:
+	@kubectl delete -f artifacts/venafi-enhanced/config/sample-cert-vault.yaml || true
+
+################## Common #################
 
 remove-jetstack-venafi-enhanced-issuer-module:
 	@echo 'Uninstalling Venafi Enhanced Issuer Module.....'
 	@helm uninstall -n jetstack-secure js || true
 
-remove-cert-policy:
-	@kubectl delete -f templates/cert-policy-and-rbac.yaml
+################## Clean Up #################
 
-remove-hashicorp-vault: 
-	@helm uninstall -n vault vault || true
+cleanup-enhanced-issuer: remove-cert-policy remove-sample-certs remove-venafi-cluster-issuer remove-venafi-issuer remove-venafi-connection-user-password remove-venafi-connection-acess-token remove-vtpp-secret remove-rbac-for-connections
 
-clean: remove-rbac-for-issuers remove-vtpp-venafi-issuer-and-secret remove-cert-policy remove-sample-certs remove-jetstack-venafi-enhanced-issuer-module
-
+cleanup-enhanced-issuer-vault: remove-sample-certs-vault remove-cert-policy-vault remove-vtpp-venafi-issuer-with-vault remove-vtpp-venafi-connection-with-vault remove-rbac-for-vault-issuers remove-service-account-for-vault

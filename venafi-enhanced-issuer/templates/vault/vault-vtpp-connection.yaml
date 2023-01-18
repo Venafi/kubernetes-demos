@@ -1,10 +1,10 @@
 apiVersion: jetstack.io/v1alpha1
-kind: VenafiClusterIssuer
+kind: VenafiConnection
 metadata:
   name: application-team-1
+  namespace: jetstack-secure
 spec:
   tpp:
-    policyDN: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
     url: ${JS_VENAFI_TPP_URL}
     accessToken:
       - serviceAccountToken:
@@ -21,17 +21,16 @@ spec:
           url: http://vault.vault.svc.cluster.local:8200
       - tppOAuth:
           authInputType: UsernamePassword
-          clientId: "cert-manager.io"
+          clientId: ${JS_VENAFI_CLIENTID}
           url: ${JS_VENAFI_TPP_URL}
 ---
 apiVersion: jetstack.io/v1alpha1
-kind: VenafiIssuer
+kind: VenafiConnection
 metadata:
   name: application-team-2
   namespace: sandbox
 spec:
   tpp:
-    policyDN: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
     url: ${JS_VENAFI_TPP_URL}
     accessToken:
       - serviceAccountToken:
@@ -48,6 +47,6 @@ spec:
           url: http://vault.vault.svc.cluster.local:8200
       - tppOAuth:
           authInputType: UsernamePassword
-          clientId: "cert-manager.io"
+          clientId: ${JS_VENAFI_CLIENTID}
           url: ${JS_VENAFI_TPP_URL}
   

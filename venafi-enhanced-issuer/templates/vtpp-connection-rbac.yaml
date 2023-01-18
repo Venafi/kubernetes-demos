@@ -3,7 +3,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: read-access-secret-role-venafi-issuer
+  name: read-access-secret-role-venafi-connection
   namespace: sandbox
 rules:
 - apiGroups: [""]
@@ -17,15 +17,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: read-access-secret-role-venafi-issuer
+  name: read-access-secret-role-venafi-connection
   namespace: sandbox
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: read-access-secret-role-venafi-issuer
+  name: read-access-secret-role-venafi-connection
 subjects:
 - kind: ServiceAccount
-  name: js-venafi-enhanced-issuer-controller-manager
+  name: venafi-connection
   namespace: jetstack-secure
 
 ---
@@ -33,7 +33,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: read-userpass-secret-role-venafi-issuer
+  name: read-userpass-secret-role-venafi-connection
   namespace: jetstack-secure
 rules:
 - apiGroups: [""]
@@ -47,13 +47,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: read-userpass-secret-role-venafi-issuer
+  name: read-userpass-secret-role-venafi-connection
   namespace: jetstack-secure
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: read-userpass-secret-role-venafi-issuer
+  name: read-userpass-secret-role-venafi-connection
 subjects:
 - kind: ServiceAccount
-  name: js-venafi-enhanced-issuer-controller-manager
+  name: venafi-connection
   namespace: jetstack-secure

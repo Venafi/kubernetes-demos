@@ -12,13 +12,14 @@ export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
 
 export JS_CONTAINER_REGISTRY := eu.gcr.io/jetstack-secure-enterprise
 
+export JS_VENAFI_CLIENTID := cert-manager.io
 
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
 
 #Reference to file that contains CA bundle in PEM format. This is the certchain to tpp.mydomain.com. venafi-tpp-server-ca.pem is in .gitignore 
 export JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE :=~/GitHub/demos/venafi-tpp-server-ca.pem
 #Base64 encoding of the above
-export JS_VENAFI_TPP_BASE64_ENCODED_CACERT :=REPLACE_ME
+export JS_VENAFI_TPP_BASE64_ENCODED_CACERT :=REPLACE-ME
 export JS_VENAFI_TPP_ZONE_PUBLIC_CA1 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public1
 export JS_VENAFI_TPP_ZONE_PUBLIC_CA2 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public2
 
@@ -51,7 +52,8 @@ export JS_AIRGAPPED := false
 export JS_DOCKER_REGISTRY_SECRET := venafi-jetstack-enterprise-key
 export JS_DOCKER_REGISTRY_USERNAME := REPLACE_ME
 export JS_DOCKER_REGISTRY_PASSWORD := REPLACE_ME
-export JS_DOCKER_EMAIL :=REPLACE_ME
+export JS_DOCKER_REGISTRY_EMAIL :=REPLACE_ME
+export JS_DOCKER_REGISTRY_URL :=REPLACE_ME
 export JS_EMAIL_ID_FOR_LE_CERT :=${JS_DOCKER_EMAIL} #for LE certs
 
 #DNS Specific variables
@@ -80,7 +82,7 @@ export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
-export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.1.7
+export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.2.0
 # Jck secure operator helm chart cersion
 export JS_OPERATOR_VERSION :=v0.0.1-alpha.18
 
@@ -118,7 +120,7 @@ export JS_CERT_MANAGER_OPEN_SHIFT_ROUTES_IMAGE_VERSION :=v0.5.0
 export JS_CERT_MANAGER_ISTIO_CSR_IMAGE_VERSION :=v0.5.0
 
 #Venafi Enhanced Issuer
-export JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION :=v0.1.7
+export JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION :=v0.2.0
 
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev
@@ -156,3 +158,8 @@ export JS_AWS_PCA_ARN :=REPLACE_ME
 #kubectl cluster-info
 export JS_KUBERNETES_HOST := REPLACE_ME
 
+export JS_SAMPLE_APP_IMAGE := nginxdemos/nginx-hello
+
+export JS_SAMPLE_TRUSTSTORE_APP_IMAGE := riazvm/jetstackdemos-truststore:1.3
+
+export JS_OPENSHIFT_ROUTE_IMAGE := ghcr.io/cert-manager/cert-manager-openshift-routes:0.1.3
