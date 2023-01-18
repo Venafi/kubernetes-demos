@@ -34,6 +34,7 @@ install-sample-app:
 # Ingress
 ########################################################################################################################
 
+
 create-sample-apps-policy:
 	@kubectl apply -f ingress/cert-policy-for-sample-apps.yaml
 
@@ -49,6 +50,8 @@ create-ingress-resource:
 
 
 ################################################# OPEN SHIFT INGRESS #######################################################################
+install-openshift-route:
+	@$(MAKE) -C cert-manager-opnshift-routes install-cert-manager-openshift-route --warn-undefined-variables
 
 create-openshift-route-policy:
 	@kubectl apply -f openshift/routes/cert-policy-for-openshift-route.yaml
