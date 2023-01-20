@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: venafi-tpp-demo-os-ingress-coffee
+  namespace: sample-apps
+spec:
+  tls:
+  - hosts:
+    - coffee.${JS_JETSTACKER_DOMAIN_NAME}
+    secretName: coffee.${JS_JETSTACKER_DOMAIN_NAME}
+  rules:
+  - host: coffee.${JS_JETSTACKER_DOMAIN_NAME}
+    http:
+      paths:
+      - path: /coffee
+        pathType: Prefix
+        backend:
+          service:
+            name: coffee-svc
+            port: 
+              number: 80

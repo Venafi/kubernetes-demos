@@ -17,15 +17,15 @@ spec:
     isCA: true
   selector:
     issuerRef:
-      name: "venafi-tpp-issuer-truststore"
-      kind: "Issuer"
-      group: "cert-manager.io"
+      name: "vtpp-enhanced-clusterissuer"
+      kind: "VenafiClusterIssuer"
+      group: "jetstack.io"
 --- 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: jetstack-truststore-apps-issuer
-  namespace: sample-apps
+  namespace: sandbox
 rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
@@ -38,7 +38,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: jetstack-truststore-apps-issuer
-  namespace: sample-apps
+  namespace: sandbox
 roleRef:
 # ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: truststore-config
-  namespace: sample-apps
+  namespace: sandbox
   labels:
     app: truststoredemo
 data:
@@ -15,7 +15,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: truststoredemo
-  namespace: sample-apps
+  namespace: sandbox
 spec:
   selector:
     matchLabels:
@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: truststoredemo
-        image: "riazvm/jetstackdemos-truststore:1.3"
+        image: ${JS_SAMPLE_TRUSTSTORE_APP_IMAGE}
         ports:
         - containerPort: 8080
           protocol: TCP

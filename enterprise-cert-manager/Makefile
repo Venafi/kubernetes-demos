@@ -16,7 +16,7 @@ SHELL := /bin/sh
 
 ########################################################################################################################
 
-init: create-namespaces configure-namespace
+init: mkdirs create-namespaces configure-namespace
 
 mkdirs:
 	@rm -rf artifacts
@@ -48,7 +48,6 @@ endif
 
 _helm_init:
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager.....'
 

@@ -1,4 +1,4 @@
-# Getting started with Venafi Jetstack Secure
+# Getting started with Venafi TLS Protect For Kubernetes
 
 ## Assumptions
 - You are a Venafi Jetstack Secure customer and you have access to credentials to access enterprise builds

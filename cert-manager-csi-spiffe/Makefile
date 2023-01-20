@@ -52,7 +52,6 @@ _create_sourceCA:
 
 install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@echo 'Setting up helm with the correct repos'
-	@helm repo add jetstack https://charts.jetstack.io
 	@helm repo update
 	@echo 'Installing Jetstack cert-manager CSI Driver.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
