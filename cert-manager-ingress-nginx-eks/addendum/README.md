@@ -35,5 +35,3 @@ cat << EOF
 EOF
 )
 ```
-
-Next: [Main Menu](/README.md) | [03. EKS with ingress-nginx and cert-manager](../../03-eks-ingress-nginx-cert-manager/README.md)
