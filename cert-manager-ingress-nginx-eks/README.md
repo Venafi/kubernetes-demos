@@ -17,8 +17,8 @@ The nginx instance can then be loaded with X.509 certificates making it responsi
 To clarify, this means traffic touching the internet is HTTPS whilst traffic touching the workload is plain old HTTP.
 
 `ingress-nginx` is a packaged version of nginx for deployment inside Kubernetes clusters.
-Instead of having to edit nginx configuration files by hand, `ingress-nginx` supports declarative configuration via Kubernetes ingress resources.
-Those ingress resources can reference certificates stored as Kubernetes secrets.
+Instead of having to edit nginx configuration files by hand, `ingress-nginx` supports declarative configuration via Kubernetes ingress objects.
+Those ingress objects can reference certificates stored as Kubernetes secrets.
 On its own, `ingress-nginx` is unable to create certificates or renew them before they expire.
 That's where `cert-manager` comes in.
 
@@ -96,7 +96,7 @@ kubectl api-resources --api-group=cert-manager.io
 
 You will need a trusted certificate obtained from a Certificate Authority (CA).
 Native cert-manager issuer objects and their [external variants](https://cert-manager.io/docs/configuration/external/) provide appropriately configured gateways to CAs and alternate certificate request handlers.
-Your cert-manager instance will now have the **Let's Encrypt** CA made available to use with `ingress-nginx`.
+You will now make the [Let's Encrypt](https://letsencrypt.org/) (ACME) CA available for use with `ingress-nginx`
 ```bash
 cat ./issuer.yaml # view what you'll be applying
 kubectl -n demos apply -f ./issuer.yaml
@@ -170,7 +170,7 @@ curl -Ls https://${dns_record_name}
 
 At this point you can navigate to the `${dns_record_name}` URL in any browser and you will see padlock icons without warnings meaning HTTPS is enforced and working.
 By observing the output in a browser you can also determine that the request your workload received was plain old HTTP.
-This means NGINX done its job - it has routed traffic from the ELB to your workload, meanwhile providing a transparent termination point for the TLS encryption.
+This means nginx done its job - it has routed traffic from the ELB to your workload, meanwhile providing a transparent termination point for the TLS encryption.
 
 ## So, what just happened?
 
