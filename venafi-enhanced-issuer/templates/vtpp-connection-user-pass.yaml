@@ -1,16 +1,17 @@
 apiVersion: jetstack.io/v1alpha1
 kind: VenafiConnection
 metadata:
-  name: vtpp-connection-app-team-1
+  name: vtpp-connection-user-pass
   namespace: jetstack-secure
 spec:
   tpp:
     url: ${JS_VENAFI_TPP_URL}
     accessToken:
     - secret:
-        name: vtpp-vei-creds-secret
+        name: vtpp-vei-user-pass
         fields: ["username", "password"]
     - tppOAuth:
         authInputType: UsernamePassword
         clientId: ${JS_VENAFI_CLIENTID}
         url: ${JS_VENAFI_TPP_URL}
+

@@ -21,7 +21,7 @@ The scripts are written with the assumption that you will be setting up a GKE cl
 - Skip this step if you are creating a brand new cluster with `fresh-start`
 - If you are on an openshift environemnt run `make update-openshift-scc`
 - If you are bringing your own cluster then simply run `make cluster-addons` 
-- Jetstack cert-manager along with the policy approver addon , trust manager and the venafi enhanced issuer will be added to the cluster
+- Jetstack cert-manager along with the policy approver addon will be added to the cluster
 
 ## Validating your cluster
 - Check if the components of Jetstack Secure are installed and running.
@@ -30,12 +30,11 @@ The scripts are written with the assumption that you will be setting up a GKE cl
 ❯ kubectl get pods -n jetstack-secure
 
 NAME                                            READY   STATUS    RESTARTS   AGE
-cert-manager-68d4cb5b69-bs7q2                   1/1     Running   0          2m8s
-cert-manager-approver-policy-7554446954-dlrv9   1/1     Running   0          89s
-cert-manager-cainjector-6f4d8bc89-s67rb         1/1     Running   0          2m8s
-cert-manager-webhook-5cbf55594c-mncr9           1/1     Running   0          2m8s
-trust-manager-5778457f48-sgnj5                  1/1     Running   0          72s
-venafi-enhanced-issuer-579455c748-5rvvm         1/1     Running   0          52s
+cert-manager-78d5dc7547-gjl9l                   1/1     Running   0          53s
+cert-manager-approver-policy-55bb5f889f-wc94m   1/1     Running   0          33s
+cert-manager-cainjector-9cf7749b6-srzpw         1/1     Running   0          53s
+cert-manager-trust-58545b4f55-n8x8m             1/1     Running   0          16s
+cert-manager-webhook-5ddbb67f75-w2s7k           1/1     Running   0          53s
 ```
 
 # Connecting the cluster to Venafi Jetstack Secure Dashboard
@@ -46,16 +45,14 @@ venafi-enhanced-issuer-579455c748-5rvvm         1/1     Running   0          52s
 ```
 ❯ kubectl get pods -n jetstack-secure
 NAME                                            READY   STATUS    RESTARTS   AGE
-agent-656b6b97c-nxbv5                           1/1     Running   0          81s
-cert-manager-68d4cb5b69-bs7q2                   1/1     Running   0          10m
-cert-manager-approver-policy-7554446954-dlrv9   1/1     Running   0          9m58s
-cert-manager-cainjector-6f4d8bc89-s67rb         1/1     Running   0          10m
-cert-manager-webhook-5cbf55594c-mncr9           1/1     Running   0          10m
-trust-manager-5778457f48-sgnj5                  1/1     Running   0          9m41s
-venafi-enhanced-issuer-579455c748-5rvvm         1/1     Running   0          9m21s
-
+agent-6bf697664b-ww9xn                          1/1     Running   0          49s
+cert-manager-78d5dc7547-gjl9l                   1/1     Running   0          11m
+cert-manager-approver-policy-55bb5f889f-wc94m   1/1     Running   0          11m
+cert-manager-cainjector-9cf7749b6-srzpw         1/1     Running   0          11m
+cert-manager-trust-58545b4f55-n8x8m             1/1     Running   0          10m
+cert-manager-webhook-5ddbb67f75-w2s7k           1/1     Running   0          11m
 ```
-The `jetstack-secure` namespace how has an addtional pod called `agent-656b6b97c-nxbv5` that is responsible for pushing the certificates to Jetstack Secure dashboard. 
+The `jetstack-secure` namespace how has an addtional pod called `agent-6bf697664b-ww9xn` that is responsible for pushing the certificates to Jetstack Secure dashboard. 
 
 # 01. Request a certificate 
 

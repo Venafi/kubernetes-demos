@@ -1,13 +1,3 @@
-# The CRDs installed by this chart are annotated with "helm.sh/resource-policy: keep", this
-# prevents them from being accidentally removed by Helm when this chart is deleted. After
-# deleting the installed chart, the user still has to manually remove the remaining CRDs.
-crds:
-  # The 'x-kubernetes-validations' annotation is not supported in Kubernetes 1.22 and below.
-  # This annotation is used by CEL, which is a feature introduced in Kubernetes 1.25 that
-  # improves how validation is performed.
-  # This option allows to force the 'x-kubernetes-validations' annotation to be excluded,
-  # even on Kubernetes 1.25+ clusters.
-  forceRemoveValidationAnnotations: false
 # -- cert-manager-approver-policy dependency options.
 cert-manager-approver-policy:
   nameOverride: cert-manager-approver-policy
@@ -113,11 +103,7 @@ cert-manager-approver-policy:
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-venafiConnection:
-  # When set to false, the rendered output does not contain the
-  # VenafiConnection CRDs and RBAC. This is usefull for when the
-  # Venafi Connection resoures are already installed seperately.
-  include: true
+
 # -- approver-policy-rego options.
 rego:
   # -- RBAC needed to watch resources.

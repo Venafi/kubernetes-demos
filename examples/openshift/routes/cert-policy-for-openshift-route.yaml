@@ -1,7 +1,8 @@
+---
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
-  name: cert-policy-for-truststores
+  name: cert-policy-for-sample-apps-route
 spec:
   allowed:
     commonName:
@@ -9,43 +10,41 @@ spec:
     dnsNames:
       values: ["*"]
     usages:
-      - signing
-      - digital signature
-      - server auth
-      - client auth
-      - key encipherment
-    isCA: true
+      - "key encipherment"
+      - "digital signature"
+      - "server auth"
   selector:
     issuerRef:
-      name: "vtpp-cluster-issuer-ts"
+      name: "vtpp-enhanced-clusterissuer"
       kind: "VenafiClusterIssuer"
       group: "jetstack.io"
+
 --- 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: jetstack-truststore-apps-issuer
+  name: jetstack-sample-apps-route
   namespace: sandbox
 rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
     verbs: ["use"]
     # Name of the CertificateRequestPolicies to be used.
-    resourceNames: ["cert-policy-for-truststores"]
+    resourceNames: ["cert-policy-for-sample-apps-route"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: jetstack-truststore-apps-issuer
+  name: jetstack-sample-apps-route
   namespace: sandbox
 roleRef:
 # ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: jetstack-truststore-apps-issuer
+  name: jetstack-sample-apps-route
 subjects:
 # The users who should be bound to the policies defined.
 - kind: ServiceAccount
-  name: cert-manager
-  namespace: jetstack-secure
+  name: cert-manager-openshift-routes
+  namespace: cert-manager

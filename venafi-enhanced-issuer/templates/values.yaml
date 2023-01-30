@@ -17,7 +17,7 @@ venafiConnection:
   # When set to false, the rendered output does not contain the
   # VenafiConnection CRDs and RBAC. This is usefull for when the
   # Venafi Connection resoures are already installed seperately.
-  include: false
+  include: true
 venafiEnhancedIssuer:
   replicas: 1
   manager:

@@ -2,9 +2,9 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: venafi-route-coffee
-  namespace: sandbox
+  namespace: sample-apps
   annotations:
-    cert-manager.io/issuer-name: vtpp-cluster-issuer # This is the only required annotation
+    cert-manager.io/issuer-name: vtpp-enhanced-clusterissuer # This is the only required annotation
     cert-manager.io/issuer-group: jetstack.io # Optional, defaults to cert-manager.io
     cert-manager.io/issuer-kind: VenafiClusterIssuer # Optional, defaults to Issuer, could be ClusterIssuer or an External Issuer
     #cert-manager.io/duration: 1h # Optional, defaults to 90 days

@@ -13,12 +13,15 @@ spec:
       - "digital signature"
       - "server auth"
   plugins:
-    venafi:
+    tpp:
       values:
-        venafiConnectionName: vtpp-connection
+        credentialSecretName: access-token
+        credentialSecretKey: access-token
+        baseURL: ${JS_VENAFI_TPP_URL}
         zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+        caBundleConfigMapName: venafi-tpp-ca-bundle
   selector:
     issuerRef:
-      name: "vtpp-cluster-issuer"
-      kind: "VenafiClusterIssuer"
-      group: "jetstack.io"
+      name: "sandbox-venafi-tpp-issuer"
+      kind: "Issuer"
+      group: "cert-manager.io"
