@@ -2,8 +2,8 @@
 apiVersion: jetstack.io/v1alpha1
 kind: VenafiClusterIssuer
 metadata:
-  name: vtpp-enhanced-clusterissuer
+  name: vtpp-clusterissuer-app-team-1
 spec:
-  venafiConnectionName: vtpp-connection-user-pass
+  venafiConnectionName: vtpp-connection-app-team-1
   zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
 ---

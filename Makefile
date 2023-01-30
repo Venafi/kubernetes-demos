@@ -12,7 +12,7 @@ include settings.sh
 fresh-start: create-cluster create-cas cluster-addons
 
 helm-registry-login:
-	@cat ${JS_ENTERPRISE_CREDENTIALS_FILE} | helm registry login -u _json_key --password-stdin https://${JS_CONTAINER_REGISTRY}
+	@cat ${JS_ENTERPRISE_CREDENTIALS_FILE} | helm registry login -u _json_key --password-stdin https://${JS_DOCKER_REGISTRY_URL}
 
 create-cluster:
 	@$(MAKE) -C scripts create-gke-cluster --warn-undefined-variables
@@ -31,7 +31,7 @@ update-openshift-scc:
 
 #cluster-addons: helm-registry-login install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
 
-cluster-addons: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
+cluster-addons: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster install-js-venafi-enhanced-issuer-module
 
 cluster-addons-all-modules: install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster install-cert-sync-to-venafi-module install-cert-manager-csi-driver install-cert-manager-csi-driver-spiffe install-js-venafi-enhanced-issuer-module
 
@@ -138,7 +138,7 @@ remove-jetstack-isolated-issuer-config:
 remove-cert-manager-trust:
 	@$(MAKE) -C trust clean --warn-undefined-variables
 
-reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-pca-issuer-module remove-cert-manager-trust remove-jetstack-cert-manager
+reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-js-venafi-enhanced-issuer-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-pca-issuer-module remove-cert-manager-trust remove-jetstack-cert-manager
 	@echo ""
 	@echo ""
 	@echo ""

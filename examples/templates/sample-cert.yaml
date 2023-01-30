@@ -14,7 +14,7 @@ spec:
     - coffee.${JS_JETSTACKER_DOMAIN_NAME}
   commonName: coffee.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
-    name: "vtpp-enhanced-clusterissuer"
+    name: "vtpp-cluster-issuer"
     kind: "VenafiClusterIssuer"
     group: "jetstack.io"
 ---

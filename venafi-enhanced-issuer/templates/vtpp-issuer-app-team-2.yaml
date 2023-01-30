@@ -2,9 +2,9 @@
 apiVersion: jetstack.io/v1alpha1
 kind: VenafiIssuer
 metadata:
-  name: vtpp-enhanced-issuer
+  name: vtpp-issuer-app-team-2
   namespace: sandbox
 spec:
-  venafiConnectionName: vtpp-connection-access-token
+  venafiConnectionName: vtpp-connection-app-team-2
   zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
 ---

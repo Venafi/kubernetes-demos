@@ -1,0 +1,12 @@
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiConnection
+metadata:
+  name: venafi-cloud-connection
+  namespace: jetstack-secure
+spec:
+  vaas:
+    apiKey:
+      - secret:
+        name: vtpp-vei-secret
+        fields: ["vaas-api-key"]
+      
