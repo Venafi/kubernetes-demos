@@ -60,15 +60,25 @@ install-jetstack-approver-policy-module: init create-config-map
 	    --version ${JS_POLICY_APPROVER_VERSION} \
 		--wait
 
+create-venafi-credentials:
+	@$(MAKE) -C ../common  init --warn-undefined-variables
+	@$(MAKE) -C ../common  create-venafi-credentials --warn-undefined-variables
+
+create-venafi-connection-rbac:
+	@$(MAKE) -C  ../common create-venafi-connection-rbac --warn-undefined-variables
+
+create-venafi-tpp-connection:
+	@$(MAKE) -C ../common create-venafi-tpp-connection --warn-undefined-variables
+
 create-venafi-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/venafi-issuer.yaml \
      > artifacts/cert-approver/venafi/venafi-issuer.yaml
-	kubectl apply -f artifacts/cert-approver/venafi/venafi-issuer.yaml
+	@kubectl apply -f artifacts/cert-approver/venafi/venafi-issuer.yaml
 
 create-certificate1:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/sample-cert1.yaml \
      > artifacts/cert-approver/venafi/sample-cert1.yaml
-	kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml
+	@kubectl apply -f artifacts/cert-approver/venafi/sample-cert1.yaml
 
 _create-config-map-with-PEM-to-access-TPP:
 	@cp ${JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE} artifacts/cert-approver/venafi/venafi-server-ca.pem
@@ -111,8 +121,10 @@ remove-jetstack-approver-policy-module:
 	@echo 'Uninstalling Venafi Jetstack Certificate Approver Policy Module.....'
 	@helm uninstall -n jetstack-secure cert-manager-approver-policy || true
 
-clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-jetstack-approver-policy-module
-	@kubectl delete secret access-token -n jetstack-secure || true
+remove-venafi-connection:
+	@$(MAKE) -C ../common clean --warn-undefined-variables || true
+
+clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-venafi-connection 
 	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure || true
 	
 

@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: java-server-app-cert
-  namespace: sample-apps
+  namespace: sandbox
 spec:
   secretName: java-server-truststore
   duration: 2160h # 90d
@@ -29,6 +29,6 @@ spec:
         key: password-key
         name: jks-password-secret
   issuerRef:
-    name: "vtpp-enhanced-clusterissuer"
+    name: "vtpp-cluster-issuer-ts"
     kind: "VenafiClusterIssuer"
     group: "jetstack.io"

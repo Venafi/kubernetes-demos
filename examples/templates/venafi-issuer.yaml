@@ -7,5 +7,5 @@ metadata:
   name: vtpp-cluster-issuer
 spec:
   venafiConnectionName: vtpp-connection
-  zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+  zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
 ---

@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: venafi-tpp-demo-os-ingress-coffee
-  namespace: sample-apps
+  namespace: sandbox
 spec:
   tls:
   - hosts:
