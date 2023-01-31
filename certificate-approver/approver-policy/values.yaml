@@ -113,11 +113,11 @@ cert-manager-approver-policy:
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-venafiConnection:
+#venafiConnection:
   # When set to false, the rendered output does not contain the
   # VenafiConnection CRDs and RBAC. This is usefull for when the
   # Venafi Connection resoures are already installed seperately.
-  include: true
+#  include: true
 # -- approver-policy-rego options.
 rego:
   # -- RBAC needed to watch resources.

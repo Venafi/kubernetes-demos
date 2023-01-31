@@ -52,7 +52,7 @@ ifneq (${JS_AIRGAPPED},true)
 			--dry-run='client' \
 			--save-config=true -o yaml | kubectl apply -f -
 else
-	@(echo "do nothing")
+	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} -n jetstack-secure || true
 endif 
 
 
