@@ -20,7 +20,7 @@ init: mkdirs create-namespaces configure-namespace
 
 mkdirs:
 	@rm -rf artifacts
-
+	@mkdir -p artifacts
 create-namespaces:
 	@kubectl apply -f namespaces/cert-manager.yaml
 
@@ -41,7 +41,7 @@ else
 endif 
 
 install-cert-manager-openshift-route: init mkdirs create-namespaces configure-namespace
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < ingress/templates/cert-manager-openshift-routes.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/cert-manager-openshift-routes.yaml \
      > artifacts/cert-manager-openshift-routes.yaml
 	@oc apply -f artifacts/cert-manager-openshift-routes.yaml -n cert-manager
 

@@ -26,8 +26,8 @@ _remove-cluster:
 gcp-full-cleanup: clean-up-terraform _remove-cluster
 	@$(MAKE) -C scripts remove-google-cas --warn-undefined-variables
 
-update-openshift-scc:
-	@$(MAKE) -C enterprise-cert-manager  update-openshift-scc --warn-undefined-variables
+update-openshift-venafi-scc:
+	@$(MAKE) -C enterprise-cert-manager  update-openshift-venafi-scc --warn-undefined-variables
 
 #cluster-addons: helm-registry-login install-jetstack-approver-policy-module install-cert-manager-trust-in-cluster
 
@@ -137,6 +137,9 @@ remove-jetstack-isolated-issuer-config:
 
 remove-cert-manager-trust:
 	@$(MAKE) -C trust clean --warn-undefined-variables
+
+remove-openshift-venafi-scc:
+	@$(MAKE) -C enterprise-cert-manager  remove-openshift-venafi-scc --warn-undefined-variables
 
 reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-js-venafi-enhanced-issuer-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-pca-issuer-module remove-cert-manager-trust remove-jetstack-cert-manager
 	@echo ""

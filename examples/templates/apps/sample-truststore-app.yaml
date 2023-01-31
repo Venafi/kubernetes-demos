@@ -65,7 +65,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: truststoredemo-svc     # Unique name of the resource
-  namespace: sample-apps
+  namespace: sandbox
   labels:
     app: truststoredemo
 spec:

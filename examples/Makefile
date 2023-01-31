@@ -127,7 +127,7 @@ create-venafi-issuer-for-trustsore:
 	@kubectl apply -f artifacts/truststores/venafi-issuer-ts.yaml
 
 create-truststore-password:
-	@kubectl create secret generic jks-password-secret --from-literal=password-key=changeit -n sandbox
+	@kubectl create secret generic jks-password-secret --from-literal=password-key=changeit -n sandbox || true
 
 create-trustsore-policy:
 	@kubectl apply -f templates/truststores/cert-policy-for-truststores.yaml
@@ -140,8 +140,8 @@ create-client-certificate:
 
 deploy-app-for-truststores:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/apps/sample-truststore-app.yaml \
-     > artifacts/trustsores/sample-truststore-app.yaml
-	@kubectl apply -f artifacts/trustsores/sample-truststore-app.yaml
+     > artifacts/truststores/sample-truststore-app.yaml
+	@kubectl apply -f artifacts/truststores/sample-truststore-app.yaml
 
 ## TEST APP USING CURL
 test-trust-app-fail:
@@ -175,7 +175,11 @@ remove-venafi-connection:
 remove-venafi-issuer:
 	@kubectl delete -f artifacts/venafi-issuer.yaml || true
 
-clean-truststores: remove-app-for-truststores remove-trustsore-policy remove-truststores-certificates delete-truststore-password remove-truststores-certificates 
+remove-venafi-truststore-issuer:
+	@kubectl delete -f artifacts/truststores/venafi-issuer-ts.yaml || true
+
+
+clean-truststores: remove-app-for-truststores remove-trustsore-policy remove-truststores-certificates delete-truststore-password remove-venafi-truststore-issuer remove-venafi-connection
 
 clean-examples: remove-venafi-issuer remove-venafi-tpp-connection remove-venafi-connection-rbac remove-venafi-credentials clean-truststores clean-ingress clean-route
 

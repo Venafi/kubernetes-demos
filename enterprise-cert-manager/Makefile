@@ -22,7 +22,7 @@ mkdirs:
 	@rm -rf artifacts
 	@mkdir -p artifacts/cert-manager
 
-update-openshift-scc:
+update-openshift-venafi-scc:
 	@oc create -f cert-manager/restricted-seccomp.yaml || true
 	@oc adm policy add-scc-to-user jetstack-privileged -z default || true
 
@@ -87,6 +87,10 @@ renew-cert:
 	@cmctl -n sandbox inspect secret test-cert
 
 install: create-namespace configure-namespace install-cert-manager
+
+remove-openshift-venafi-scc:
+	@oc delete -f cert-manager/restricted-seccomp.yaml || true
+	@oc adm policy remove-scc-from-user jetstack-privileged -z default || true
 
 clean: remove-cert remove-cert-manager
 	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure || true
