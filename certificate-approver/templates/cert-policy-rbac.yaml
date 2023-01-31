@@ -1,7 +1,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: cert-manager-policy:cert-policy-for-apps-in-sandbox
+  namespace: sandbox
 rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
@@ -11,13 +12,14 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: cert-manager-policy:cert-policy-for-apps-in-sandbox
+  namespace: sandbox
 roleRef:
 # ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: cert-manager-policy:cert-policy-for-apps-in-sandbox
 subjects:
 # The users who should be bound to the policies defined.

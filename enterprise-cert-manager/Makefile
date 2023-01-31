@@ -22,9 +22,9 @@ mkdirs:
 	@rm -rf artifacts
 	@mkdir -p artifacts/cert-manager
 
-update-openshift-scc:
-	@oc create -f cert-manager/restricted-seccomp.yaml
-	@oc adm policy add-scc-to-user jetstack-privileged -z default
+update-openshift-venafi-scc:
+	@oc create -f cert-manager/restricted-seccomp.yaml || true
+	@oc adm policy add-scc-to-user jetstack-privileged -z default || true
 
 create-namespaces:
 	@kubectl apply -f namespaces/jetstack-secure.yaml
@@ -42,7 +42,7 @@ ifneq (${JS_AIRGAPPED},true)
 			--dry-run='client' \
 			--save-config=true -o yaml | kubectl apply -f -
 else
-	@(echo "do nothing")
+	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} || true
 endif 
 
 
@@ -87,6 +87,10 @@ renew-cert:
 	@cmctl -n sandbox inspect secret test-cert
 
 install: create-namespace configure-namespace install-cert-manager
+
+remove-openshift-venafi-scc:
+	@oc delete -f cert-manager/restricted-seccomp.yaml || true
+	@oc adm policy remove-scc-from-user jetstack-privileged -z default || true
 
 clean: remove-cert remove-cert-manager
 	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure || true
