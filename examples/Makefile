@@ -21,8 +21,8 @@ mkdirs:
 	@mkdir -p artifacts/truststores
 
 create-namespaces:
-
 	@kubectl apply -f namespaces/sandbox.yaml
+	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} -n sandbox || true
 
 install-sample-app:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/apps/sample-app.yaml \
@@ -180,6 +180,7 @@ remove-venafi-truststore-issuer:
 
 
 clean-truststores: remove-app-for-truststores remove-trustsore-policy remove-truststores-certificates delete-truststore-password remove-venafi-truststore-issuer remove-venafi-connection
+
 
 clean-examples: remove-venafi-issuer remove-venafi-tpp-connection remove-venafi-connection-rbac remove-venafi-credentials clean-truststores clean-ingress clean-route
 

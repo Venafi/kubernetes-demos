@@ -24,4 +24,5 @@ jetstack-operator
 agent
 .DS_Store
 extraMakefile
+restricted-seccomp.yaml
 

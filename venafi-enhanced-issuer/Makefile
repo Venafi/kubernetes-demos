@@ -39,7 +39,7 @@ ifneq (${JS_AIRGAPPED},true)
 			--dry-run='client' \
 			--save-config=true -o yaml | kubectl apply -f -
 else
-	@(echo "do nothing")
+	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} -n jetstack-secure || true
 endif 
 
 
@@ -74,24 +74,24 @@ create-vtpp-secret:
 	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret.yaml
 
 create-venafi-connection-acess-token:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-access-token.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml	
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-app-team-2.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-connection-app-team-2.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-app-team-2.yaml	
 
 create-venafi-connection-user-password:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-user-pass.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-app-team-1.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-connection-app-team-1.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-app-team-1.yaml
 
 create-venafi-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-issuer.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-issuer.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-issuer.yaml
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-issuer-app-team-2.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-issuer-app-team-2.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-issuer-app-team-2.yaml
 
 create-venafi-cluster-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-issuer.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-issuer-app-team-1.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-cluster-issuer-app-team-1.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer-app-team-1.yaml
 
 
 create-cert-policy:
