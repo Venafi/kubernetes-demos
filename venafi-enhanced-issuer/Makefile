@@ -148,8 +148,8 @@ mount-tpp-secret:
 create-service-account-for-vault:
 	@kubectl apply -f templates/vault/vault-service-account.yaml
 
-create-rbac-for-vault-issuers:
-	@kubectl apply -f templates/vault/vault-issuer-rbac.yaml
+create-rbac-for-vault-connection:
+	@kubectl apply -f templates/vault/vault-connection-rbac.yaml
 
 create-vtpp-venafi-connection-with-vault: 
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/vault-vtpp-connection.yaml \
@@ -206,7 +206,7 @@ remove-service-account-for-vault:
 	@kubectl delete -f templates/vault/vault-service-account.yaml || true
 
 remove-rbac-for-vault-issuers:
-	@kubectl delete -f templates/vault/vault-issuer-rbac.yaml || true
+	@kubectl delete -f templates/vault/vault-connection-rbac.yaml || true
 
 remove-vtpp-venafi-connection-with-vault: 
 	@kubectl delete -f artifacts/venafi-enhanced/config/vault-vtpp-connection.yaml || true
