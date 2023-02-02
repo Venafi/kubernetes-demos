@@ -50,6 +50,7 @@ users:
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe-approver
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe
 - system:serviceaccount:jetstack-secure:cert-sync-to-venafi-cert-discovery-venafi-sa
+- system:serviceaccount:jetstack-secure:venafi-enhanced-issuer
 volumes:
 - configMap
 - downwardAPI

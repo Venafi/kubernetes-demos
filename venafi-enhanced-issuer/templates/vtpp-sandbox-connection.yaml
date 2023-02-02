@@ -1,13 +1,13 @@
 apiVersion: jetstack.io/v1alpha1
 kind: VenafiConnection
 metadata:
-  name: vtpp-connection-app-team-2
+  name: vtpp-sandbox-connection
   namespace: sandbox
 spec:
   tpp:
     url: ${JS_VENAFI_TPP_URL}
     accessToken:
     - secret:
-        name: vtpp-vei-access-token
+        name: vtpp-vei-creds-secret
         fields: ["access-token"]
 

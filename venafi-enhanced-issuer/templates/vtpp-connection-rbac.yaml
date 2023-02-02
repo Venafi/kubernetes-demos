@@ -19,7 +19,7 @@ metadata:
   name: read-creds-secret-role-for-venafi-connection
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: read-creds-secret-role-for-venafi-connection
 subjects:
 - kind: ServiceAccount

@@ -65,6 +65,7 @@ install-jetstack-venafi-enhanced-issuer-module: init _create-config-map-with-PEM
 
 ################## CREATE ISSUERS AND CLUSTER ISSUERS USING KUBERNETES SECRETS #################
 
+
 create-rbac-for-connections:
 	@kubectl apply -f templates/vtpp-connection-rbac.yaml
 
@@ -74,24 +75,24 @@ create-vtpp-secret:
 	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-secret.yaml
 
 create-venafi-connection-acess-token:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-app-team-2.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-connection-app-team-2.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-app-team-2.yaml	
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-sandbox-connection.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-sandbox-connection.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-sandbox-connection.yaml	
 
 create-venafi-connection-user-password:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-connection-app-team-1.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-connection-app-team-1.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-connection-app-team-1.yaml
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-connection.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-cluster-connection.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-connection.yaml
 
-create-venafi-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-issuer-app-team-2.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-issuer-app-team-2.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-issuer-app-team-2.yaml
+create-venafi-issuer: create-rbac-for-connections create-vtpp-secret create-venafi-connection-acess-token
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-sandbox-issuer.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-sandbox-issuer.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-sandbox-issuer.yaml
 
-create-venafi-cluster-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-issuer-app-team-1.yaml \
-     > artifacts/venafi-enhanced/config/vtpp-cluster-issuer-app-team-1.yaml
-	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer-app-team-1.yaml
+create-venafi-cluster-issuer: create-rbac-for-connections create-vtpp-secret create-venafi-connection-user-password
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vtpp-cluster-issuer.yaml \
+     > artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
+	@kubectl apply -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml
 
 
 create-cert-policy:
