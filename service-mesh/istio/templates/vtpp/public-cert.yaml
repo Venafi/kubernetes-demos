@@ -13,6 +13,6 @@ spec:
   commonName: storefront-vtpp.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
     name: vtpp-public-issuer
-    kind: Issuer
-    group: cert-manager.io
+    kind: VenafiClusterIssuer
+    group: jetstack.io
 --- 

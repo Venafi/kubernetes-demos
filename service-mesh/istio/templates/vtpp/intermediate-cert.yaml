@@ -17,8 +17,8 @@ spec:
     - jetstack-dev
   issuerRef:
     name: vtpp-intermediate-issuer
-    kind: Issuer
-    group: cert-manager.io
+    kind: VenafiClusterIssuer
+    group: jetstack.io
 
 ---
 apiVersion: cert-manager.io/v1

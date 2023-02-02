@@ -15,7 +15,7 @@ spec:
       - "server auth"
   selector:
     issuerRef:
-      name: "vtpp-issuer-app-team-2"
+      name: "vtpp-sandbox-issuer"
       kind: "VenafiIssuer"
       group: "jetstack.io"
 ---
@@ -35,7 +35,7 @@ spec:
       - "server auth"
   selector:
     issuerRef:
-      name: "vtpp-clusterissuer-app-team-1"
+      name: "vtpp-cluster-issuer"
       kind: "VenafiClusterIssuer"
       group: "jetstack.io"
 
