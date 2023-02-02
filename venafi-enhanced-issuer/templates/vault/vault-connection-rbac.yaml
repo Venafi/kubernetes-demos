@@ -1,0 +1,59 @@
+---
+# create role that allows creating sa tokens for 'app-team-1'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-tokens-for-application-team-1
+  namespace: jetstack-secure
+rules:
+- apiGroups: [""]
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+  resourceNames: [ "application-team-1" ]
+---
+# link the controller's service account to the 'create-tokens-for-vault-sa' role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: application-team-1-sa-rolebinding
+  namespace: jetstack-secure
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: create-tokens-for-application-team-1
+subjects:
+- kind: ServiceAccount
+  name: venafi-connection
+  namespace: jetstack-secure
+---
+# create role that allows creating sa tokens for 'app-team-1'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-tokens-for-application-team-2
+  namespace: sandbox
+rules:
+- apiGroups: [""]
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+  resourceNames: [ "application-team-2" ]
+---
+# link the controller's service account to the 'create-tokens-for-vault-sa' role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: application-team-2-sa-rolebinding
+  namespace: sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: create-tokens-for-application-team-2
+subjects:
+- kind: ServiceAccount
+  name: venafi-connection
+  namespace: jetstack-secure
+---
