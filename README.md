@@ -67,7 +67,7 @@ The VenafiConnection custom resources are used to configure the connection and a
 
 The simplest way of authentication to the Venafi control plane is using the Venafi TPP access-token, Venafi-TPP username and password or Venafi-as-a-Service API Key stored as a Kubernetes secrert. The Venafi connection supports secretless authentication using JWT or storing credentails in an external secrets engine like Vault. In this sample we will use the username and password authentication. 
 
-To create a venafi connection follow the instructions [here](docs/02.create-venafi-connection)
+To create a venafi connection follow the instructions [here](docs/02.create-venafi-connection.md#creating-a-venafi-connection)
 
 # 03. Creating policies for auto approval
 
