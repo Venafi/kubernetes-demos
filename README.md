@@ -136,5 +136,5 @@ In this scenario we will use an external issuer (AWS PCA Issuer) to sign certifi
 # 11. Issue Machine Identities using the Venafi Enhanced Issuer
 In this scenatio we will create a venafi enhanced issuer that would access Hashi Vault to get credentails required to access the Venafi API's. We will use Venafi Trust Protection Platfor/Venafi As A Service to sign a certificate request. Follow instructions [here](docs/11.certs-with-venafi-enhanced-issuer.md#cert-manager-venafi-enhanced-issuer-to-manage-certificates-in-cluster)
 
-# 11. Examples
-A set of examples , currenty covers Ingress, Openshift Ingress, Openshift Routes, Java Truststores [here](docs/11.cert-manager-samples.md#cert-manager-samples)
+# 12. Examples
+A set of examples , currenty covers Ingress, Openshift Ingress, Openshift Routes, Java Truststores [here](docs/12.cert-manager-samples.md#cert-manager-samples)
