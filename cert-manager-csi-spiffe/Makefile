@@ -105,7 +105,7 @@ remove-redis-client:
 remove-trust-bundle:
 	@kubectl delete -f artifacts/csi-driver-spiffe/venafi/trust-bundle.yaml || true
 
-remove-cert-manager-csi-driver-spiffe: remove-redis-app remove-spiffe-cluster-issuer remove-trust-bundle
+clean: remove-redis-app remove-spiffe-cluster-issuer remove-trust-bundle
 	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver SPIFFE'
 	@helm uninstall -n jetstack-secure cert-manager-csi-driver-spiffe || true
 	@kubectl delete secret spiffe-source-ca --namespace='jetstack-secure' || true

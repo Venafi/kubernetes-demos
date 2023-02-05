@@ -121,10 +121,8 @@ remove-jetstack-approver-policy-module:
 	@echo 'Uninstalling Venafi Jetstack Certificate Approver Policy Module.....'
 	@helm uninstall -n jetstack-secure cert-manager-approver-policy || true
 
-remove-venafi-connection:
-	@$(MAKE) -C ../common clean --warn-undefined-variables || true
 
-clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-venafi-connection 
+clean: remove-certificates remove-issuer remove-rbac remove-cert-policy remove-jetstack-approver-policy-module
 	@kubectl delete configmap venafi-tpp-ca-bundle -n jetstack-secure || true
 	
 

@@ -13,7 +13,7 @@ spec:
     - sample-issuer.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
   commonName: sample-issuer.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
-    name: "vtpp-sanbox-issuer"
+    name: "vtpp-sandbox-issuer"
     kind: "VenafiIssuer"
     group: "jetstack.io"
 ---
