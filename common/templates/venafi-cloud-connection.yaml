@@ -6,7 +6,7 @@ metadata:
 spec:
   vaas:
     apiKey:
-      - secret:
-        name: vtpp-vei-secret
+     - secret:
+        name: venafi-credentials
         fields: ["vaas-api-key"]
       

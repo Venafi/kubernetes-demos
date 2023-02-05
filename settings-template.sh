@@ -67,7 +67,7 @@ export JS_CERT_MANAGER_TRUST_VERSION=v0.3.0
 # cert-discovery-venafi helm chart version
 export JS_VENAFI_CERT_SYNC_VERSION :=v0.2.0
 # approver policy helm chart version
-export JS_POLICY_APPROVER_VERSION :=v0.7.0
+export JS_POLICY_APPROVER_VERSION :=v0.7.1
 # Isolated issuer version
 export JS_ISOLATED_ISSUER_VERSION :=v0.0.1-alpha.2
 # cert-manager-CSI-driver version helm chart version
@@ -80,7 +80,7 @@ export JS_CERT_MANAGER_ISTIO_CSR_VERSION :=v0.5.0
 export JS_ISTIO_VERSION :=1.14.1
 export JS_ISTIO_SHORT_VERSION :=1.14
 # Venafi enchanged issuer helm chart version
-export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.3.0
+export JS_VENAFI_ENHANCED_ISSUER_VERSION :=v0.3.1
 # Jck secure operator helm chart cersion
 export JS_OPERATOR_VERSION :=v0.0.1-alpha.18
 
@@ -100,7 +100,7 @@ export JS_CERT_DISCOVERY_VENAFI_IMAGE_VERSION :=v0.2.0
 export JS_KUBE_RBAC_PROXY_IMAGE_VERSION :=v0.13.1
 
 #CERTIFICATE-APPROVER
-export JS_APPROVER_POLICY_ENTERPRISE_IMAGE_VERSION :=v0.7.0
+export JS_APPROVER_POLICY_ENTERPRISE_IMAGE_VERSION :=v0.7.1
 
 # ENTERPRISE CERT MANAGER
 export JS_CERT_MANAGER_CONTROLLER_IMAGE_VERSION :=v1.11.0
@@ -118,7 +118,7 @@ export JS_CERT_MANAGER_OPEN_SHIFT_ROUTES_IMAGE_VERSION :=v0.5.0
 export JS_CERT_MANAGER_ISTIO_CSR_IMAGE_VERSION :=v0.5.0
 
 #Venafi Enhanced Issuer
-export JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION :=v0.3.0
+export JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION :=v0.3.1
 
 # Jetstack Secure common settings
 export JS_CLUSTER_TRUST_DOMAIN_NAME :=jetstack-dev
