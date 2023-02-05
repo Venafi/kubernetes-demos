@@ -2,35 +2,34 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: sample-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+  name: sample-vault.app2.${JS_JETSTACKER_DOMAIN_NAME}
   namespace: sandbox
 spec:
-  secretName: sample-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+  secretName: sample-vault.vei.${JS_JETSTACKER_DOMAIN_NAME}
   duration: 2160h
   privateKey:
     rotationPolicy: Always
   dnsNames:
-    - sample-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
-  commonName: sample-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+    - sample-vault.app2.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: sample-vault.app2.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
     name: "application-team-2"
     kind: "VenafiIssuer"
     group: "jetstack.io"
 ---
----
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: sample-ci-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+  name: sample-vault.app1.${JS_JETSTACKER_DOMAIN_NAME}
   namespace: sandbox
 spec:
-  secretName: sample-ci-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+  secretName: sample-vault.app1.${JS_JETSTACKER_DOMAIN_NAME}
   duration: 2160h
   privateKey:
     rotationPolicy: Always
   dnsNames:
-    - sample-ci-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
-  commonName: sample-ci-vault.vttp.vei.${JS_JETSTACKER_DOMAIN_NAME}
+    - sample-vault.app1.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: sample-vault.app1.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
     name: "application-team-1"
     kind: "VenafiClusterIssuer"

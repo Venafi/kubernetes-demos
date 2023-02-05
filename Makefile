@@ -124,24 +124,28 @@ remove-jetstack-venafi-cert-sync-module:
 	@$(MAKE) -C cert-sync-to-venafi remove-certificate-sync-module --warn-undefined-variables
 
 remove-jetstack-cert-manager-csi-driver:
-	@$(MAKE) -C cert-manager-csi remove-cert-manager-csi-driver --warn-undefined-variables
+	@$(MAKE) -C cert-manager-csi clean --warn-undefined-variables 
 
 remove-jetstack-cert-manager-csi-driver-spiffe:
-	@$(MAKE) -C cert-manager-csi-spiffe remove-cert-manager-csi-driver-spiffe --warn-undefined-variables
+	@$(MAKE) -C cert-manager-csi-spiffe clean --warn-undefined-variables
 
 remove-istio-csr-and-demos: 
-	@$(MAKE) -C service-mesh/istio cleanup --warn-undefined-variables
+	@$(MAKE) -C service-mesh/istio cleanup --warn-undefined-variables || true
 
 remove-jetstack-isolated-issuer-config:
-	@$(MAKE) -C isolated-issuer remove-isolated-issuer-config --warn-undefined-variables	
+	@$(MAKE) -C isolated-issuer remove-isolated-issuer-config --warn-undefined-variables || true
 
 remove-cert-manager-trust:
-	@$(MAKE) -C trust clean --warn-undefined-variables
+	@$(MAKE) -C trust clean --warn-undefined-variables || true
+
+remove-venafi-connection:
+	@$(MAKE) -C common clean --warn-undefined-variables || true
 
 remove-openshift-venafi-scc:
 	@$(MAKE) -C enterprise-cert-manager  remove-openshift-venafi-scc --warn-undefined-variables
 
-reset-cluster: remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-js-venafi-enhanced-issuer-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-pca-issuer-module remove-cert-manager-trust remove-jetstack-cert-manager
+reset-cluster: remove-vault remove-istio-csr-and-demos remove-jetstack-isolated-issuer-config remove-jetstack-cert-manager-csi-driver-spiffe remove-jetstack-cert-manager-csi-driver remove-jetstack-venafi-cert-sync-module remove-venafi-connection remove-js-venafi-enhanced-issuer-module remove-jetstack-approver-policy-module remove-kms-issuer-module remove-pca-issuer-module remove-cert-manager-trust remove-jetstack-cert-manager
+	@kubectl delete ns sandbox || true
 	@echo ""
 	@echo ""
 	@echo ""

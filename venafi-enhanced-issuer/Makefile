@@ -105,6 +105,8 @@ create-sample-certs:
 
 
 ################## ENHANCED ISSUER WITH VAULT #################
+install-vault-in-cluster:
+	@$(MAKE) -C .. install-vault-in-cluster --warn-undefined-variables
 
 configure-vault:
 	@kubectl exec -n vault pods/vault-0 -- \
@@ -166,7 +168,7 @@ create-cert-policy-vault:
 	@kubectl apply -f templates/vault/cert-policy-and-rbac.yaml
 
 create-sample-certs-vault:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/sample-cert.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/vault/sample-cert-vault.yaml \
      > artifacts/venafi-enhanced/config/sample-cert-vault.yaml
 	@kubectl apply -f artifacts/venafi-enhanced/config/sample-cert-vault.yaml
 
@@ -181,16 +183,16 @@ remove-vtpp-secret:
 	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-secret.yaml || true
 
 remove-venafi-connection-acess-token:
-	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-connection-access-token.yaml || true	
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-sandbox-connection.yaml || true	
 
 remove-venafi-connection-user-password:
-	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-connection-user-pass.yaml || true
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-cluster-connection.yaml || true
 
 remove-venafi-issuer:
-	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-issuer.yaml || true
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-sandbox-issuer.yaml || true
 
 remove-venafi-cluster-issuer:
-	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml || true 
+	@kubectl delete -f artifacts/venafi-enhanced/config/vtpp-cluster-issuer.yaml || true
 
 
 remove-sample-certs:
@@ -231,3 +233,5 @@ remove-jetstack-venafi-enhanced-issuer-module:
 cleanup-enhanced-issuer: remove-cert-policy remove-sample-certs remove-venafi-cluster-issuer remove-venafi-issuer remove-venafi-connection-user-password remove-venafi-connection-acess-token remove-vtpp-secret remove-rbac-for-connections
 
 cleanup-enhanced-issuer-vault: remove-sample-certs-vault remove-cert-policy-vault remove-vtpp-venafi-issuer-with-vault remove-vtpp-venafi-connection-with-vault remove-rbac-for-vault-issuers remove-service-account-for-vault
+
+clean: cleanup-enhanced-issuer-vault cleanup-enhanced-issuer remove-jetstack-venafi-enhanced-issuer-module

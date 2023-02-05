@@ -100,6 +100,6 @@ remove-policy-and-rbac:
 remove-sample-app:
 	@kubectl delete -f https://raw.githubusercontent.com/cert-manager/csi-driver/main/deploy/example/example-app.yaml || true
 
-remove-cert-manager-csi-driver: remove-redis-app _remove-redis-rbac-policy-and-issuer remove-policy-and-rbac remove-sample-app
+clean: remove-redis-app _remove-redis-rbac-policy-and-issuer remove-policy-and-rbac remove-sample-app
 	@echo 'Uninstalling Jetstack Enterprise cert-manager CSI Driver'
 	@helm uninstall -n jetstack-secure cert-manager-csi-driver || true
