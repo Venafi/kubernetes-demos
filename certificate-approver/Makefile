@@ -75,6 +75,11 @@ create-venafi-issuer:
      > artifacts/cert-approver/venafi/venafi-issuer.yaml
 	@kubectl apply -f artifacts/cert-approver/venafi/venafi-issuer.yaml
 
+create-venafi-cloud-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/venafi-cloud-issuer.yaml \
+     > artifacts/cert-approver/venafi/venafi-cloud-issuer.yaml
+	@kubectl apply -f artifacts/cert-approver/venafi/venafi-cloud-issuer.yaml
+
 create-certificate1:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/sample-cert1.yaml \
      > artifacts/cert-approver/venafi/sample-cert1.yaml

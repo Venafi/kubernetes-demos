@@ -1,0 +1,11 @@
+# Create secret to access Venafi TPP with token
+# Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: vcloud-cluster-issuer
+spec:
+  venafiConnectionName: venafi-cloud-connection
+  zone: ${JS_VENAFI_CLOUD_PUBLIC_ZONE_ID1}
+---
