@@ -16,7 +16,7 @@ spec:
     venafi:
       values:
         venafiConnectionName: vtpp-connection
-        zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+        zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
   selector:
     issuerRef:
       name: "v*-public-issuer"
