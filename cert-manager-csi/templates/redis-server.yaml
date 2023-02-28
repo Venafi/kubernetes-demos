@@ -14,7 +14,6 @@ data:
     tls-ca-cert-file /redis-master-ssl/certs/ca.crt
     tls-ca-cert-dir /etc/ssl/certs
     tls-auth-clients yes
-
 ---
 
 apiVersion: apps/v1
@@ -64,15 +63,16 @@ spec:
             readOnly: true
             volumeAttributes:
                   csi.cert-manager.io/issuer-name: vtpp-issuer-for-redis
-                  csi.cert-manager.io/dns-names: redis-server01.svc.cluster.local
-                  csi.cert-manager.io/common-name: redis-server01.svc.cluster.local
+                  csi.cert-manager.io/issuer-kind: VenafiClusterIssuer
+                  csi.cert-manager.io/issuer-group: jetstack.io                  
+                  csi.cert-manager.io/dns-names: redis-server.svc.cluster.local
+                  csi.cert-manager.io/common-name: redis-server.svc.cluster.local
         - name: config
           configMap:
             name: redis-server-config
             items:
             - key: redis-config
-              path: redis.conf
-
+              path: redis.conf 
 ---
 apiVersion: v1
 kind: Service

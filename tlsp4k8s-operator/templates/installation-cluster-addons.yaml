@@ -1,0 +1,17 @@
+apiVersion: operator.jetstack.io/v1alpha1
+kind: Installation
+metadata:
+  name: cluster-add-ons
+spec:
+  certManager:
+    version: ${JS_CERT_MANAGER_VERSION}
+  approverPolicy: 
+    version: ${JS_POLICY_APPROVER_VERSION}
+  venafiEnhancedIssuer:
+    version: ${JS_VENAFI_ENHANCED_ISSUER_VERSION}
+  trustManager:
+    version: ${JS_CERT_MANAGER_TRUST_VERSION}
+  images:
+    secret: ${JS_DOCKER_REGISTRY_SECRET}
+    registry: ${JS_CONTAINER_REGISTRY}
+  

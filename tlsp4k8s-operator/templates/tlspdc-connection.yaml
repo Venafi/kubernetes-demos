@@ -1,0 +1,46 @@
+# Example installation with venafi-enhanced-issuer
+# Usage:
+# - create a jse-sa-creds secret that contains JSE GCR credentials in
+#   jetstack-secure namespace
+# - Fill in TPP username and password to ./examples/venafienhancedissuer/secret.yaml and apply the secret
+# - Ensure that the Installation spec points to a TPP instance that can be accessed from the cluster
+# - apply this resource and observe that it becomes ready
+# The resources that will be created from this Installation yaml:
+# - cert-manager, approver-policy, venafi-enhanced-issuer deployments
+# - A VenafiIssuer named 'application-team-1'
+# - Role and RoleBinding that allows venafi-enhanced-issuer's service account get Secret application-team-1-tpp-access-token
+# - an 'allow-all' CertificateRequestPolicy and associated RBAC for 'application-team-1' VenafiIssuer
+apiVersion: operator.jetstack.io/v1alpha1
+kind: Installation
+metadata:
+  name: tlsdc-connection
+spec:
+  certManager:
+    controller:
+      replicas: 1
+    webhook:
+      replicas: 1
+  approverPolicy:
+    replicas: 1
+  venafiEnhancedIssuer:
+    replicas: 1
+    version: v0.3.2
+    imagePullSecrets: ["jse-gcr-creds"]
+  venafiConnections:
+  - name: tpp-connection
+    namespace: default
+    tpp:
+      url: <url>
+      accessToken:
+      - secret:
+          fields: ["username", "password"]
+          name: application-team-1-tpp-access-token
+      - tppOAuth:
+          url: <url>
+          authInputType: UsernamePassword
+  issuers:
+  - name: application-team-1
+    namespace: default
+    venafiEnhancedIssuer:
+      venafiConnectionName: tpp-connection
+      zone: "TPP\\test"

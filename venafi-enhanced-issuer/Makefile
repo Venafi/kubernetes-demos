@@ -6,8 +6,8 @@ SHELL := bash
 .PHONY: help clean check_clean
 SHELL := /bin/sh
 
- # Include personal settings
- include ../settings.sh
+# Include personal settings
+include ../settings.sh
 
 check-env:
 ifndef JS_VENAFI_TPP_URL

@@ -1,3 +1,12 @@
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: vtpp-issuer-for-redis
+spec:
+  venafiConnectionName: vtpp-connection
+  zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+---
 # Create secret to access Venafi TPP with token
 # Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
 
@@ -14,7 +23,7 @@ stringData:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: vtpp-issuer-for-redis
+  name: vtpp-issuer-for-redis-1
   namespace: sandbox
 spec:
   venafi:

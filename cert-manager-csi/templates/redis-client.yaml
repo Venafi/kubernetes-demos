@@ -48,6 +48,8 @@ spec:
             readOnly: true
             volumeAttributes:
                   csi.cert-manager.io/issuer-name: vtpp-issuer-for-redis
+                  csi.cert-manager.io/issuer-kind: VenafiClusterIssuer
+                  csi.cert-manager.io/issuer-group: jetstack.io
                   csi.cert-manager.io/dns-names: redis-client.svc.cluster.local
                   csi.cert-manager.io/common-name: redis-client.svc.cluster.local
         - name: config
