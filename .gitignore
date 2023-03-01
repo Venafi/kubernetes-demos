@@ -26,4 +26,8 @@ agent
 extraMakefile
 EXTRAREADME.md
 restricted-seccomp.yaml
-
+js-dockerconfig-eu.json
+js-dockerconfig-us.json
+js-enterprise-credentials2.json
+operator-rbac.yaml
+finalizer-rbac.yaml

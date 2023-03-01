@@ -27,7 +27,8 @@ metadata:
   generation: 1
   name: jetstack-privileged
 priority: null
-readOnlyRootFilesystem: true
+readOnlyRootFilesystem: false
+allowHostDirVolumePlugin: true
 runAsNonRoot: true
 requiredDropCapabilities:
 - ALL
@@ -51,6 +52,8 @@ users:
 - system:serviceaccount:jetstack-secure:cert-manager-csi-driver-spiffe
 - system:serviceaccount:jetstack-secure:cert-sync-to-venafi-cert-discovery-venafi-sa
 - system:serviceaccount:jetstack-secure:venafi-enhanced-issuer
+- system:serviceaccount:jetstack-secure:js-operator-cainjector
+- system:serviceaccount:jetstack-secure:js-operator-operator
 volumes:
 - configMap
 - downwardAPI
@@ -58,3 +61,4 @@ volumes:
 - persistentVolumeClaim
 - projected
 - secret
+- tmp

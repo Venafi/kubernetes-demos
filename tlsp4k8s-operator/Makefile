@@ -20,7 +20,7 @@ init: mkdirs create-namespaces configure-namespace
 
 mkdirs:
 	@rm -rf artifacts
-	@mkdir -p artifacts/cert-manager
+	@mkdir -p artifacts
 
 update-openshift-venafi-scc:
 	@oc create -f cert-manager/restricted-seccomp.yaml || true
@@ -45,53 +45,30 @@ else
 	@kubectl create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} --docker-server=${JS_DOCKER_REGISTRY_URL} --docker-username=${JS_DOCKER_REGISTRY_USERNAME} --docker-password=${JS_DOCKER_REGISTRY_PASSWORD} --docker-email=${JS_DOCKER_REGISTRY_EMAIL} -n jetstack-secure || true
 endif 
 
+install-js-operator:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
+     > artifacts/values.yaml
 
-_helm_init:
-	@echo 'Setting up helm with the correct repos'
-	@helm repo update
-	@echo 'Installing Jetstack cert-manager.....'
-
-install-cert-manager: mkdirs _helm_init
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-manager/approver-enabled.yaml \
-     > artifacts/cert-manager/approver-enabled.yaml
 	@helm upgrade \
-		--install -f artifacts/cert-manager/approver-enabled.yaml cert-manager \
+		--install -f artifacts/values.yaml js-operator \
 		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager \
-	    --version ${JS_CERT_MANAGER_VERSION} \
+		oci://${JS_CONTAINER_REGISTRY}/charts/js-operator \
+	    --version ${JS_OPERATOR_VERSION} \
 		--wait
 
-install-cert-manager-without-auto-approver: mkdirs _helm_init
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-manager/approver-disabled.yaml \
-     > artifacts/cert-manager/approver-disabled.yaml
-	@helm upgrade \
-		--install -f artifacts/cert-manager/approver-disabled.yaml cert-manager \
-		--namespace jetstack-secure \
-		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager \
-	    --version ${JS_CERT_MANAGER_VERSION} \
-		--wait
+operator-cluster-addons:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/install-cluster-addons.yaml \
+     > artifacts/install-cluster-addons.yaml	
+	
+	@kubectl apply -f artifacts/install-cluster-addons.yaml
 
-create-cert:
-	@kubectl apply -f cert-manager/sample-cert.yaml
-
-remove-cert:
-	@kubectl delete -f cert-manager/sample-cert.yaml || true
-
-remove-cert-manager:
-	@helm uninstall -n jetstack-secure cert-manager || true
+remove-operator-cluster-addons:
+	@kubectl delete -f artifacts/install-cluster-addons.yaml || true
+	
+remove-js-operator:
+	@helm uninstall -n jetstack-secure js-operator || true
 	@kubectl delete -f namespaces/jetstack-secure.yaml || true
 
-renew-cert:
-	@cmctl -n sandbox renew test-cert
-	@cmctl -n sandbox status certificate test-cert
-	@cmctl -n sandbox inspect secret test-cert
-
-install: create-namespace configure-namespace install-cert-manager
-
-remove-openshift-venafi-scc:
-	@oc delete -f cert-manager/restricted-seccomp.yaml || true
-	@oc adm policy remove-scc-from-user jetstack-privileged -z default || true
-
-clean: remove-cert remove-cert-manager
+clean: remove-js-operator
 	@kubectl delete secret venafi-jetstack-enterprise-key -n jetstack-secure || true
 	@kubectl delete -f namespaces/jetstack-secure.yaml || true
