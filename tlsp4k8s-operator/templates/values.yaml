@@ -1,0 +1,36 @@
+js-operator:
+  name: js-operator
+images:
+  registry: ${JS_CONTAINER_REGISTRY}
+  secret:
+    # Whether imagePullSecrets fields should be set for operator and cainjector
+    enabled: true
+    # Name of the image pull secret Kubernetes Secret. User should ensure that
+    # this secret has been created in installation namespace and contains
+    # credentials to registry with operator and cainjector images (by default
+    # eu.gcr.io/jetstack-secure-enterprise)
+    name: ${JS_DOCKER_REGISTRY_SECRET}
+commonLabels: {}
+  # team_name: dev
+operator:
+  # if unset Chart'sAppVersion will be used
+  imageTag: ${JS_OPERATOR_IMAGE_VERSION}
+  logLevel: 2
+  replicas: 1
+  webhook:
+    host: "0.0.0.0"
+    port: 6443
+    certDir: "/tmp"
+  resources: {}
+  # requests:
+  #   cpu: 10m
+  #   memory: 200Mi
+cainjector:
+  imageTag: ${JS_CERT_MANAGER_CAINJECTOR_IMAGE_VERSION}
+  replicas: 1
+  logLevel: 2
+  resources: {}
+  # requests:
+  #   cpu: 10m
+  #   memory: 200Mi
+
