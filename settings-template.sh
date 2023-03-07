@@ -106,9 +106,9 @@ export JS_VENAFI_ENHANCED_ISSUER_IMAGE_VERSION :=v0.3.2
 
 # JS OPERATOR
 # helm
-export JS_OPERATOR_VERSION :=v0.0.1-alpha.20
+export JS_OPERATOR_VERSION :=v0.0.1-alpha.24
 # image
-export JS_OPERATOR_IMAGE_VERSION :=v0.0.1-alpha.20
+export JS_OPERATOR_IMAGE_VERSION :=v0.0.1-alpha.24
 
 # CERT-SYNC
 # helm
