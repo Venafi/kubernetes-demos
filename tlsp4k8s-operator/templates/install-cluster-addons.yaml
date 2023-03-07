@@ -5,13 +5,50 @@ metadata:
 spec:
   certManager:
     version: ${JS_CERT_MANAGER_VERSION}
-  approverPolicy: 
+  approverPolicyEnterprise: 
     version: ${JS_POLICY_APPROVER_VERSION}
   venafiEnhancedIssuer:
     version: ${JS_VENAFI_ENHANCED_ISSUER_VERSION}
+    caSources: 
+      - name: venafi-tpp-ca-bundle
   trustManager:
     version: ${JS_CERT_MANAGER_TRUST_VERSION}
   images:
     secret: ${JS_DOCKER_REGISTRY_SECRET}
     registry: ${JS_CONTAINER_REGISTRY}
-  
+  venafiConnections:
+  - name: tpp-connection
+    namespace: jetstack-secure
+    tpp:
+      url: ${JS_VENAFI_TPP_URL}
+      accessToken:
+      - secret:
+          name: venafi-credentials
+          fields: ["username", "password"]
+      - tppOAuth:
+          authInputType: UsernamePassword
+          clientId: ${JS_VENAFI_CLIENTID}
+          url: ${JS_VENAFI_TPP_URL}
+  issuers:  
+  - name: application-team-1
+    clusterScope: true
+    venafiEnhancedIssuer:
+      venafiConnectionName: tpp-connection
+      zone: "${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}"
+    policy:
+      allowed:
+        commonName:
+          value: "*"
+        dnsNames:
+          values: ["*"]
+        usages:
+          - "signing"
+          - "digital signature"
+          - "server auth"
+      plugins:
+        venafi:
+          venafiConnectionName: tpp-connection
+          zone: "${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}"
+      subjects:
+        certManager: true
+---
