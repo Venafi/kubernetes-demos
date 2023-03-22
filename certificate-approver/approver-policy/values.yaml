@@ -8,12 +8,10 @@ crds:
   # This option allows to force the 'x-kubernetes-validations' annotation to be excluded,
   # even on Kubernetes 1.25+ clusters.
   forceRemoveValidationAnnotations: false
+
 # -- cert-manager-approver-policy dependency options.
 cert-manager-approver-policy:
   nameOverride: cert-manager-approver-policy
-  
-  imagePullSecrets:
-  - name: ${JS_DOCKER_REGISTRY_SECRET}
 
   # -- Number of replicas of approver-policy to run.
   replicaCount: 1
@@ -22,6 +20,10 @@ cert-manager-approver-policy:
     repository: ${JS_CONTAINER_REGISTRY}/approver-policy-enterprise
     pullPolicy: IfNotPresent
     tag: ${JS_APPROVER_POLICY_ENTERPRISE_IMAGE_VERSION}
+
+  # -- Optional secrets used for pulling the approver-policy container image.
+  imagePullSecrets:
+  - name: ${JS_DOCKER_REGISTRY_SECRET}
 
   app:
     # -- Verbosity of approver-policy logging.
@@ -53,45 +55,8 @@ cert-manager-approver-policy:
     - "venaficlusterissuers.jetstack.io/*"
     - "venafiissuers.jetstack.io/*"
 
-    metrics:
-      # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
-      port: 9402
-      # -- Service to expose metrics endpoint.
-      service:
-        # -- Create a Service resource to expose metrics endpoint.
-        enabled: true
-        # -- Service type to expose metrics.
-        type: ClusterIP
-        # -- ServiceMonitor resource for this Service.
-        servicemonitor:
-          enabled: false
-          prometheusInstance: default
-          interval: 10s
-          scrapeTimeout: 5s
-          labels: {}
-
-    readinessProbe:
-      # -- Container port to expose approver-policy HTTP readiness probe on
-      # default network interface.
-      port: 6060
-
-    webhook:
-      # -- Host that the webhook listens on.
-      host: 0.0.0.0
-      # -- Port that the webhook listens on.
-      port: 6443
-      # -- Timeout of webhook HTTP request.
-      timeoutSeconds: 5
-      # -- Directory to read and store the webhook TLS certificate key pair.
-      certificateDir: /tmp
-      # -- Type of Kubernetes Service used by the Webhook
-      service:
-        type: ClusterIP
-
   # -- Volume containing the rego rules.
   volumes:
-  - name: tmp
-    emptyDir: {}
   - name: rego
     configMap:
       name: cert-manager-approver-policy-rego
@@ -99,8 +64,6 @@ cert-manager-approver-policy:
 
   # -- Mount for the policy directory.
   volumeMounts:
-  - name: tmp
-    mountPath: /tmp
   - name: rego
     mountPath: /var/run/rego
 
@@ -113,11 +76,13 @@ cert-manager-approver-policy:
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-#venafiConnection:
+
+venafiConnection:
   # When set to false, the rendered output does not contain the
   # VenafiConnection CRDs and RBAC. This is usefull for when the
   # Venafi Connection resoures are already installed seperately.
-#  include: true
+  include: true
+
 # -- approver-policy-rego options.
 rego:
   # -- RBAC needed to watch resources.

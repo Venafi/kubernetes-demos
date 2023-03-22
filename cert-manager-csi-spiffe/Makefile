@@ -53,14 +53,14 @@ _create_sourceCA:
 install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@echo 'Setting up helm with the correct repos'
 	@helm repo update
-	@echo 'Installing Jetstack cert-manager CSI Driver.....'
+	@echo 'Installing Jetstack cert-manager CSI SPIFFE Driver.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
      > artifacts/csi-driver-spiffe/values.yaml
 	@helm upgrade \
 		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe \
 		--namespace jetstack-secure \
 		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-csi-driver-spiffe \
-        --version ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION}
+        --version ${JS_CERT_MANAGER_CSI_DRIVER_SPIFFE_VERSION} \
 		--wait
 
 _create-config-map-with-PEM-to-access-TPP:

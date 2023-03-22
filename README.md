@@ -1,19 +1,19 @@
 # Getting started with Venafi TLS Protect For Kubernetes
 
 ## Assumptions
-- You are a Venafi Jetstack Secure customer and you have access to credentials to access enterprise builds
-- If you do not, sign up for an account at https://platform.jetstack.io and reach out for access to credentials
+- You are a Venafi TLS Protect for Kubernetes (TLSPK) customer and you have access to credentials to access enterprise builds
+- If you do not, sign up for an account at https://platform.jetstack.io and reach out for access to credentials. Getting access to enterprise images is controlled by a feature flag that needs to be enabled. 
 
 ## Setting up your environment 
-- Copy [settings-template.sh] (settings-template.sh) as `settings.sh`. Run `cp settings-template.sh settings.sh`. This is a one time work unless new environment variables are introduced in the template. 
+- Copy [settings-template.sh] (settings-template.sh) as `settings.sh`. Run `cp settings-template.sh settings.sh`. This is a one time work unless new environment variables are introduced in the template. We update the version numbers of Helm charts and images regularly so keep your `settings.sh` up-to-date with the template. 
 - Set the JS_ENTERPRISE_CREDENTIALS_FILE in `settings.sh` with the file location of JSON credentials that you have been provided to pull enterprise images.  
-- Additionally, file `settings.sh` contains environment variables that will be used throughout the setup and configuration. Make sure to set the values as needed. Examples are provided in the comments. 
+- Additionally, file `settings.sh` contains environment variables that will be used throughout the setup and configuration. Make sure to set the values as needed. Examples are provided in the template.
 
 ## Creating your Kubernetes cluster
 The scripts are written with the assumption that you will be setting up a GKE cluster and as such have access to Google Cloud Platform. If you plan to operate in a cluster other than GKE, you can ignore the cluster creation and jump right into cluster configuration. 
 
 - To create a cluster including a Google Certficate Authority Service, simply run `make fresh-start`
-- This will create a brand new GKE cluster, a new Google Certificate Authority Serivce and installs Jetstack cert-manager along with the policy approver addon. 
+- This will create a brand new GKE cluster, a new Google Certificate Authority Service and installs a few required components. The target used for the required components is `cluster-addons` 
 - It should take about 10 mins to build and configure a cluster.
 
 ## Configuring your Kubernetes cluster
@@ -21,10 +21,10 @@ The scripts are written with the assumption that you will be setting up a GKE cl
 - Skip this step if you are creating a brand new cluster with `fresh-start`
 - If you are on an openshift environemnt run `make update-openshift-venafi-scc`
 - If you are bringing your own cluster then simply run `make cluster-addons` 
-- Jetstack cert-manager along with the policy approver addon, trust and the venafi enhanced issuer will be added to the cluster
+- Enterprise cert-manager along with the policy-approver, trust-manager and the Venafi Enhanced Issuer will be installed in the cluster when you run the `cluster-addons` target
 
 ## Validating your cluster
-- Check if the components of Jetstack Secure are installed and running.
+- Check if the components of TLSPK are installed and running.
 - Run `kubectl get pods -n jetstack-secure`. This should show that pods are up and running. 
 ```
 ❯ kubectl get pods -n jetstack-secure
@@ -38,10 +38,10 @@ trust-manager-5778457f48-mzkj6                  1/1     Running   0          67s
 venafi-enhanced-issuer-7c9b979cbf-mbwfp         1/1     Running   0          35s
 ```
 
-# Connecting the cluster to Venafi Jetstack Secure Dashboard
-- Log back into Jetstack Secure https://platform.jetstack.io and click on Clusters.
+# Connecting the cluster to TLS Protect for Kubernetes Dashboard
+- Log back into TLS Protect for Kubernetes https://platform.jetstack.io and click on Clusters.
 - For specific instructions and screenshots click [here](docs/jetstack-secure.md#connecting-a-cluster-to-jetstack-secure)
-- Validate that the Jetstack Secure Agent has been installed and running in the cluster.
+- Validate that the TLSPK Agent has been installed and running in the cluster.
 - Run `kubectl get pods -n jetstack-secure`
 ```
 ❯ kubectl get pods -n jetstack-secure
@@ -54,66 +54,68 @@ cert-manager-webhook-5cbf55594c-tzvj6           1/1     Running   0          4m4
 trust-manager-5778457f48-mzkj6                  1/1     Running   0          3m38s
 venafi-enhanced-issuer-7c9b979cbf-mbwfp         1/1     Running   0          3m6s
 ```
-The `jetstack-secure` namespace how has an addtional pod called `agent-656b6b97c-24zfj` that is responsible for pushing the certificates to Jetstack Secure dashboard. 
+The `jetstack-secure` namespace how has an addtional pod called `agent-656b6b97c-24zfj` that is responsible for sending public certificate data to TLSPK dashboard. 
 
 # 01. Request a certificate 
 
 To create and approve a certificate manually follow the instructions [here](docs/01.create-certificate.md#creating-a-certificate)
-Login to Jetstack Secure dashboard to view the certificate data
+Login to TLSPK dashboard to view the certificate data
 
 # 02. Creating a Venafi Connection
 
-The VenafiConnection custom resources are used to configure the connection and authentication between the Venafi Control Plane and your Kubernetes cluster.
+The VenafiConnection custom resources are used to define the connection and authentication between the Venafi Control Plane and your Kubernetes cluster.
 
-The simplest way of authentication to the Venafi control plane is using the Venafi TPP access-token, Venafi-TPP username and password or Venafi-as-a-Service API Key stored as a Kubernetes secrert. The Venafi connection supports secretless authentication using JWT or storing credentails in an external secrets engine like Vault. In this sample we will use the username and password authentication. 
+There are several ways to configure the authentication for the Venafi Control Plane. In case of TLS Protect for Datacenter or also referred to as TPP, the supported options are access-token, Username / password credentials or JWT token tied to a service account in Kubernetes. For TLS Protect Cloud (which is the as-as-service offering from Venafi), API Key is used. 
+For production workloads, the supported secretless authentication using JWT or storing credentails in an external secrets store is recommeded. In this demo repo, you will find us use username and password authentication. 
 
-To create a venafi connection follow the instructions [here](docs/02.create-venafi-connection.md#creating-a-venafi-connection)
+To create a Venafi Connection follow the instructions [here](docs/02.create-venafi-connection.md#creating-a-venafi-connection). 
+This will create two connections. One for Venafi TLS Protect Datacenter and another for TLS Protect Cloud
 
 # 03. Creating policies for auto approval
 
-The Venafi Jetstack Enterprise Policy Approver is an enterprise addon to define and manage `CertificateRequestPolicy` resources that provides the ability to
-- define policies locally in-cluster that enforces how `CertificateRequests` are processed
+The Venafi TLSPK Enterprise Policy Approver is an addon to define and manage `CertificateRequestPolicy` resources that provides the ability to
+- define policies locally in-cluster to enforce how `CertificateRequests` are processed
 - leverage Venafi plugin to locally enforce policies defined in Venafi without replicating them
 - leverage `rego` plugin to leverage policies defined using Open Policy Agent 
 
 To automatically approve certificate requests with `CertificateRequestPolicy` follow the instructions [here](docs/03.auto-approve-certs.md#create-policies-for-auto-approval)
 
-Refresh the Jetstack Secure dashboard to look at new data pushed by the agent. Review the data.
+Refresh the TLSPK dashboard to look at new data pushed by the agent. Review the data.
 
-# 04. Pushing certificates for visibility to Venafi Trust Protection Platform 
+# 04. Pushing certificates for visibility to Venafi TLS Protect - Datacenter 
 
-The Venafi Jetstack Enterprise certificate sync module is an enterprise addon to synchronize TLS secrets that are in cluster into a policy folder defined in Venafi for management. This allows Venafi Administrators to understand the various Certificate Authorities used for the certificates and define appropriate policies to manage compliance. 
+The Venafi TLSPK Enterprise certificate sync module is an addon to synchronize TLS secrets that are in cluster into a policy folder defined in Venafi for management. This allows Venafi Administrators to understand the various Certificate Authorities used for the certificates and define appropriate policies to manage compliance. Starting TLS Protect - Datacenter (or TPP as it is called) version 22.4, there is a comprehensive native discovery capability that security administrators should leverage.
 
-To setup the ability to push all TLS secrets to Venafi Trust Protection Platform follow the instructions [here](docs/04.cert-sync-to-venafi.md#push-certificate-data-to-venafi-trust-protection-platform)
+To push all TLS secrets to Venafi TLS Protect - Datacenter follow the instructions [here](docs/04.cert-sync-to-venafi.md#push-certificate-data-to-venafi-trust-protection-platform)
 
-Refresh the Jetstack Secure dashboard to look at new data pushed by the agent. Review the data. Additionally, access the Venafi Trust Protection Platform. Certificates pushed by the cert sync module will show up the folder designated for discovery.
+Refresh the TLSPK dashboard to look at new data pushed by the agent. Review the data. Additionally, access the Venafi TLS Protect - Datacenter. Certificates pushed by the cert sync module will show up the folder designated for discovery.
 
-# 05. Create identities for pods with Jetstack cert-manager CSI driver
+# 05. Create identities for pods with Enterprise cert-manager CSI driver
 
-Jetstack cert-manager CSI driver is an addon to cert-manager to provide TLS indentities to pods running in-cluster. The identities are directly injected into the pod's tmp filesystem thereby avoiding the need to create and manage TLS secrets in Kubernetes.  
+Enterprise cert-manager CSI driver (based on the open source cert-manager CSI driver) is an addon to cert-manager to provide TLS indentities to pods running in-cluster. The identities are directly injected into the pod's ephemeral filesystem and avoids the need to create and manage TLS secrets in Kubernetes.  
 
-Follow the instructions [here](docs/05.pod-identities-csi-driver.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver) to setup Jetstack cert-manager CSI driver and validate that certs are injected into the pods.
+Follow the instructions [here](docs/05.pod-identities-csi-driver.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver) to setup Enterprise cert-manager CSI driver and validate that certs are injected into the pods.
 
-# 06. Create identities for pods with Jetstack cert-manager SPIFFE driver
+# 06. Create identities for pods with Enterprise cert-manager SPIFFE driver
 
-Jetstack cert-manager CSI SPIFFE driver is an addon to cert-manager to provide TLS indentities to pods running in-cluster using SPIFFE. The identities are directly injected into the pod's tmp filesystem thereby avoiding the need to create and manage TLS secrets in Kubernetes.  
+Enterprise cert-manager CSI SPIFFE driver is an addon to cert-manager to provide TLS indentities to pods running in-cluster with SPIFFE. The identities are directly injected into the pod's ephemeral filesystem and avoids the need to create and manage TLS secrets in Kubernetes.  
 
-Follow the instructions [here](docs/06.pod-identities-csi-driver-spiffe.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver-spiffe) to setup Jetstack cert-manager CSI SPIFFE driver and validate that SPIFFE SVIDS are injected into the pods
+Follow the instructions [here](docs/06.pod-identities-csi-driver-spiffe.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver-spiffe) to setup Enterprise cert-manager CSI SPIFFE driver and validate that SPIFFE SVIDS are injected into the pods
 
 # 07. Issue certificates with an issuer running outside the cluster
 
-The Venafi Jetstack Enterprise issuer for cert-manager provides a mechanism for organizations to run an issuer either in-cluster or isolated from the cluster. The isolated issuer bootstraps itself with an intermediate CA issued by Venafi and keeps it in memory. This is critical for organizaitons that are looking for ways to avoid having to store certificate information including the privateKey as TLS secrets. 
+The Venafi TLSPK Enterprise issuer for cert-manager provides a mechanism for organizations to run an issuer either in-cluster or isolated from the cluster. The isolated issuer bootstraps itself with an intermediate CA issued by Venafi and keeps it in memory. This is critical for organizaitons that are looking for ways to avoid having to store certificate information including the privateKey as TLS secrets. 
 
 Follow the instructions [here](docs/07.isolated-issuer.md#configuring-and-running-venafi-jetstack-secure-isolated-issuer)
 
-# 08. Venafi Jetstack Secure cert-manager istio-csr agent to sign Istio mesh workloads 
+# 08. Venafi TLSPK Enterprise cert-manager istio-csr agent to sign Istio mesh workloads 
 
-Jetstack cert-manager istio-csr is a cert-manager addon that provides that ability to sign mesh workloads with a cert-manager issuer. Various issuers can be configured and setup as `istio-ca` for Istio. More information about istio-csr can be found [here](https://platform.jetstack.io/documentation/installation/istio-csr) 
+Enterprise cert-manager istio-csr is a cert-manager addon that provides that ability to sign mesh workloads with a cert-manager issuer. Various issuers can be configured and setup as `istio-ca` for Istio. More information about istio-csr can be found [here](https://platform.jetstack.io/documentation/installation/istio-csr) 
 
 Choose one of the following options to install and configure for your service mesh.
 
-## 08a. Signing mesh workloads with Venafi Trust Protection Platform 
-In this scenario, we will walk through the process of configuring Venafi Trust Protection Platform to manage the intermediate that will sign mesh workloads. The policy approver that's running in cluster will enforce policies defined in-cluster. Follow instructions [here](docs/08a.vtpp-istio-service-mesh.md#setting-up-venafi-trust-protection-platform-for-signing-istio-service-mesh-workloads)
+## 08a. Signing mesh workloads with a CA managed in Venafi TLS Protect - Datacenter 
+In this scenario, we will walk through the process of configuring Venafi TLS Protect - Datacenter to manage the intermediate that will sign mesh workloads. The policy approver that's running in cluster will enforce policies defined in-cluster. Follow instructions [here](docs/08a.vtpp-istio-service-mesh.md#setting-up-venafi-trust-protection-platform-for-signing-istio-service-mesh-workloads)
 
 
 ## Signing mesh workloads with Venafi TLS Protect Cloud
@@ -133,8 +135,8 @@ In this scenario we will use an external issuer (AWS KMS Issuer) to sign  certif
 # 10. Issue certificates with cert-manager AWS ACM Private Certificate Authority Issuer
 In this scenario we will use an external issuer (AWS PCA Issuer) to sign certificate requests.  Follow instructions [here](docs/10.certs-with-aws-pca-issuer.md#cert-manager-aws-pca-issuer-to-manage-certificates-in-cluster)
 
-# 11. Issue Machine Identities using the Venafi Enhanced Issuer
-In this scenatio we will create a venafi enhanced issuer that would access Hashi Vault to get credentails required to access the Venafi API's. We will use Venafi Trust Protection Platfor/Venafi As A Service to sign a certificate request. Follow instructions [here](docs/11.certs-with-venafi-enhanced-issuer.md#cert-manager-venafi-enhanced-issuer-to-manage-certificates-in-cluster)
+# 11. Manage Machine Identities using the Venafi Enhanced Issuer
+In this scenatio we will create a Venafi Enhanced Issuer that would access Hashicorp Vault to get credentails required to access the Venafi Platform. `VenafiIssuer` / `VenafiClusterIssuer` resources are mapped to a `VenafiConnection` to issue and manage identities for workloads. Follow instructions [here](docs/11.certs-with-venafi-enhanced-issuer.md#cert-manager-venafi-enhanced-issuer-to-manage-certificates-in-cluster)
 
 # 12. Examples
 A set of examples , currenty covers Ingress, Openshift Ingress, Openshift Routes, Java Truststores [here](docs/12.cert-manager-samples.md#cert-manager-samples)

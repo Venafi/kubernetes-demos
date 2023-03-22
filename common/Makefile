@@ -20,6 +20,7 @@ mkdirs:
 
 ################## PREP KUBERNETES CLUSTER FOR ISOLATED ISSUER #################
 init: mkdirs
+	@echo "created directory artifacts for generated resources"
 
 # Create a Kubernetes secret resource
 create-venafi-credentials:
