@@ -66,7 +66,8 @@ install-jetstack-istio-csr:
 	    --install -f artifacts/istio-csr/values.yaml cert-manager-istio-csr \
   		--namespace jetstack-secure \
 		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-istio-csr \
-  		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION}
+  		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION} \
+		--wait
 
 #### Venafi TPP Specific Targets #######
 vtpp-step1: JS_CERT_MANAGER_ISSUER_GROUP=$(DEFAULT_ISSUER_GROUP)
