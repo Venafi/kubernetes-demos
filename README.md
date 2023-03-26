@@ -102,11 +102,11 @@ Enterprise cert-manager CSI SPIFFE driver is an addon to cert-manager to provide
 
 Follow the instructions [here](docs/06.pod-identities-csi-driver-spiffe.md#securing-pods-with-identities-using-the-venafi-jetstack-cert-manager-csi-driver-spiffe) to setup Enterprise cert-manager CSI SPIFFE driver and validate that SPIFFE SVIDS are injected into the pods
 
-# 07. Issue certificates with Venafi FireflyCA
+# 07. Issue certificates with Venafi Firefly
 
-Leveraging the Venafi FireflyCA as a cert-manager issuer allows enterprises to configure and govern an intermediate CA from the Venafi Control Plane. The fireflyCA issuer bootstraps itself with an intermediate CA keeps it in memory. This is critical for organizaitons that are looking for ways to avoid having to store intermediate certificate information including the privateKey as TLS secrets.  
+Leveraging the Venafi Firefly as a cert-manager issuer allows enterprises to configure and govern an intermediate CA from the Venafi Control Plane. Firefly issuer bootstraps itself with an intermediate CA keeps it in memory. This is critical for organizaitons that are looking for ways to avoid having to store intermediate certificate information including the privateKey as TLS secrets.  
 
-Follow the instructions [here](docs/07.fireflyca-issuer.md#configuring-and-running-venafi-fireflyca)
+Follow the instructions [here](docs/07.fireflyca-issuer.md#configuring-and-running-venafi-firefly)
 
 # 08. Venafi TLSPK Enterprise cert-manager istio-csr agent to sign Istio mesh workloads 
 
