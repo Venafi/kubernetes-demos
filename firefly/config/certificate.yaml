@@ -1,0 +1,68 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cert1.svc.cluster.local
+  namespace: sandbox
+  annotations:
+    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
+spec:
+  isCA: false
+  commonName: test-cert1.svc.cluster.local
+  dnsNames:
+  - test-cert1.svc.cluster.local
+  privateKey:
+    algorithm: ECDSA
+    rotationPolicy: Always
+  duration: 72h
+  renewBefore: 24h
+  secretName: test-cert1.svc.cluster.local
+  issuerRef:
+    name: fireflyCA
+    group: firefly-ca.venafi.com
+
+--- 
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cert2.svc.cluster.local
+  namespace: sandbox
+  annotations:
+    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
+spec:
+  isCA: false
+  commonName: test-cert2.svc.cluster.local
+  dnsNames:
+  - test-cert2.svc.cluster.local
+  privateKey:
+    algorithm: ECDSA
+    rotationPolicy: Always
+  duration: 24h
+  renewBefore: 8h
+  secretName: test-cert2.svc.cluster.local
+  issuerRef:
+    name: fireflyCA
+    group: firefly-ca.venafi.com
+
+--- 
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cert3.svc.cluster.local
+  namespace: sandbox
+  annotations:
+    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
+spec:
+  isCA: false
+  commonName: test-cert3.svc.cluster.local
+  dnsNames:
+  - test-cert3.svc.cluster.local
+  privateKey:
+    algorithm: ECDSA
+    rotationPolicy: Always
+  duration: 1h
+  secretName: test-cert3.svc.cluster.local
+  issuerRef:
+    name: fireflyCA
+    group: firefly-ca.venafi.com

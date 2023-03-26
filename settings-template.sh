@@ -177,3 +177,6 @@ export JS_SAMPLE_APP_IMAGE := nginxdemos/nginx-hello
 export JS_SAMPLE_TRUSTSTORE_APP_IMAGE := riazvm/jetstackdemos-truststore:1.3
 
 export JS_OPENSHIFT_ROUTE_IMAGE := ghcr.io/cert-manager/cert-manager-openshift-routes:0.1.3
+
+#Firefly config
+export JS_VENAFI_FIREFLYCA_CONFIG_ID :=b45axxx0-xxxx-xxxx-xxxx-f78e8339xxxx
