@@ -65,7 +65,7 @@ Login to TLSPK dashboard to view the certificate data
 
 The VenafiConnection custom resources are used to define the connection and authentication between the Venafi Control Plane and your Kubernetes cluster.
 
-There are several ways to configure the authentication for the Venafi Control Plane. In case of TLS Protect for Datacenter or also referred to as TPP, the supported options are access-token, Username / password credentials or JWT token tied to a service account in Kubernetes. For TLS Protect Cloud (which is the as-as-service offering from Venafi), API Key is used. 
+There are several ways to configure the authentication for the Venafi Control Plane. In case of TLS Protect for Datacenter or also referred to as TPP, the supported options are access-token, Username / password credentials or JWT token tied to a service account in Kubernetes. For TLS Protect Cloud (which is the as-a-service offering from Venafi), API Key is used. 
 For production workloads, the supported secretless authentication using JWT or storing credentails in an external secrets store is recommeded. In this demo repo, you will find us use username and password authentication. 
 
 To create a Venafi Connection follow the instructions [here](docs/02.create-venafi-connection.md#creating-a-venafi-connection). 
