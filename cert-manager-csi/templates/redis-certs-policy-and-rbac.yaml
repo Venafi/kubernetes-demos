@@ -15,13 +15,13 @@ spec:
   plugins:
     venafi:
       values:
-        venafiConnectionName: vtpp-connection
-        zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+        venafiConnectionName: venafi-connection
+        zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
   selector:
     issuerRef:
-      name: "vtpp-issuer-for-redis"
-      kind: "Issuer"
-      group: "cert-manager.io"
+      name: "venafi-issuer-for-redis"
+      kind: "VenafiClusterIssuer"
+      group: "jetstack.io"
 
 --- 
 apiVersion: rbac.authorization.k8s.io/v1
