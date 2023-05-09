@@ -20,7 +20,7 @@ spec:
   plugins:
     venafi:
       values:
-        venafiConnectionName: vtpp-connection
+        venafiConnectionName: venafi-connection
         zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
   selector:
     issuerRef:

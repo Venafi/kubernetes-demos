@@ -15,10 +15,10 @@ spec:
   plugins:
     venafi:
       values:
-        venafiConnectionName: vtpp-connection
-        zone: ${JS_VENAFI_TPP_ZONE_PUBLIC_CA1}
+        venafiConnectionName: venafi-connection
+        zone: ${JS_VENAFI_ZONE_PUBLIC_CA1}
   selector:
     issuerRef:
-      name: "vtpp-cluster-issuer"
+      name: "venafi-cluster-issuer"
       kind: "VenafiClusterIssuer"
       group: "jetstack.io"
