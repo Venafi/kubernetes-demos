@@ -1,0 +1,154 @@
+---
+# Source: authentication-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "authentication-svc-ingress"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-authentication-svc"
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            vsatApp: "vsat-messaging-svc"
+---
+# Source: authentication-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-authentication-svc
+  namespace: "platform"
+automountServiceAccountToken: false
+---
+# Source: authentication-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-authentication-svc
+  namespace: "platform"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8084
+      targetPort: service-port
+      protocol: TCP
+      name: service-port
+  selector:
+    app.kubernetes.io/name: authentication-svc
+    app.kubernetes.io/instance: vsat
+---
+# Source: authentication-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-authentication-svc
+  namespace: "platform"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: authentication-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-authentication-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        app.kubernetes.io/name: authentication-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-authentication-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/authentication-svc@sha256:a24978a57f05b785fd65439ebeb6e0d073961fc7589aa2b4a1f069b4c5a6abd7"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: 8084
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+          resources:
+            {}
+          volumeMounts:
+            - name: credentials
+              mountPath: /credentials
+              readOnly: true
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: vsat-proxy-config
+                optional: true
+          env:
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: CREDENTIALS
+              value: /credentials
+            - name: TOKEN_POLL_INTERVAL
+              value: "3"
+            - name: TOKEN_POLL_TIMEOUT
+              value: "180"
+            - name: REDIS_SERVER_ADDRESS
+              value: vsat-redis-master:6379
+            - name: SERVER_ADDRESS
+              value: :8084
+      serviceAccountName: vsat-authentication-svc
+      volumes:
+        - name: credentials
+          secret:
+            secretName: client-credentials
+        - name: certs-mount
+          secret:
+            secretName: authentication-svc-tls
+---
+# Source: authentication-svc/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-authentication-svc
+  namespace: "platform"
+spec:
+  secretName: authentication-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-authentication-svc
+    - vsat-authentication-svc.platform
+    - vsat-authentication-svc.platform.svc
+    - vsat-authentication-svc.platform.svc.cluster.local

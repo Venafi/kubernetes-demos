@@ -1,0 +1,154 @@
+---
+# Source: messaging-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "messaging-svc-ingress"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-messaging-svc"
+  ingress:
+    - from:
+      - namespaceSelector: {}
+        podSelector:
+          matchLabels:
+            vsatMessagingIngress: "true"
+---
+# Source: messaging-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-messaging-svc
+  namespace: "platform"
+automountServiceAccountToken: false
+---
+# Source: messaging-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-messaging-svc
+  namespace: "platform"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8082
+      targetPort: service-port
+      protocol: TCP
+      name: service-port
+  selector:
+    app.kubernetes.io/name: messaging-svc
+    app.kubernetes.io/instance: vsat
+---
+# Source: messaging-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-messaging-svc
+  namespace: "platform"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: messaging-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-messaging-svc"
+        vsatRedisIngress: "true"
+        app.kubernetes.io/name: messaging-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-messaging-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-messaging-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/messaging-svc@sha256:334db467935d411c7a74b22813ee331573fe441e84e5833b593ffd3b40de9052"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: 8082
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+          resources:
+            {}
+          volumeMounts:
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: vsat-proxy-config
+                optional: true
+          env:
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: REDIS_SERVER_ADDRESS
+              value: vsat-redis-master:6379
+            - name: SERVER_ADDRESS
+              value: :8082
+            - name: AUTHENTICATION_SVC_BASE_URL
+              value: "https://vsat-authentication-svc.platform.svc.cluster.local:8084"
+            - name: CLOUD_WEB_SOCKET_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cloud-vsat-config
+                  key: cloudWebsocketUrl
+            - name: CLOUD_GRPC_SERVER_PORT
+              value: "9443"
+            - name: REDIS_STREAMS_MAXLEN
+              value: "10000"
+      volumes:
+        - name: certs-mount
+          secret:
+            secretName: messaging-svc-tls
+---
+# Source: messaging-svc/templates/certificate.yaml
+# Redis
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-messaging-svc
+  namespace: "platform"
+spec:
+  secretName: messaging-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-messaging-svc
+    - vsat-messaging-svc.platform
+    - vsat-messaging-svc.platform.svc
+    - vsat-messaging-svc.platform.svc.cluster.local

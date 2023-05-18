@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: client-credentials
+  namespace: platform
+data:
+  client-credentials.json:  "REPLACE-ME"
+---
+apiVersion:  v1
+kind:  ConfigMap
+metadata:
+  name: cloud-vsat-config
+  namespace: platform
+data:
+  cloudWebsocketUrl: "wss://vsat-gw.venafi.cloud/system/socket"
+  cloudGrpcServerPort:  "2623"
+  publickey: ""
+  fingerprint: ""
+  registry: ""
+  validator: ""
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vsat-bootstrap
+  namespace: platform
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: jfrogcred
+      containers:
+        - image: "rimo.jfrog.io/docker/venafi-vsatellite/inventory-svc@sha256:eeb5e22df41a887939f8d54f0b0afc5a6917b4966692cee5a2b933086e943d0e"
+          name: vsat-bootstrap
+---

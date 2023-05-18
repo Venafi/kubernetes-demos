@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: key-generation
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acme
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: internal-scan
+---

@@ -1,0 +1,166 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: internal-scan
+---
+# Source: scanafi-svc-internal/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "scanafi-svc-ingress"
+  namespace: "internal-scan"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-scanafi-svc"
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            vsatApp: "vsat-messaging-svc"
+---
+# Source: scanafi-svc-internal/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-scanafi-svc-internal
+  namespace: "internal-scan"
+automountServiceAccountToken: false
+---
+# Source: scanafi-svc-internal/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-scanafi-svc-internal
+  namespace: "internal-scan"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8053
+      targetPort: service-port
+      protocol: TCP
+      name: service-port
+  selector:
+    app.kubernetes.io/name: scanafi-svc-internal
+    app.kubernetes.io/instance: vsat
+---
+# Source: scanafi-svc-internal/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-scanafi-svc-internal
+  namespace: "internal-scan"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # NOTE: due to MultiQueue implementation, we support only a single pod running at a given time
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: scanafi-svc-internal
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-scanafi-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        app.kubernetes.io/name: scanafi-svc-internal
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-scanafi-svc-internal
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-scanafi-svc-internal
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/scanafi-svc-internal@sha256:f5caec30bb702508f77922123ea38095a98ee561578798e3d65b7e2d12ebeb00"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: 8053
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /v1/healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /v1/healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 10
+          envFrom:
+            - configMapRef:
+                name: vsat-proxy-config
+                optional: true
+          env:
+            - name: LOG_LEVEL
+              value: info
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: PROVIDER_ENDPOINT_URL
+              value: "https://vsat-messaging-svc.platform.svc.cluster.local:8082/v1/cloudmessages/stream"
+            - name: REDIS_SERVER_ADDRESS
+              value: "vsat-redis-master.platform.svc.cluster.local:6379"
+            - name: SERVER_ADDRESS
+              value: :8053
+            - name : SCANAFI_SCAN_ENDPOINTS
+              value: ""
+            - name: BATCH_MAX_SCANRESULT_SIZE
+              value: "500"
+            - name: BATCH_TIMEOUT
+              value: "5000"
+            - name: TASK_MAX_WORKERS
+              value: "500"
+            - name: UPLOAD_RETRY_COUNT
+              value: "10"
+            - name: CLOUD_STREAM_CHUNK_SIZE
+              value: "50"
+          resources:
+            {}
+          volumeMounts:
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+      volumes:
+        - name: certs-mount
+          secret:
+            secretName: scanafi-svc-tls
+---
+# Source: scanafi-svc-internal/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-scanafi-svc-internal
+  namespace: "internal-scan"
+spec:
+  secretName: scanafi-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-scanafi-svc-internal
+    - vsat-scanafi-svc-internal.internal-scan
+    - vsat-scanafi-svc-internal.internal-scan.svc
+    - vsat-scanafi-svc-internal.internal-scan.svc.cluster.local

@@ -1,0 +1,159 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acme
+---
+# Source: acme-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "acme-svc-ingress"
+  namespace: "acme"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-acme-svc"
+  ingress:
+    - from: []
+---
+# Source: acme-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-acme-svc
+  namespace: "acme"
+automountServiceAccountToken: false
+---
+# Source: acme-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-acme-svc
+  namespace: "acme"
+spec:
+  type: ClusterIP
+  ports:
+    - port: !!int "8443"
+      targetPort: http
+      protocol: TCP
+      name: http
+
+  selector:
+    app.kubernetes.io/name: acme-svc
+    app.kubernetes.io/instance: vsat
+---
+# Source: acme-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-acme-svc
+  namespace: "acme"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: acme-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-acme-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        vsatCryptoIngress: "true"
+        app.kubernetes.io/name: acme-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-acme-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: acme-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/acme-svc@sha256:eb7edd91f7120221f13605b8b8bdd66ef0a4eb034b1e03689fe78f1fe90e337a"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: !!int "8443"
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+          envFrom:
+            - configMapRef:
+                name: vsat-proxy-config
+                optional: true
+          env:
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: REDIS_SERVER_ADDRESS
+              value: "vsat-redis-master.platform:6379"
+            - name: ACME_APPLICATION_PORT
+              value: "8443"
+            - name: MESSAGING_SVC_BASE_URL
+              value: "https://vsat-messaging-svc.platform.svc.cluster.local:8082"
+            - name: CRYPTO_SVC_BASE_URL
+              value: "https://vsat-crypto-svc.platform.svc.cluster.local:8443"
+            - name: DNS_CLIENT_CONCURRENCY
+              value: "5"
+            - name: ACME_CLIENT_DIRECTORY_CONCURRENCY
+              value: "1"
+            - name: ACME_CLIENT_ACCOUNT_CONCURRENCY
+              value: "1"
+            - name: ACME_CLIENT_ORDER_CONCURRENCY
+              value: "5"
+            - name: ACME_CLIENT_CHALLENGE_CONCURRENCY
+              value: "5"
+            - name: ACME_CLIENT_CERTIFICATE_CONCURRENCY
+              value: "5"
+          volumeMounts:
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+      volumes:
+        - name: certs-mount
+          secret:
+            secretName: acme-svc-tls
+---
+# Source: acme-svc/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-acme-svc
+  namespace: "acme"
+spec:
+  secretName: acme-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-acme-svc
+    - vsat-acme-svc.acme
+    - vsat-acme-svc.acme.svc
+    - vsat-acme-svc.acme.svc.cluster.local

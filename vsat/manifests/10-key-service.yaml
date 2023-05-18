@@ -1,0 +1,148 @@
+---
+# Source: key-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "key-svc-ingress"
+  namespace: "key-generation"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-key-svc"
+  policyTypes:
+    - Ingress
+---
+# Source: key-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-key-svc
+  namespace: "key-generation"
+automountServiceAccountToken: false
+---
+# Source: key-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-key-svc
+  namespace: "key-generation"
+  labels:
+    app.kubernetes.io/name: key-svc
+    app.kubernetes.io/instance: vsat
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: key-svc
+    app.kubernetes.io/instance: vsat
+  ports:
+    - port: !!int "8443"
+      targetPort: !!int "8443"
+      protocol: TCP
+      name: key-port
+---
+# Source: key-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-key-svc
+  namespace: "key-generation"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: key-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-key-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        vsatCryptoIngress: "true"
+        app.kubernetes.io/name: key-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-key-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-key-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/key-svc@sha256:15d306f3f9984488c776501a0ac54896a34391f8fd860052dd256f0f7ad77bea"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: !!int "8443"
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 10
+          env:
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: KEY_SVC_PORT
+              value: "8443"
+            - name: MESSAGE_CLIENT_CONCURRENCY
+              value: "50"
+            - name: NAMESPACE
+              value: "key-generation"
+            - name: REDIS_SERVER_ADDRESS
+              value: vsat-redis-master.platform:6379
+            - name: MESSAGING_SVC_BASE_URL
+              value: "https://vsat-messaging-svc.platform:8082"
+            - name: CRYPTO_SVC_BASE_URL
+              value: "https://vsat-crypto-svc.platform:8443"
+          resources:
+            {}
+          volumeMounts:
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+      volumes:
+        - name: certs-mount
+          secret:
+            secretName: key-svc-tls
+---
+# Source: key-svc/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-key-svc
+  namespace: "key-generation"
+spec:
+  secretName: key-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-key-svc
+    - vsat-key-svc.key-generation
+    - vsat-key-svc.key-generation.svc
+    - vsat-key-svc.key-generation.svc.cluster.local
