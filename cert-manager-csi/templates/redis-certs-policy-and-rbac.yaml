@@ -22,7 +22,32 @@ spec:
       name: "venafi-issuer-for-redis"
       kind: "VenafiClusterIssuer"
       group: "jetstack.io"
-
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-redis-server
+spec:
+  allowed:
+    commonName:
+      value: "redis*svc.cluster.local"
+      required: true
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "digital signature"
+      - "key encipherment"
+      - "server auth"
+  plugins:
+    venafi:
+      values:
+        venafiConnectionName: venafi-connection
+        zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
+  selector:
+    issuerRef:
+      name: "venafi-issuer-for-redis-server"
+      kind: "VenafiClusterIssuer"
+      group: "jetstack.io"
 --- 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -34,7 +59,7 @@ rules:
     resources: ["certificaterequestpolicies"]
     verbs: ["use"]
     # Name of the CertificateRequestPolicies to be used.
-    resourceNames: ["cert-policy-for-redis"]
+    resourceNames: ["cert-policy-for-redis","cert-policy-for-redis-server","cert-policy-for-redis-tmp"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -55,3 +80,28 @@ subjects:
 - kind: ServiceAccount
   name: cert-manager
   namespace: jetstack-secure
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-redis-tmp
+spec:
+  allowed:
+    commonName:
+      value: "redis*svc.cluster.local"
+      required: true
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "digital signature"
+      - "key encipherment"
+  plugins:
+    venafi:
+      values:
+        venafiConnectionName: venafi-connection
+        zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
+  selector:
+    issuerRef:
+      name: "vtpp-issuer-for-redis"
+      kind: "Issuer"
+      group: "cert-manager.io"
