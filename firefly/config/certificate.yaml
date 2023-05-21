@@ -1,68 +1,68 @@
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: test-cert1.svc.cluster.local
-  namespace: sandbox
-  annotations:
-    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
-spec:
-  isCA: false
-  commonName: test-cert1.svc.cluster.local
-  dnsNames:
-  - test-cert1.svc.cluster.local
-  privateKey:
-    algorithm: ECDSA
-    rotationPolicy: Always
-  duration: 72h
-  renewBefore: 24h
-  secretName: test-cert1.svc.cluster.local
-  issuerRef:
-    name: fireflyCA
-    group: firefly-ca.venafi.com
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: cert-two-days-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-two-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: cert-two-days-1.svc.cluster.local
+    dnsNames:
+    - cert-two-days-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 48h
+    renewBefore: 8h
+    secretName: cert-two-days-1.svc.cluster.local
+    issuerRef:
+      name: firefly
+      group: firefly.venafi.com
 
 --- 
 
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: test-cert2.svc.cluster.local
-  namespace: sandbox
-  annotations:
-    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
-spec:
-  isCA: false
-  commonName: test-cert2.svc.cluster.local
-  dnsNames:
-  - test-cert2.svc.cluster.local
-  privateKey:
-    algorithm: ECDSA
-    rotationPolicy: Always
-  duration: 24h
-  renewBefore: 8h
-  secretName: test-cert2.svc.cluster.local
-  issuerRef:
-    name: fireflyCA
-    group: firefly-ca.venafi.com
-
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: cert-ten-days-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-ten-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: cert-ten-days-1.svc.cluster.local
+    dnsNames:
+    - cert-ten-days-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 240h
+    renewBefore: 72h
+    secretName: cert-ten-days-1.svc.cluster.local
+    issuerRef:
+      name: firefly
+      group: firefly.venafi.com
 --- 
 
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: test-cert3.svc.cluster.local
-  namespace: sandbox
-  annotations:
-    fireflyca.venafi.com/policy-name: fireflyca-demo-policy
-spec:
-  isCA: false
-  commonName: test-cert3.svc.cluster.local
-  dnsNames:
-  - test-cert3.svc.cluster.local
-  privateKey:
-    algorithm: ECDSA
-    rotationPolicy: Always
-  duration: 1h
-  secretName: test-cert3.svc.cluster.local
-  issuerRef:
-    name: fireflyCA
-    group: firefly-ca.venafi.com
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: cert-hundred-days-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-hundred-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: cert-hundred-days-1.svc.cluster.local
+    dnsNames:
+    - cert-hundred-days-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 2400h
+    renewBefore: 720h
+    secretName: cert-hundred-days-1.svc.cluster.local
+    issuerRef:
+      name: firefly
+      group: firefly.venafi.com 

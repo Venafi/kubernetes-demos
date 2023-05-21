@@ -19,7 +19,7 @@ init: mkdirs make-namespaces configure-namespace
 
 mkdirs:
 	@rm -rf artifacts
-	@mkdir -p artifacts/firefly-ca
+	@mkdir -p artifacts/firefly
 	@mkdir -p artifacts/cert-manager
 
 make-namespaces:
@@ -68,20 +68,21 @@ install-cert-manager:
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 
-#create-firefly-crds:
-#	@kubectl apply -f config/cert-manager-fireflyca-crd.yaml
-#	@kubectl apply -f config/cert-manager-fireflyca-rbac.yaml
+	
+#STEP4. Deploy firefly. This creates a secret, config map that holds the configuration to Venafi Control Plane and also holds the kubeconfig generated for the 
+#service account 'firefly' that has the permission to control the deployment. 
+deploy-firefly: create-sa-key create-firefly-configmap install-firefly
 
-#STEP4. Deploy fireflyCA. This creates a config map that holds the configuration to Venafi Control Plane and also holds the kubeconfig generated for the 
-#service account 'firefly-ca' that has the permission to control the deployment. 
-deploy-firefly: create-firefly-configmap install-firefly
+#The service account key pair must have been created. The public key goes into Venafi control plane. The private key is stored as kubernetes secret. 
+create-sa-key: 
+	@kubectl create secret generic -n cert-manager firefly-secrets --from-file=sa-key.pem=firefly-key.pem
 
 create-firefly-configmap:
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/firefly-config.yaml \
-     > artifacts/firefly-ca/config1.yaml
-	 @cat artifacts/firefly-ca/config1.yaml | sed -e "s/REPLACE_WITH_TIMESTAMP/$(shell date +%Y-%m-%d-%H%M)/g" > artifacts/firefly-ca/config.yaml
-	 @rm -rf artifacts/firefly-ca/config1.yaml
-	@kubectl create configmap -n cert-manager firefly-ca-config --from-file artifacts/firefly-ca/config.yaml --from-file artifacts/kubeconfig.yaml
+     > artifacts/firefly/config1.yaml
+	 @cat artifacts/firefly/config1.yaml | sed -e "s/REPLACE_WITH_TIMESTAMP/$(shell date +%Y-%m-%d-%H%M)/g" > artifacts/firefly/config.yaml
+	 @rm -rf artifacts/firefly/config1.yaml
+	@kubectl create configmap -n cert-manager firefly-config --from-file artifacts/firefly/config.yaml --from-file artifacts/kubeconfig.yaml
 
 # Installation is done via static manifests at this time. These manifests are generated via a Helm Chart and will be changed
 # to do a direct Helm install once published to OCI 
@@ -97,8 +98,7 @@ remove-certificates:
 
 
 # All Firefly CA related API's. Use UI if that works best for you.
-
-create-firefly-ca-issuer:
+create-firefly-issuer:
 	@echo "Creating Firefly issuer with Venafi BUILTIN CA"
 	@curl --location --request POST 'https://api.venafi.cloud/v1/distributedissuers/subcaproviders' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
@@ -119,7 +119,7 @@ create-firefly-ca-issuer:
 		"keyAlgorithm": "EC_P256" \
 	}'
 
-show-firefly-ca-issuers:
+show-firefly-issuers:
 	@echo "List Firefly issuers"
 	@curl --location --request GET 'https://api.venafi.cloud/v1/distributedissuers/subcaproviders' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
@@ -158,7 +158,16 @@ get-firefly-intermediate-certificate-ids:
 	2>/dev/null \
 	| jq '.intermediateCertificates[]|.id,.commonName')
 
-get-firefly-ca-issuer-ids:
+tmp-get-firefly-intermediate-certificate-ids:
+	@(curl --location --request GET 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates' \
+	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
+	--header 'Content-Type: application/json' \
+	2>/dev/null \
+	| jq '.intermediateCertificates[]|.id') > foo.sh 
+	##sed -e 's/$/STRING_SUFFIX/' foo.sh
+	##sed -e 's/^/STRING_PREFIX/' foo.sh
+
+get-firefly-issuer-ids:
 	@(curl --location --request GET 'https://api.venafi.cloud/v1/distributedissuers/subcaproviders' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json' \
@@ -179,7 +188,7 @@ get-firefly-policy-ids:
 	2>/dev/null \
 	| jq '.policies[].id')
 
-delete-firefly-ca-issuer:
+delete-firefly-issuer:
 	@echo "Delete Firefly Configuration"
 	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/configurations/ce129180-80b6-11ed-a4c5-fd2a379af263' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
@@ -191,21 +200,27 @@ delete-firefly-ca-issuer:
 
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/ae45b480-cb1c-11ed-8c19-05231112a342' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/ffa8a380-f75b-11ed-9a76-21c39b0ec114' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 
-#delete-firefly-crds:
-# @kubectl delete -f config/cert-manager-fireflyca-crd.yaml || true
-#	#@kubectl delete -f config/cert-manager-fireflyca-rbac.yaml || true
+delete-firefly-private-key-secret:
+	@kubectl delete secret firefly-secrets -n cert-manager || true
 
-uninstall-firfly-ca:
+uninstall-firefly:
 	@kubectl -n cert-manager delete -f config/firefly-resources.yaml || true
-	@kubectl -n cert-manager delete configmap firefly-ca-config || true
+	@kubectl -n cert-manager delete configmap firefly-config || true
 
 uninstall-cert-manager:
 	@helm uninstall -n cert-manager cert-manager || true
 
-cleanup: remove-certificates uninstall-firfly-ca uninstall-cert-manager
+generate-key-pair:
+	@openssl genrsa -out firefly-key.pem 2048
+	@openssl rsa -in firefly-key.pem -pubout > firefly-key.pub
+	@echo @@@@@@@ The public key contents below should be used for service account in Venafi Control Plane @@@@@@@
+	@cat firefly-key.pub
+	@echo @@@@@@@ The public key contents above should be used for service account in Venafi Control Plane @@@@@@@
+
+cleanup: remove-certificates uninstall-firefly uninstall-cert-manager delete-firefly-private-key-secret
 	@kubectl delete -f namespaces/sandbox.yaml || true
 	@kubectl delete -f namespaces/venafi-tlspk.yaml || true

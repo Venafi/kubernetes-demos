@@ -1,24 +1,11 @@
 bootstrap:
   vaas:
-    apiKey: ${JS_VENAFI_CLOUD_API_KEY}
-    configurationID: ${JS_VENAFI_FIREFLYCA_CONFIG_ID}
+    auth:
+      privateKeyFile: /var/run/secrets/firefly.venafi.com/sa-key.pem
+      clientID: ${JS_VENAFI_FIREFLY_CLIENT_ID}
     csr:
       instanceNaming: REPLACE_WITH_TIMESTAMP
 controller:
-  kubeconfigFile: /etc/firefly-ca/kubeconfig.yaml
+  kubeconfigFile: /etc/firefly/kubeconfig.yaml
   cert-manager:
-    groupName: "firefly-ca.venafi.com"
-#server:
-#  grpc:
-#    port: 8081
-#    tls:
-#      dnsNames:
-#        -  bootstrap1.svc.venafi.local
-#      ipAddress: 172.16.1.175
-#  graphql:
-#    port: 8123
-#    playground: true
-#    tls:
-#      dnsNames:
-#      - bootstrap1.svc.venafi.local
-#      ipAddress: 172.16.1.175
+    groupName: "firefly.venafi.com"
