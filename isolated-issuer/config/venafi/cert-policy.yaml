@@ -13,13 +13,10 @@ spec:
       - "digital signature"
       - "server auth"
   plugins:
-    tpp:
+    venafi:
       values:
-        credentialSecretName: access-token
-        credentialSecretKey: access-token
-        baseURL: ${JS_VENAFI_TPP_URL}
+        venafiConnectionName: vtpp-connection
         zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
-        caBundleConfigMapName: venafi-tpp-ca-bundle
   selector:
     issuerRef:
       name: "*"
