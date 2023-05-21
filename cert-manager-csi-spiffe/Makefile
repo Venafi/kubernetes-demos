@@ -56,7 +56,7 @@ install-cert-manager-csi-driver-spiffe: _create_sourceCA
 	@echo 'Installing Jetstack cert-manager CSI SPIFFE Driver.....'
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/values.yaml \
      > artifacts/csi-driver-spiffe/values.yaml
-	@helm upgrade \
+	helm upgrade \
 		--install -f artifacts/csi-driver-spiffe/values.yaml cert-manager-csi-driver-spiffe \
 		--namespace jetstack-secure \
 		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-csi-driver-spiffe \
@@ -80,6 +80,16 @@ create-spiffe-cluster-issuer: _create-tpp-access-secret-for-policy _create-confi
      > artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml
 	@kubectl apply -f artifacts/csi-driver-spiffe/venafi/cert-policy-for-venafi-ica.yaml
 
+print-ca-cert:
+	@echo "kubectl get ConfigMap jetstack-dev -o=jsonpath='{.data.ca\.crt}' | openssl x509 -text | HEAD"
+	@kubectl get ConfigMap jetstack-dev -o=jsonpath='{.data.ca\.crt}' | openssl x509 -text | HEAD
+
+print-spiffe-issuer-cert:
+	kubectl -n jetstack-secure get secret jetstack-spiffe-ca-issuer.jetstack-secure.svc.cluster.local -o jsonpath='{.data.tls\.crt}' | base64 --decode | openssl x509 -text | HEAD
+
+print-workloads-cert:
+	kubectl get certificaterequest -n sandbox -o=jsonpath='{.items[].status.certificate}' |  base64 --decode | openssl x509 -text | grep spiffe
+	
 deploy-redis-app: deploy-redis-server deploy-redis-client
 
 deploy-redis-server:

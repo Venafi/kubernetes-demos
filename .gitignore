@@ -31,3 +31,5 @@ js-dockerconfig-us.json
 js-enterprise-credentials2.json
 operator-rbac.yaml
 finalizer-rbac.yaml
+firefly/firefly-key.pem
+firefly/firefly-key.pub

@@ -8,7 +8,7 @@
 # ------------------------------------------- #
 clustername=${CLUSTER_FULLNAME}
 server=${CLUSTER_URL}
-name=firefly-ca
+name=firefly
 ns=cert-manager # namespace
 # ------------------------------------------- #
 
