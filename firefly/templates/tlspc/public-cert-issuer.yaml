@@ -1,0 +1,25 @@
+# Create secret to access Venafi TPP with token
+# Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tlspc-secret
+  namespace: istio-system
+stringData:
+  apikey: ${JS_VENAFI_CLOUD_API_KEY}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: tlspc-public-cert-issuer
+  namespace: istio-system
+spec:
+  venafi:
+    zone: "${JS_VENAFI_CLOUD_PUBLIC_ZONE_ID1}" # Set this to the Venafi policy zone you want to use
+    cloud:
+      apiTokenSecretRef:
+        name: tlspc-secret
+        key: apikey
+---

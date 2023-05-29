@@ -224,3 +224,111 @@ generate-key-pair:
 cleanup: remove-certificates uninstall-firefly uninstall-cert-manager delete-firefly-private-key-secret
 	@kubectl delete -f namespaces/sandbox.yaml || true
 	@kubectl delete -f namespaces/venafi-tlspk.yaml || true
+
+
+### Additional targets for using Firefly to sign mesh workloads. 
+
+mesh-setup:
+	@kubectl apply -f namespaces/istio-system.yaml
+	@kubectl apply -f namespaces/mesh-apps.yaml
+	@helm repo add kyverno https://kyverno.github.io/kyverno/
+	@helm repo update
+	@helm install \
+		kyverno kyverno/kyverno \
+		-n kyverno \
+		--create-namespace \
+		--set replicaCount=3
+		--wait
+	@kubectl apply -f config/policy.yaml
+
+mesh-step1:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/servicemesh/istio-csr-values.yaml \
+     > artifacts/firefly/istio-csr-values.yaml
+
+mesh-step2: _create_venafi_builtin_trust_anchor
+
+# File is in .gitigore. Find your own trust anchor. 
+_create_venafi_builtin_trust_anchor:
+	@cp config/venafi-builtin-ica.pem artifacts/firefly/venafi-builtin-ica.pem
+	@kubectl create secret generic ica-cert --namespace='cert-manager' --from-file=ica.pem=artifacts/firefly/venafi-builtin-ica.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
+mesh-step3:
+	@echo 'Setting up helm with the correct repos'
+	@helm repo add jetstack https://charts.jetstack.io
+	@helm repo update
+	@echo 'Installing Venafi istio CSR agent.....'
+
+	@helm upgrade \
+	    --install -f artifacts/firefly/istio-csr-values.yaml cert-manager-istio-csr \
+  		--namespace cert-manager \
+		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-istio-csr \
+  		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION} \
+		--wait
+
+mesh-step4: _install-and-configure-istio
+
+_install-and-configure-istio:
+	@cp templates/servicemesh/istio-operator.yaml artifacts/firefly/istio-operator.yaml
+	@istioctl install -y -f artifacts/firefly/istio-operator.yaml
+
+mesh-step5: _create-peer-authentication
+_create-peer-authentication:
+	@cp templates/servicemesh/peerauthentication.yaml artifacts/firefly/peerauthentication.yaml
+	@kubectl apply -f artifacts/firefly/peerauthentication.yaml
+
+mesh-step6: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
+_create-tlspc-public-cert-issuer:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/tlspc/public-cert-issuer.yaml \
+     > artifacts/firefly/tlspc-public-cert-issuer.yaml
+	@kubectl apply -f artifacts/firefly/tlspc-public-cert-issuer.yaml
+_create-tlspc-public-cert:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/tlspc/public-cert.yaml \
+     > artifacts/firefly/public-cert.yaml
+	@kubectl apply -f artifacts/firefly/public-cert.yaml
+
+mesh-step7: _create_entry_in_GCP_CloudDNS
+_create_entry_in_GCP_CloudDNS:
+	@$(MAKE) -C ../scripts map-mesh-gateway-ip-to-dns --warn-undefined-variables
+
+mesh-step8: _install-sample-app _create_gateway_resources
+_install-sample-app:
+	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/main/release/kubernetes-manifests.yaml
+
+_create_gateway_resources: HOST_NAME=storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+_create_gateway_resources: _create_gateway
+
+_create_gateway:
+	@cat templates/servicemesh/istio-manifests.yaml | sed -e "s/REPLACE_WITH_HOST_NAME/${HOST_NAME}/g" > artifacts/firefly/istio-manifests.yaml
+	@kubectl -n mesh-apps apply -f artifacts/firefly/istio-manifests.yaml
+	@echo "####################################################################################################"
+	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
+	@echo "######### Access application using https://${HOSTNAME}                                    ##########"
+	@echo "####################################################################################################"
+
+print-cert:
+	@$(MAKE) -C ../service-mesh/istio validate-secret --warn-undefined-variables
+
+uninstall-istio-csr:
+	@helm uninstall -n cert-manager cert-manager-istio-csr || true
+
+uninstall-kyverno:
+	@helm uninstall -n kyverno kyverno || true
+
+uninstall-istio:
+	@istioctl uninstall -y -f artifacts/firefly/istio-operator.yaml || true
+
+_delete-resources:
+	@kubectl -n mesh-apps delete -f artifacts/firefly/istio-manifests.yaml || true
+	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/main/release/kubernetes-manifests.yaml
+	@kubectl delete -f artifacts/firefly/public-cert.yaml || true
+	@kubectl delete -f artifacts/firefly/tlspc-public-cert-issuer.yaml || true
+	@kubectl delete -f artifacts/firefly/peerauthentication.yaml || true
+	@kubectl delete secret ica-cert --namespace='cert-manager' || true
+	@kubectl delete -f config/policy.yaml || true
+
+mesh-cleanup: _delete-resources uninstall-istio uninstall-istio-csr uninstall-kyverno
+	@kubectl delete -f namespaces/istio-system.yaml || true
+	@kubectl delete -f namespaces/mesh-apps.yaml || true
+	@kubectl delete ns kyverno || true
+
+full-cleanup: mesh-cleanup cleanup
