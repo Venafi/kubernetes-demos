@@ -200,7 +200,7 @@ delete-firefly-issuer:
 
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/ffa8a380-f75b-11ed-9a76-21c39b0ec114' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/e0e14e00-fdc5-11ed-ba16-2b1da557b699' \
 	--header 'tppl-api-key: ${JS_VENAFI_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 
@@ -294,16 +294,28 @@ mesh-step8: _install-sample-app _create_gateway_resources
 _install-sample-app:
 	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/main/release/kubernetes-manifests.yaml
 
-_create_gateway_resources: HOST_NAME=storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+mesh-step9: _install-istio-tools
+
+_create_gateway_resources: HOST_DNSNAME=storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
 _create_gateway_resources: _create_gateway
 
 _create_gateway:
-	@cat templates/servicemesh/istio-manifests.yaml | sed -e "s/REPLACE_WITH_HOST_NAME/${HOST_NAME}/g" > artifacts/firefly/istio-manifests.yaml
+	@cat templates/servicemesh/istio-manifests.yaml | sed -e "s/REPLACE_WITH_HOST_NAME/${HOST_DNSNAME}/g" > artifacts/firefly/istio-manifests.yaml
 	@kubectl -n mesh-apps apply -f artifacts/firefly/istio-manifests.yaml
 	@echo "####################################################################################################"
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
-	@echo "######### Access application using https://${HOSTNAME}                                    ##########"
+	@echo "######### Access application using https://${HOST_DNSNAME}     ###"
 	@echo "####################################################################################################"
+
+_install-istio-tools:
+	@echo 'Installing Kiali............'
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/kiali.yaml
+	@echo 'Installing Jaeger............'
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/jaeger.yaml
+	@echo 'Installing Prometheus............'
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/prometheus.yaml
+	@echo 'Installing Grafana............'
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/grafana.yaml
 
 print-cert:
 	@$(MAKE) -C ../service-mesh/istio validate-secret --warn-undefined-variables
@@ -317,18 +329,29 @@ uninstall-kyverno:
 uninstall-istio:
 	@istioctl uninstall -y -f artifacts/firefly/istio-operator.yaml || true
 
+_remove-istio-tools:
+	@echo 'Removing Kiali............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/kiali.yaml || true
+	@echo 'Removing Jaeger............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/jaeger.yaml || true
+	@echo 'Removing Prometheus............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/prometheus.yaml || true
+	@echo 'Removing Grafana............'
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-${JS_ISTIO_SHORT_VERSION}/samples/addons/grafana.yaml || true
+
 _delete-resources:
 	@kubectl -n mesh-apps delete -f artifacts/firefly/istio-manifests.yaml || true
-	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/main/release/kubernetes-manifests.yaml
+	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/main/release/kubernetes-manifests.yaml || true
 	@kubectl delete -f artifacts/firefly/public-cert.yaml || true
 	@kubectl delete -f artifacts/firefly/tlspc-public-cert-issuer.yaml || true
 	@kubectl delete -f artifacts/firefly/peerauthentication.yaml || true
 	@kubectl delete secret ica-cert --namespace='cert-manager' || true
 	@kubectl delete -f config/policy.yaml || true
 
-mesh-cleanup: _delete-resources uninstall-istio uninstall-istio-csr uninstall-kyverno
+mesh-cleanup: _remove-istio-tools _delete-resources uninstall-istio uninstall-istio-csr uninstall-kyverno
 	@kubectl delete -f namespaces/istio-system.yaml || true
 	@kubectl delete -f namespaces/mesh-apps.yaml || true
 	@kubectl delete ns kyverno || true
+	@kubectl delete MutatingWebhookConfiguration istio-revision-tag-default || true
 
 full-cleanup: mesh-cleanup cleanup
