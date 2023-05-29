@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+  namespace: istio-system
+spec:
+  secretName: storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+  duration: 72h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+  commonName: storefront-vtlspc.${JS_JETSTACKER_DOMAIN_NAME}
+  issuerRef:
+    name: tlspc-public-cert-issuer
+    kind: Issuer
+    group: cert-manager.io
+--- 

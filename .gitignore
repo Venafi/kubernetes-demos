@@ -33,3 +33,4 @@ operator-rbac.yaml
 finalizer-rbac.yaml
 firefly/firefly-key.pem
 firefly/firefly-key.pub
+firefly/config/venafi-builtin-ica.pem
