@@ -14,7 +14,7 @@ spec:
     - sample-cert1.${JS_JETSTACKER_DOMAIN_NAME}
   commonName: sample-cert1.${JS_JETSTACKER_DOMAIN_NAME}
   issuerRef:
-    name: "vtpp-cluster-issuer"
+    name: "venafi-cluster-issuer"
     kind: "VenafiClusterIssuer"
     group: "jetstack.io"
 --- 

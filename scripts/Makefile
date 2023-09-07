@@ -7,7 +7,7 @@ SHELL := bash
 SHELL := /bin/sh
 
 # Include personal settings
- include ../settings.sh
+include ../settings.sh
 
 ## GCP Targets 
 create-gke-cluster:
