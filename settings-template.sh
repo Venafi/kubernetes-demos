@@ -1,53 +1,41 @@
 export JS_ENTERPRISE_CREDENTIALS_FILE := /Users/riaz.mohamed/sandbox/gitprojects/clean/jetstackdemosv2/demos/js-enterprise-credentials-1.json
-
+export JS_AIRGAPPED := false
 
 ###########################
 # Venafi Specific Variables
 ###########################
 
-# Venafi TPP access token. You must have the Venafi platform up and running
+# Venafi TLSP-DC (TPP) access token. You must have the Venafi platform up and running
 export JS_VENAFI_TPP_ACCESS_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN :=REPLACE-ME
 export JS_VENAFI_TPP_REFRESH_TOKEN_EXPIRY :=REPLACE-ME
-
-export JS_VENAFI_CLIENTID := cert-manager.io
-export JS_CONTAINER_REGISTRY := eu.gcr.io/jetstack-secure-enterprise
-
+export JS_VENAFI_TPP_USERNAME := REPLACE-ME # E.g. user1
+export JS_VENAFI_TPP_PASSWORD := REPLACE-ME # E.g. userpass
 export JS_VENAFI_TPP_URL :=REPLACE-ME # E.g. https://tpp.mydomain.com/vedsdk
-
-#Reference to file that contains CA bundle in PEM format. This is the certchain to tpp.mydomain.com. venafi-tpp-server-ca.pem is in .gitignore 
 export JS_VENAFI_TPP_CA_BUNDLE_PEM_FILE :=~/GitHub/demos/venafi-tpp-server-ca.pem
-#Base64 encoding of the above
 export JS_VENAFI_TPP_BASE64_ENCODED_CACERT :=REPLACE-ME
-export JS_VENAFI_TPP_ZONE_PUBLIC_CA1 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public1
-export JS_VENAFI_TPP_ZONE_PUBLIC_CA2 := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Public2
-
-#Reference to file that contains CA bundle in PEM format for Private PKI. This is the root CA for PKI referenced in PRIVATE_CA$. 
-#venafi-msca-ica-root.pem is in .gitignore 
-export JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE :=~/GitHub/demos/venafi-msca-ica-root.pem
-export JS_VENAFI_TPP_ZONE_PRIVATE_CA1 := REPLACE-ME # E.g. Certificates\\Kubernetes\\Private1
-export JS_VENAFI_TPP_ZONE_PRIVATE_CA2 := REPLACE-ME # E.g. Certificates\\Kubernetes\\Private2
-
 #Location to sync certificates between Kubernetes and Venafi TPP
 export JS_VENAFI_CERT_SYNC_POLICY_FOLDER := REPLACE-ME # E.g. Certificates\\\\Kubernetes\\\\Discovered
+export JS_VENAFI_CLIENTID := cert-manager.io
 
+# VENAFI TLSPC (Cloud)
 # Venafi API Key. Register for an account on ui.venafi.cloud for a key.
 export JS_VENAFI_CLOUD_API_KEY :=REPLACE-ME
 
-# Figure out escaping on your own !!. Using \\ here. Had to use \\\\ For Venafi TPP.
-export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID1 :=Demo\\demo
-export JS_VENAFI_CLOUD_PUBLIC_ZONE_ID2 :=Demo\\demo
+#venafi-msca-ica-root.pem is in .gitignore 
+export JS_VENAFI_INTERMEDIATE_CA_ROOT_PEM_FILE :=~/GitHub/demos/venafi-msca-ica-root.pem
 
-# Venafi Zone ID for CSI driver specific usecases.
-# Due to escaping \\ becomes one \, so Demo\\\\demo becomes Demo\\demo
-export JS_VENAFI_CLOUD_PRIVATE_ZONE_ID1 :=Demo\\\\demo
-export JS_VENAFI_CLOUD_PRIVATE_ZONE_ID2 :=Demo\\\\demo
 
-export JS_VENAFI_TPP_USERNAME := REPLACE-ME # E.g. user1
-export JS_VENAFI_TPP_PASSWORD := REPLACE-ME # E.g. userpass
+# Zones / Policy Folders
+export JS_VENAFI_ZONE_PUBLIC_CA1 := REPLACE-ME
+
+#Examples
+#TLKPK-Riaz-Public\TLSPK-Template-Riaz
+#tpp Riaz\\Certificates\\Kubernetes\\Ingress
+export JS_VENAFI_ZONE_PRIVATE_CA1 := REPLACE-ME
 
 # Email for creating docker registry secret that holds Jetstack Secure enterprise access token
-export JS_AIRGAPPED := false
+export JS_CONTAINER_REGISTRY := eu.gcr.io/jetstack-secure-enterprise
 export JS_DOCKER_REGISTRY_SECRET := venafi-jetstack-enterprise-key
 export JS_DOCKER_REGISTRY_USERNAME := REPLACE_ME
 export JS_DOCKER_REGISTRY_PASSWORD := REPLACE_ME
@@ -58,7 +46,6 @@ export JS_EMAIL_ID_FOR_LE_CERT :=${JS_DOCKER_REGISTRY_EMAIL} #for LE certs
 #DNS Specific variables
 export JS_JETSTACKER_DOMAIN_NAME :=REPLACE_ME
 export JS_K8S_CLUSTER_NAME :=jetstack-secure-demo-01
-
 
 #--------START IMAGE VERSIONS AND HELM CHART VERSIONS -------------
 # ENTERPRISE CERT MANAGER versions
@@ -135,6 +122,8 @@ export JS_ISTIO_SHORT_VERSION :=1.17
 # image
 export JS_CERT_MANAGER_OPEN_SHIFT_ROUTES_IMAGE_VERSION :=v0.5.0
 
+export JS_SAMPLE_TRUSTSTORE_APP_IMAGE := riazvm/jetstackdemos-truststore:1.3
+export JS_OPENSHIFT_ROUTE_IMAGE := ghcr.io/cert-manager/cert-manager-openshift-routes:0.1.3
 #--------END  IMAGE VERSIONS AND HELM CHART VERSIONS -------------
 
 
@@ -174,9 +163,6 @@ export JS_KUBERNETES_HOST := REPLACE_ME
 
 export JS_SAMPLE_APP_IMAGE := nginxdemos/nginx-hello
 
-export JS_SAMPLE_TRUSTSTORE_APP_IMAGE := riazvm/jetstackdemos-truststore:1.3
-
-export JS_OPENSHIFT_ROUTE_IMAGE := ghcr.io/cert-manager/cert-manager-openshift-routes:0.1.3
 
 #Firefly config
 export JS_FIREFLY_VERSION :=v1.2.0

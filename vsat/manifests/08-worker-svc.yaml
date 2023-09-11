@@ -1,0 +1,179 @@
+---
+# Source: worker-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "worker-svc-ingress"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-worker-svc"
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              vsatApp: "vsat-messaging-svc"
+        - podSelector:
+            matchLabels:
+              vsatApp: "vsat-status-svc"
+---
+# Source: worker-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+---
+# Source: worker-svc/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+rules:
+  - apiGroups: ["cert-manager.io"]
+    resources: ["signers", "issuers", "certificates", "certificaterequests"]
+    verbs: ["approve", "create", "update", "delete", "get", "list", "watch"]
+---
+# Source: worker-svc/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vsat-worker-svc
+subjects:
+  - kind: ServiceAccount
+    name: vsat-worker-svc
+    namespace: "platform"
+---
+# Source: worker-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8085
+      targetPort: service-port
+      protocol: TCP
+      name: service-port
+  selector:
+    app.kubernetes.io/name: worker-svc
+    app.kubernetes.io/instance: vsat
+---
+# Source: worker-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-worker-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        app.kubernetes.io/name: worker-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-worker-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-worker-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/worker-svc@sha256:14f3412e7169626e0e1cc0a8cba5dd2e7ba5c6ecfa510a4bc24e719721f0a910"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: 8085
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+          env:
+          - name: VSAT_USE_TLS
+            value: "true"
+          - name: CERTS_PATH
+            value: /certs-mount
+          - name: SERVER_ADDRESS
+            value: :8085
+          - name: NAMESPACE
+            value: "platform"
+          - name: REDIS_SERVER_ADDRESS
+            value: vsat-redis-master:6379
+          - name: MESSAGING_SVC_BASE_URL
+            value: "https://vsat-messaging-svc.platform.svc.cluster.local:8082"
+          - name: CRYPTO_SVC_BASE_URL
+            value: "https://vsat-crypto-svc.platform.svc.cluster.local:8086"
+          - name: WORKER_CERT_DURATION
+            value: 8760h
+          - name: WORKER_CERT_CREATE_WAIT_DURATION
+            value: 
+          - name: WORKER_CERT_ISSUER
+            value: vsat-certs-ca
+          resources:
+            {}
+          volumeMounts:
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+      volumes:
+        - name: certs-mount
+          secret:
+            secretName: worker-svc-tls
+---
+# Source: worker-svc/templates/certificate.yaml
+# Redis
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-worker-svc
+  namespace: "platform"
+spec:
+  secretName: worker-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-worker-svc
+    - vsat-worker-svc.platform
+    - vsat-worker-svc.platform.svc
+    - vsat-worker-svc.platform.svc.cluster.local

@@ -1,7 +1,7 @@
 apiVersion: jetstack.io/v1alpha1
 kind: VenafiConnection
 metadata:
-  name: vtpp-connection
+  name: venafi-connection
   namespace: jetstack-secure
 spec:
   tpp:

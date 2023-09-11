@@ -1,0 +1,215 @@
+---
+# Source: inventory-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "inventory-svc-ingress"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-inventory-svc"
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              vsatApp: "vsat-status-svc"
+---
+# Source: inventory-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-inventory-svc
+  namespace: "platform"
+---
+# Source: inventory-svc/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vsat-inventory-svc
+  annotations:
+    ignore-check.kube-linter.io/wildcard-in-rules: "Wildcard in role"
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+#  - apiGroups: ["", "apps", "apiextensions.k8s.io", "rbac.authorization.k8s.io", "networking.k8s.io", "policy", "admissionregistration.k8s.io", "certificates.k8s.io", "auditregistration.k8s.io", "events.k8s.io","autoscaling"]
+#    resources: ["*"]
+#    verbs: ["*"]
+#  - apiGroups: ["batch"]
+#    resources: ["jobs"]
+#    verbs: ["create", "get", "watch", "list", "delete"]
+#  - apiGroups: ["cert-manager.io", "acme.cert-manager.io"]
+#    resources: ["*"]
+#    verbs: ["*"]
+#  - apiGroups: ["serving.knative.dev", "networking.internal.knative.dev", "autoscaling.internal.knative.dev", "caching.internal.knative.dev"]
+#    resources: ["*"]
+#    verbs: ["create", "get", "watch", "list", "delete"]
+---
+# Source: inventory-svc/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vsat-inventory-svc
+  annotations:
+    ignore-check.kube-linter.io/access-to-secrets: "Access to secrets"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vsat-inventory-svc
+subjects:
+  - kind: ServiceAccount
+    name: vsat-inventory-svc
+    namespace: "platform"
+---
+# Source: inventory-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-inventory-svc
+  namespace: "platform"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8099
+      targetPort: service-port
+      protocol: TCP
+      name: service-port
+  selector:
+    app.kubernetes.io/name: inventory-svc
+    app.kubernetes.io/instance: vsat
+---
+# Source: inventory-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-inventory-svc
+  namespace: "platform"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: inventory-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-inventory-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        app.kubernetes.io/name: inventory-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-inventory-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: vsat-inventory-svc
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/inventory-svc@sha256:eeb5e22df41a887939f8d54f0b0afc5a6917b4966692cee5a2b933086e943d0e"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service-port
+              containerPort: 8099
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: service-port
+              scheme: HTTPS
+            initialDelaySeconds: 5
+          resources:
+            {}
+          volumeMounts:
+            - mountPath: /etc/rancher/k3s
+              name: venafi-registries-file
+              readOnly: true
+            - mountPath: /cloudconfig
+              name: cloud-config
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: vsat-proxy-config
+                optional: true
+          env:
+            - name: VSAT_USE_TLS
+              value: "true"
+            - name: CERTS_PATH
+              value: /certs-mount
+            - name: CLOUD_CONFIG
+              value: /cloudconfig
+            - name: IMAGE_REPO_PROPERTY
+              value: image.repository
+            - name: REDIS_SERVER_ADDRESS
+              value: vsat-redis-master:6379
+            - name: MESSAGING_SVC_BASE_URL
+              value: "https://vsat-messaging-svc.platform.svc.cluster.local:8082"
+            - name: SERVER_ADDRESS
+              value: :8099
+            - name: INSTALL_TIMEOUT
+              value: "5"
+            - name: UNINSTALL_TIMEOUT
+              value: "5"
+            - name: UPGRADE_TIMEOUT
+              value: "5"
+            - name: CLOUD_RESPONSE_RETRY_MILLIS
+              value: "1000"
+            - name: CLOUD_RESPONSE_MAX_RETRY_MILLIS
+              value: "120000"
+            - name: NAMESPACE
+              value: "platform"
+            - name: RELEASE
+              value: "dummy"
+            - name: VENAFI_REGISTRIES_PATH
+              value: /etc/rancher/k3s
+      volumes:
+        - name: venafi-registries-file
+          configMap:
+            name: venafi-registries-config
+            optional: true
+        - name: cloud-config
+          configMap:
+            name: cloud-vsat-config
+        - name: certs-mount
+          secret:
+            secretName: vsat-inventory-svc-tls
+---
+# Source: inventory-svc/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-inventory-svc
+  namespace: "platform"
+spec:
+  secretName: vsat-inventory-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-inventory-svc
+    - vsat-inventory-svc.platform
+    - vsat-inventory-svc.platform.svc
+    - vsat-inventory-svc.platform.svc.cluster.local

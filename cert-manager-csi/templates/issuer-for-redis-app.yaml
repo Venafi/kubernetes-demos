@@ -1,5 +1,26 @@
 # Create secret to access Venafi TPP with token
 # Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: venafi-issuer-for-redis
+spec:
+  venafiConnectionName: venafi-connection
+  zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
+---
+
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: venafi-issuer-for-redis-server
+spec:
+  venafiConnectionName: venafi-connection
+  zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
+---
+
+# Create secret to access Venafi TPP with token
+# Using stringData for unencoded apikey value. Must be base64 encoded if "data" is used instead of stringData
 
 apiVersion: v1
 kind: Secret
@@ -18,9 +39,11 @@ metadata:
   namespace: sandbox
 spec:
   venafi:
-    zone: ${JS_VENAFI_TPP_ZONE_PRIVATE_CA1}
+    zone: ${JS_VENAFI_ZONE_PRIVATE_CA1}
     tpp:
       url: ${JS_VENAFI_TPP_URL} # Change this to the URL of your TPP instance
       caBundle: ${JS_VENAFI_TPP_BASE64_ENCODED_CACERT}
       credentialsRef:
         name: vtpp-auth-secret-for-redis-issuer
+
+

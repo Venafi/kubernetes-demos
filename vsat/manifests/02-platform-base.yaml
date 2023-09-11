@@ -1,0 +1,62 @@
+apiVersion:  batch/v1
+kind: Job
+metadata:
+  name: vsat-certmanager-svc-1-0-6
+  namespace: platform
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      restartPolicy: Never
+      containers:
+        - image: "rimo.jfrog.io/docker/venafi-vsatellite/inventory-svc@sha256:eeb5e22df41a887939f8d54f0b0afc5a6917b4966692cee5a2b933086e943d0e"
+          name: certmanager-svc
+---
+# Source: platform-base/templates/deny-all-networkPolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: "platform-deny-all-base"
+  namespace: "platform"
+spec:
+  podSelector: {}
+  ingress: []
+---
+# Source: platform-base/templates/certificates.yaml
+# Create a 10y Root CA Certificate used to sign vsat cluster certificates
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-certs-ca
+  namespace: "jetstack-secure"
+spec:
+  secretName: vsat-certs-ca
+  duration: 87600h
+  issuerRef:
+    name: vsat-certs-selfsigned
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  commonName: ca.venafi.vsat
+  isCA: true
+---
+# Source: platform-base/templates/certificates.yaml
+# Bootstrap self signing Issuer used only to create Root CA.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: vsat-certs-selfsigned
+  namespace: "platform"
+spec:
+  selfSigned: {}
+---
+# Source: platform-base/templates/certificates.yaml
+# Create the Certificate Issuer that uses the Root CA Certificate to sign certs.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: vsat-certs-ca
+  namespace: "platform"
+spec:
+  ca:
+    secretName: vsat-certs-ca

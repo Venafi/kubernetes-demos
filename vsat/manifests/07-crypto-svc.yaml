@@ -1,0 +1,208 @@
+---
+# Source: crypto-svc/templates/ingressNetworkPolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "crypto-svc-ingress"
+spec:
+  podSelector:
+    matchLabels:
+      vsatApp: "vsat-crypto-svc"
+  ingress:
+    - from: []
+---
+# Source: crypto-svc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vsat-crypto-svc
+  namespace: "platform"
+---
+# Source: crypto-svc/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vsat-crypto-svc-config
+  namespace: "platform"
+data:
+  config.yaml: |
+    log:
+      useJSon: true
+      level: debug
+    http:
+      host: 0.0.0.0
+      port: 8443
+      tls:
+        certFile: /certs-mount/tls.crt
+        keyFile: /certs-mount/tls.key
+        caCertFile: /certs-mount/ca.crt
+    httpClient:
+      tls:
+        certFile: /certs-mount/tls.crt
+        keyFile: /certs-mount/tls.key
+        caCertFile: /certs-mount/ca.crt
+    redis:
+      serverAddress: vsat-redis-master:6379
+      tls:
+        certFile: /certs-mount/tls.crt
+        keyFile: /certs-mount/tls.key
+        caCertFile: /certs-mount/ca.crt
+    messagingClient:
+      url: "https://vsat-messaging-svc:8082"
+      credentialsPath: /credentials/client-credentials.json
+      requestTimeout: 30s
+---
+# Source: crypto-svc/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vsat-crypto-svc-secrets
+  namespace: "platform"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: ""
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "delete", "deletecollection"]
+---
+# Source: crypto-svc/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "dave" to read secrets in the "development" namespace.
+# You need to already have a ClusterRole named "secret-reader".
+kind: RoleBinding
+metadata:
+  name: vsat-crypto-svc-secrets
+  namespace: "platform"
+  annotations:
+    ignore-check.kube-linter.io/access-to-secrets: "This application has permissions to access secrets"
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role #this must be Role or ClusterRole
+  name: vsat-crypto-svc-secrets
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: vsat-crypto-svc
+    namespace: "platform"
+---
+# Source: crypto-svc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vsat-crypto-svc
+  namespace: "platform"
+spec:
+  selector:
+    app.kubernetes.io/name: crypto-svc
+    app.kubernetes.io/instance: vsat
+  type: ClusterIP
+  ports:
+    - port: !!int 8443
+      targetPort: http
+      protocol: TCP
+      name: http
+---
+# Source: crypto-svc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsat-crypto-svc
+  namespace: "platform"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: crypto-svc
+      app.kubernetes.io/instance: vsat
+  template:
+    metadata:
+      labels:
+        vsatApp: "vsat-crypto-svc"
+        vsatRedisIngress: "true"
+        vsatMessagingIngress: "true"
+        app.kubernetes.io/name: crypto-svc
+        app.kubernetes.io/instance: vsat
+    spec:
+      imagePullSecrets:
+        - name: jfrogcred
+      serviceAccountName: vsat-crypto-svc
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
+      containers:
+        - name: "vsat-crypto-svc"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          image: "rimo.jfrog.io/docker/venafi-vsatellite/crypto-svc@sha256:265dcd420b961d70697941569b0492a92c51cdf7a94821e77a89ac9d2ccf175f"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: !!int "8443"
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTPS
+            initialDelaySeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /config.yaml
+              subPath: config.yaml
+            - name: credentials
+              mountPath: /credentials
+              readOnly: true              
+            - name: certs-mount
+              mountPath: /certs-mount
+              readOnly: true
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+      volumes:      
+        - name: certs-mount
+          secret:
+            secretName: crypto-svc-tls
+        - name: config
+          configMap:
+            name: vsat-crypto-svc-config
+        - name: credentials
+          secret:
+            secretName: client-credentials
+---
+# Source: crypto-svc/templates/certificate.yaml
+# Redis
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vsat-crypto-svc
+  namespace: "platform"
+spec:
+  secretName: crypto-svc-tls
+  duration: 8760h
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: vsat-certs-ca
+    kind: ClusterIssuer
+    group: "cert-manager.io"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  dnsNames:
+    - vsat-crypto-svc
+    - vsat-crypto-svc.platform
+    - vsat-crypto-svc.platform.svc
+    - vsat-crypto-svc.platform.svc.cluster.local
