@@ -30,7 +30,7 @@ configure-namespace:
 ifneq (${JS_AIRGAPPED},true)
 	@echo "Creating docker registry secret. You must have the credentials file to create a secret"
 	@echo
-	@kubectl -n 'cert-manager' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+	@kubectl -n 'venafi' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
 			--docker-password="$$(cat ${JS_ENTERPRISE_CREDENTIALS_FILE})" \
 			--docker-email='$(JS_DOCKER_REGISTRY_EMAIL)' \
 			--docker-server='${JS_CONTAINER_REGISTRY}' \
@@ -38,7 +38,7 @@ ifneq (${JS_AIRGAPPED},true)
 			--dry-run='client' \
 			--save-config=true -o yaml | kubectl apply -f -
 else
-	@kubectl -n 'cert-manager' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
+	@kubectl -n 'venafi' create secret docker-registry ${JS_DOCKER_REGISTRY_SECRET} \
 		--docker-password='${JS_DOCKER_REGISTRY_PASSWORD}' \
 		--docker-email='${JS_DOCKER_REGISTRY_EMAIL}' \
 		--docker-server='${JS_DOCKER_REGISTRY_URL}' \
@@ -47,55 +47,42 @@ else
 		--save-config=true -o yaml | kubectl apply -f -
 endif 
 
-#STEP2. Create the kubeconfig required for fireflyCA to run. This is temporary and will go away. 
-create-kubeconfig:
-	@echo "Create kubeconfig. Run the shell script like this... "
-	@echo "Replace CLUSTER_FULLNAME with your cluster name and CLUSTER_URL with your cluster URL. Example below"
-	@echo
-	@echo "CLUSTER_FULLNAME=arn:aws:eks:<your-region>:<your-account>:cluster/<your-cluster-name> CLUSTER_URL=https://<whatever-you-see-in-the-url>.eks.amazonaws.com ./create-kube-config.sh"
-	@echo
-	@echo "The Service account associcated kubeconfig is generated - written to console as well as to file artifacts/kubeconfig.yaml"
-
-#STEP3. Install cert-manager. Very likely this already exists in the cluster. This install assumes approver controller is enabled.
+#STEP2. Install cert-manager. Very likely this already exists in the cluster. This install assumes approver controller is enabled.
 # Enterprise cert-manager approval controller is disabled. 
 install-cert-manager: 
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < cert-manager/values.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/cert-manager/approver-enabled.yaml \
      > artifacts/cert-manager/values.yaml
 	@helm upgrade \
 		--install -f artifacts/cert-manager/values.yaml cert-manager \
-		--namespace cert-manager \
+		--namespace venafi \
 		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager \
 	    --version ${JS_CERT_MANAGER_VERSION} \
 		--wait
 
 	
-#STEP4. Deploy firefly. This creates a secret, config map that holds the configuration to Venafi Control Plane and also holds the kubeconfig generated for the 
-#service account 'firefly' that has the permission to control the deployment. 
-deploy-firefly: create-sa-key create-firefly-configmap install-firefly
+#STEP3. Deploy firefly. This creates a secret, config map that holds the configuration to Venafi Control Plane and deploys firefly 
+install-firefly: create-sa-key _install-firefly-helm
 
 #The service account key pair must have been created. The public key goes into Venafi control plane. The private key is stored as kubernetes secret. 
 create-sa-key: 
-	@kubectl create secret generic -n cert-manager firefly-secrets --from-file=sa-key.pem=firefly-key.pem
+	@kubectl create secret generic -n venafi venafi-credentials --from-file=svc-acct.key=firefly-key.pem
 
-create-firefly-configmap:
-	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < config/firefly-config.yaml \
-     > artifacts/firefly/config1.yaml
-	 @cat artifacts/firefly/config1.yaml | sed -e "s/REPLACE_WITH_TIMESTAMP/$(shell date +%Y-%m-%d-%H%M)/g" > artifacts/firefly/config.yaml
-	 @rm -rf artifacts/firefly/config1.yaml
-	@kubectl create configmap -n cert-manager firefly-config --from-file artifacts/firefly/config.yaml --from-file artifacts/kubeconfig.yaml
+_install-firefly-helm:
+	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/helm-values.yaml \
+     > artifacts/firefly/values.yaml
+	@helm upgrade \
+		--install -f artifacts/firefly/values.yaml firefly \
+		--namespace venafi \
+		oci://registry.venafi.cloud/public/venafi-images/helm/firefly \
+	    --version ${VENAFI_FIREFLY_VERSION} \
+		--wait
 
-# Installation is done via static manifests at this time. These manifests are generated via a Helm Chart and will be changed
-# to do a direct Helm install once published to OCI 
-install-firefly:
-	@kubectl -n cert-manager apply -f config/firefly-resources.yaml
-
-#STEP5 . Create certificate.
+#STEP4 . Create certificate.
 create-certificates:
 	@kubectl apply -f config/certificate.yaml
 
 remove-certificates:
 	@kubectl delete -f config/certificate.yaml || true
-
 
 # All Firefly CA related API's. Use UI if that works best for you.
 create-firefly-issuer:
@@ -205,14 +192,13 @@ delete-firefly-intermediateCertificates:
 	--header 'Content-Type: application/json'
 
 delete-firefly-private-key-secret:
-	@kubectl delete secret firefly-secrets -n cert-manager || true
+	@kubectl delete secret venafi-credentials -n venafi || true
 
 uninstall-firefly:
-	@kubectl -n cert-manager delete -f config/firefly-resources.yaml || true
-	@kubectl -n cert-manager delete configmap firefly-config || true
+	@helm uninstall -n venafi firefly || true
 
 uninstall-cert-manager:
-	@helm uninstall -n cert-manager cert-manager || true
+	@helm uninstall -n venafi cert-manager || true
 
 generate-key-pair:
 	@openssl genrsa -out firefly-key.pem 2048
@@ -231,17 +217,8 @@ cleanup: remove-certificates uninstall-firefly uninstall-cert-manager delete-fir
 mesh-setup:
 	@kubectl apply -f namespaces/istio-system.yaml
 	@kubectl apply -f namespaces/mesh-apps.yaml
-	@helm repo add kyverno https://kyverno.github.io/kyverno/
-	@helm repo update
-	@helm install \
-		kyverno kyverno/kyverno \
-		-n kyverno \
-		--create-namespace \
-		--set replicaCount=3
-		--wait
-	@kubectl apply -f config/policy.yaml
 
-mesh-step1:
+mesh-step1: mesh-setup
 	@envsubst "$$(printf '$${%s} ' $${!JS_*})" < templates/servicemesh/istio-csr-values.yaml \
      > artifacts/firefly/istio-csr-values.yaml
 
@@ -250,7 +227,7 @@ mesh-step2: _create_venafi_builtin_trust_anchor
 # File is in .gitigore. Find your own trust anchor. 
 _create_venafi_builtin_trust_anchor:
 	@cp config/venafi-builtin-ica.pem artifacts/firefly/venafi-builtin-ica.pem
-	@kubectl create secret generic ica-cert --namespace='cert-manager' --from-file=ica.pem=artifacts/firefly/venafi-builtin-ica.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@kubectl create secret generic ica-cert --namespace='venafi' --from-file=ica.pem=artifacts/firefly/venafi-builtin-ica.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 mesh-step3:
 	@echo 'Setting up helm with the correct repos'
@@ -260,7 +237,7 @@ mesh-step3:
 
 	@helm upgrade \
 	    --install -f artifacts/firefly/istio-csr-values.yaml cert-manager-istio-csr \
-  		--namespace cert-manager \
+  		--namespace venafi \
 		oci://${JS_CONTAINER_REGISTRY}/charts/cert-manager-istio-csr \
   		--version ${JS_CERT_MANAGER_ISTIO_CSR_VERSION} \
 		--wait
@@ -321,10 +298,7 @@ print-cert:
 	@$(MAKE) -C ../service-mesh/istio validate-secret --warn-undefined-variables
 
 uninstall-istio-csr:
-	@helm uninstall -n cert-manager cert-manager-istio-csr || true
-
-uninstall-kyverno:
-	@helm uninstall -n kyverno kyverno || true
+	@helm uninstall -n venafi cert-manager-istio-csr || true
 
 uninstall-istio:
 	@istioctl uninstall -y -f artifacts/firefly/istio-operator.yaml || true
@@ -345,13 +319,11 @@ _delete-resources:
 	@kubectl delete -f artifacts/firefly/public-cert.yaml || true
 	@kubectl delete -f artifacts/firefly/tlspc-public-cert-issuer.yaml || true
 	@kubectl delete -f artifacts/firefly/peerauthentication.yaml || true
-	@kubectl delete secret ica-cert --namespace='cert-manager' || true
-	@kubectl delete -f config/policy.yaml || true
+	@kubectl delete secret ica-cert --namespace='venafi' || true
 
-mesh-cleanup: _remove-istio-tools _delete-resources uninstall-istio uninstall-istio-csr uninstall-kyverno
+mesh-cleanup: _remove-istio-tools _delete-resources uninstall-istio uninstall-istio-csr 
 	@kubectl delete -f namespaces/istio-system.yaml || true
 	@kubectl delete -f namespaces/mesh-apps.yaml || true
-	@kubectl delete ns kyverno || true
 	@kubectl delete MutatingWebhookConfiguration istio-revision-tag-default || true
 
 full-cleanup: mesh-cleanup cleanup

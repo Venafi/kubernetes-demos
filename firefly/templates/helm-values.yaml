@@ -1,0 +1,96 @@
+# -- (bool) REQUIRED: Set to true to indicate acceptance of Venafi's
+# [End User License Agreement](https://venafi.com/end-user-license-agreement).
+acceptTerms: true
+
+deployment:
+  # -- Toggle for running the Firefly controller inside the kubernetes
+  # cluster as an in-cluster Certificate Authority (CA).
+  enabled: true
+
+  # -- (string) REQUIRED: The ClientID of a your TLS Protect Cloud service account associated with the desired configuration.
+  venafiClientID: ${JS_VENAFI_FIREFLY_CLIENT_ID}
+
+  # -- Provide the name of the Secret containing the credentials of your TLS Protect Cloud service account.
+  venafiCredentialsSecretName: venafi-credentials
+
+  # -- A Minimum of 2 is needed to achieve active-passive standby HA.
+  replicaCount: 2
+
+  # -- The Docker image repo.
+  # Override image if you are using an on-prem image registry.
+  # Do not include a tag. Set `deployment.imageDigest` instead.
+  #image: registry.venafi.cloud/public/venafi-images/firefly
+  # -- (string) The digest of the image.
+  #imageDigest: REPLACE_WITH_IMAGE_DIGEST
+  # -- Override the image pullPolicy.
+  #imagePullPolicy: IfNotPresent
+
+  # -- It is not recommended to disable mlock except for development or
+  # testing!
+  mlock: true
+
+  # -- Log level, goes from 1 to 5 (highest).
+  logLevel: 2
+
+  # -- Set a list of image pull secrets, example-
+  imagePullSecrets: []
+  # - name: jss-pull-secret
+
+  # -- It is recommended to set a nodeSelector for resource isolation.
+  nodeSelector: {}
+  # firefly-runner: "true"
+
+  # -- The default is the minimum security context to allow for the mlock
+  # operation.
+  securityContext:
+    capabilities:
+      add: ["IPC_LOCK"]
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1001
+
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 512Mi
+
+  tolerations: []
+
+  affinity: {}
+
+crd:
+  # -- Installs the CRD in the cluster. Required to enable firefly with
+  # the given group.
+  enabled: true
+
+  # -- Group name of the issuer.
+  groupName: firefly.venafi.com
+
+  approver:
+    # -- Enable or disable the creation of a ClusterRole and ClusterRoleBinding
+    # to allow an approver to approve CertificateRequest resources which use
+    # the Firefly issuer group name.
+    enabled: true
+    # -- The subject which will be granted permission to approve
+    # CertifcateRequest resources which use the Firefly issuer group.
+    subject:
+      kind: ServiceAccount
+      namespace: venafi
+      name: cert-manager
+      #name: cert-manager-approver-policy
+
+# -- Optional subject to assign permissions to sign firefly
+# CertificateRequests. This should be used when firefly is running
+# outside the cluster, and likely takes the identity of a Kubernetes User.
+overrideSignerSubject: {}
+# apiGroup: rbac.authorization.k8s.io
+# kind: User
+# name: firefly
+
