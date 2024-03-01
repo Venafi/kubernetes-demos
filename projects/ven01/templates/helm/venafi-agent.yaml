@@ -1,0 +1,29 @@
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: false
+  # -- Annotations YAML to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If blank and `serviceAccount.create` is true, a name is generated using the fullname template of the release.
+  name: ""
+
+# -- Authentication details for the Venafi Kubernetes Agent
+authentication:
+  # -- Name of the secret containing the private key
+  secretName: agent-private-key
+  # -- Key name in the referenced secret
+  secretKey: "privatekey.pem"
+
+# -- Configuration section for the Venafi Kubernetes Agent itself
+config:
+  # -- Overrides the server if using a proxy in your environment
+  # For the EU variant use: https://api.venafi.eu/
+  server: "https://api.venafi.cloud/"
+  # -- The client-id returned from the Venafi Control Plane
+  clientId: ""
+  # -- Send data back to the platform every minute unless changed
+  period: "0h1m0s"
+  # -- Name for the cluster resource if it needs to be created in Venafi Control Plane
+  clusterName: "REPLACE_WITH_CLUSTER_NAME"
+  # -- Description for the cluster resource if it needs to be created in Venafi Control Plane
+  clusterDescription: "REPLACE_WITH_CLUSTER_NAME"
