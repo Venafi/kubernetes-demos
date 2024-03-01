@@ -1,0 +1,15 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "awspcaissuer",
+        "Action": [
+          "acm-pca:DescribeCertificateAuthority",
+          "acm-pca:GetCertificate",
+          "acm-pca:IssueCertificate"
+        ],
+        "Effect": "Allow",
+        "Resource": "${VEN_AWS_PCA_ARN}"
+      }
+    ]
+  }
