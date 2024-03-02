@@ -2,7 +2,7 @@
 
 Before installing the Venafi components in cluster, make sure to setup the environment 
 
-The `Makefile` provided loads environment variables from `vars.sh`. If `Makefile` is not something you prefer to use, you can look at the targets and adapt it to your own tooling. 
+The `Makefile` uses environment variables from `vars.sh`. If `Makefile` is not something you prefer to use, you can look at the targets and adapt it to your own tooling. 
 
 ## **Setting up your Venafi environment**
 
@@ -41,9 +41,16 @@ Once you have an access-token,
 - The VEN_PRIVATE_CA1 is the policy folder from which you will be issuing certificates. Replace the value with the policy folder that you intend to use. 
 - The VEN_TPP_CA_BUNDLE_PEM_FILE is relevant if your TPP server `venafi.tfs.com` uses a private CA. To make sure you have a complete setup with trust store setup, download the certificate chain of your TPP server and save it as a pem file. Provide the path to the PEM file. 
 
-NOTE: A simple way (my simple way) is to just hit the TPP url using firefox and downloading the certificate and chain as PEM. You can choose to download it the best way that works for you. 
+NOTE: A simple way (my simple way) is to just hit the TPP URL using firefox and downloading the certificate and chain as PEM. You can choose to download it the best way that works for you. 
 
 # **Cluster Setup**
+
+**NOTE** There is no registry access secret in this repo. You should have been provided one or you have the ability to generate one from the product. 
+```
+Copy the registry secret YAML 
+```
+cp your-registry-secret.yaml registry/venafi_registry_secret.yaml
+```
 
 Start with cluster setup only after you have completed the Venafi configuration and setup the environment variables. 
 
@@ -281,7 +288,7 @@ Events:
   Normal  Verified  22m (x2 over 22m)  awspcaissuer-controller  Issuer verified
 ```
 
-## STEP 7B - Setting up AWS ACM PCA with Acccess Key
+## STEP 7B - Setting up AWS ACM PCA with Access Key
 
 **NOTE** Make sure VEN_AWS_PCA_ARN VEN_AWS_PCA_REGION VEN_AWS_PCA_ACCESS_KEY VEN_AWS_PCA_SECRET_ACCESS_KEY values are set. 
 
