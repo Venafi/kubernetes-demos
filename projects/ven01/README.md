@@ -48,7 +48,7 @@ NOTE: A simple way (my simple way) is to just hit the TPP URL using firefox and 
 # **Cluster Setup**
 
 **NOTE** There is no registry access secret in this repo. You should have been provided one or you have the ability to generate one from the product. 
-```
+
 Copy the registry secret YAML 
 ```
 cp your-registry-secret.yaml registry/venafi_registry_secret.yaml
