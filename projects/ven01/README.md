@@ -1,3 +1,5 @@
+# This project demonstrates using Venafi to issuer certificates in cluster. Additonally includes samples to use AWS PCA issuer with both IRSA and secrets.
+
 # **Pre-requisites**
 
 Before installing the Venafi components in cluster, make sure to setup the environment 
