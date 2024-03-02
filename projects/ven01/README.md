@@ -18,7 +18,7 @@ Run
 ```
 vcert getcred --username <replace-with-user-name> \
 		           --password <replace-with-password> \
-				   -u https://venafi.tfs.com/vedsdk \
+				   -u https://venafi.example.com/vedsdk \
 				   --client-id cert-manager.io \
 				   --scope "certificate:manage,revoke" \
 				   --format json
@@ -41,7 +41,7 @@ Once you have an access-token,
 - Set VEN_SERVER_URL to the URL used in the `vcert` command
 - Set VEN_ACCESS_TOKEN to the value of `access_token` returned above.
 - The VEN_PRIVATE_CA1 is the policy folder from which you will be issuing certificates. Replace the value with the policy folder that you intend to use. 
-- The VEN_TPP_CA_BUNDLE_PEM_FILE is relevant if your TPP server `venafi.tfs.com` uses a private CA. To make sure you have a complete setup with trust store setup, download the certificate chain of your TPP server and save it as a pem file. Provide the path to the PEM file. 
+- The VEN_TPP_CA_BUNDLE_PEM_FILE is relevant if your TPP server `venafi.example.com` uses a private CA. To make sure you have a complete setup with trust store setup, download the certificate chain of your TPP server and save it as a pem file. Provide the path to the PEM file. 
 
 NOTE: A simple way (my simple way) is to just hit the TPP URL using firefox and downloading the certificate and chain as PEM. You can choose to download it the best way that works for you. 
 
@@ -81,7 +81,7 @@ Step 1 is essentially a setup target to create a few things
 - The `ConfigMap` that holds the Venafi server trust anchor is created 
 - Couple of helm values file from `templates/helm` directory is staged in `artifacts` directory  
 
-**NOTE** A image pull registry secret valid for a short period (30 days) is available for you. If TFS allows access only to specific OCI registries, all Venafi container images will need to be pulled and mirrored in TFS registry. This section assumes TFS has the ability to pull container images from Venafi's private OCI registry. Mirroring images is common and something we expect will happen for your production setups. You will have the ability to create your own Venafi registry secret and manage it. 
+**NOTE** Make sure you have a valid image pull registry secret. If you are unable to pull images directly from Venafi's OCI registry, all Venafi container images will need to be pulled and mirrored in your artifactory/registry. This section assumes you have the ability to pull container images from Venafi's private OCI registry. Mirroring images is common and something we expect will happen for your production setups.
 
 Run 
 ```
