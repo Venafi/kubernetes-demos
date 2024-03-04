@@ -1,0 +1,9 @@
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: venafi-cloud-cluster-issuer
+spec:
+  venafiConnectionName: venafi-cloud-connection
+  zone: ${VEN_PRIVATE_CA1}
+---

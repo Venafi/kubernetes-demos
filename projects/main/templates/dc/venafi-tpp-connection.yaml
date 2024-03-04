@@ -1,0 +1,13 @@
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiConnection
+metadata:
+  name: venafi-tpp-connection
+  namespace: venafi
+spec:
+  tpp:
+    url: ${VEN_SERVER_URL}
+    accessToken:
+    - secret:
+        name: venafi-tpp-credentials
+        fields: ["access-token"]
+

@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ghost-rider.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: ghost-rider.svc.cluster.local
+  duration: 2160h
+  subject:
+    organizations: 
+     - Venafi Inc
+    organizationalUnits:
+     - TLSPK Demo
+    localities:
+     - Salt Lake City
+    provinces:
+     - Utah
+    countries:
+     - US
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - ghost-rider.svc.cluster.local
+  commonName: ghost-rider.svc.cluster.local
+  issuerRef:
+    name: "REPLACE_WITH_ISSUER_NAME"
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"

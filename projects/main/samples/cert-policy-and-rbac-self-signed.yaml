@@ -1,0 +1,93 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: allow-self-signed-issuer-in-ns-sandbox
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    isCA: true
+  selector:
+    issuerRef:
+      name: "selfsigned-issuer"
+      kind: "Issuer"
+      group: "cert-manager.io"
+
+--- 
+
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: allow-self-signed-issuer-for-pods-in-ns-sandbox
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    subject:
+      organizations:
+        values: ["*"]
+      countries:
+        values: ["*"]
+      organizationalUnits:
+        values: ["*"]
+      localities:
+        values: ["*"]
+      provinces:
+        values: ["*"]
+      streetAddresses:
+        values: ["*"]
+      postalCodes:
+        values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+      - "key encipherment"
+  selector:
+    issuerRef:
+      name: "cert-issuer-from-phantom-ca"
+      kind: "Issuer"
+      group: "cert-manager.io"
+
+--- 
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cert-manager-policy-for-selfsigned-certs-in-sandbox
+  namespace: sandbox
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["allow-self-signed-issuer-in-ns-sandbox", "allow-self-signed-issuer-for-pods-in-ns-sandbox"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-manager-policy-for-selfsigned-certs-in-sandbox
+  namespace: sandbox
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-policy-for-selfsigned-certs-in-sandbox
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager-csi-driver
+  namespace: venafi
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: venafi
+

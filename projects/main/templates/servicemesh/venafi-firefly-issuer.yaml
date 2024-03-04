@@ -1,0 +1,4 @@
+apiVersion: firefly.venafi.com/v1alpha1
+kind: Issuer
+metadata:
+  name: venafi-firefly-issuer
