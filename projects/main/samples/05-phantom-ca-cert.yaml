@@ -1,0 +1,59 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+  namespace: sandbox
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: phantom-ca
+  namespace: sandbox
+spec:
+  isCA: true
+  secretName: phantom-ca-key-pair
+  commonName: phantom-ca
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-issuer-from-phantom-ca
+  namespace: sandbox
+spec:
+  ca:
+    secretName: phantom-ca-key-pair
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: phantom-ca-issued.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: phantom-ca-issued.svc.cluster.local
+  duration: 2160h
+  subject:
+    organizations: 
+     - MIM Lab
+    organizationalUnits:
+     - Phantom
+    localities:
+     - Salt Lake City
+    provinces:
+     - Utah
+    countries:
+     - US
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - phantom-ca-issued.svc.cluster.local
+  commonName: phantom-ca-issued.svc.cluster.local
+  issuerRef:
+    name: "cert-issuer-from-phantom-ca"
+    kind: "Issuer"
+    group: "cert-manager.io"
