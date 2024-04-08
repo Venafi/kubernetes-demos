@@ -1,0 +1,13 @@
+venafiEnhancedIssuer:
+  replicas: 2
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+  manager:
+    # The trustedCaBundles allows you to specify additional CA certificate
+    # bundles that will be mounted to /etc/ssl/certs/. Note that Mozilla's CA
+    # certificates are present in the image by default at
+    # /etc/ssl/certs/ca-certificates.crt, and cannot be disabled.
+    trustedCaBundles:
+     - configMapName: venafi-tpp-ca-bundle
+       configMapKey: ca.crt

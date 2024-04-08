@@ -1,0 +1,20 @@
+# If the Venafi TPP server DNS name uses a non public CA, 
+#it is requried to have the CA to communicate with TPP
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: venafi-tpp-ca-bundle
+spec:
+  sources:
+  # Include a bundle of publicly trusted certificates which can be
+  # used to validate most TLS certificates on the internet, such as
+  # those issued by Let's Encrypt, Google, Amazon and others.
+  #- useDefaultCAs: true  
+  - secret:
+      name: "venafi-tpp-server-cert"
+      key: "ca.crt"
+  target:
+    # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in
+    # every namespace based on the sources above.
+    configMap:
+      key: "ca.crt"
