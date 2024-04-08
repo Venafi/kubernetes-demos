@@ -1,0 +1,11 @@
+---
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiClusterIssuer
+metadata:
+  name: venafi-tpp-cluster-issuer
+spec:
+  venafiConnectionName: venafi-tpp-connection
+  zone: ${VEN_PRIVATE_CA1}
+  certificateNameExpression: >-
+    request.namespace + "_" + request.name
+---
