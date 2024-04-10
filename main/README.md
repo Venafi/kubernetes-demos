@@ -1,0 +1,566 @@
+# TLS Protect for Kuberentes & Firefly 
+# DOCS - OUT OF DATE and needs rework
+
+## Requirements  
+- You have access to the Venafi Control Plane and have the entitlements to use 
+   - TLS Protect Cloud
+   - TLS Protect for Kubernetes
+   - Firefly 
+
+## Assumptions 
+- For the purposes of this demo, **Firefly** will be configured to run in Kubernetes along with the rest of the workloads. In production environments it is recommended to isolate **Firefly** by running it in a dedicated nodepool or outside of the cluster in it's own VM or physical machine. When running outside the cluster Firefly will authenticate using `kubeconfig` associated with the `ServiceAccount` tied to a Firefly `Deployment`
+- `CertificateRequest` resources will comply to the policies associated with Firefly configured in Venafi Control Plane. Most enterprises also run Venafi policies in-cluster with Venafi TLSPK Enterprise Policy Approver. If `policy-approver` is deployed in cluster, a `CertificateRequestPolicy` must be created that allows all for the **Firefly** issuer to avoid conflicting policies.    
+
+## Configuring Venafi Firefly 
+Login into [Venafi TLS Protect Cloud](https://ui.venafi.cloud) and access the **Firefly** addon from the product switcher in the upper right corner. If you don't have an account you can sign up for a 30 day trial.
+
+![Firefly in TLS Protect Cloud](../images/fireflyCA-initial.png)
+
+You can switch between TLS Protect Cloud and Firefly at any time. You will be presented with the last accessed module when you login.
+
+### Creating a Sub CA Provider 
+The first step to getting started with **Firefly** is to create a subordinate CA provider. Several upstream CA's are supported but for the purposes of setting up this demo environment 
+- Click "Sub CA Providers" in the top menu
+- Click the "New" -> "Venafi Built-In CA" button. 
+
+> **NOTE** 
+> Sub CA Provider can be created using the Venafi API as well. There are several helper `Makefile` targets showing how to use the Venafi APIs. [Venafi Developer Central](https://developer.venafi.com) is a good place to start to understand the various APIs and recipes that can be used. 
+
+In the presented screen provide the details for the subordinate CA. An example is included in the screenshot below. The common name for the CA that will be bootstrapped is set as `firefly-built-in-180.svc.cluster.local` with the key algorithm as `RSA 2048`. Set the rest of the subject information that best suits your needs. The sample uses the Venafi Built-In CA. For producton, it is recommended to use the organization's CA.
+
+![Creating a Sub CA Provider](../images/firefly-subca-config.png)
+
+Make sure to save and review the Sub CA Provider you create. 
+### Create a policy for certificates issued by Firefly
+As a next step , we will create a policy that will be used by the **Firefly** issuer for issuing certificates in cluster. Venafi Firefly provides a very comprehensive policy model for governing how certificates are issued for workloads. Read the TLS Protect Cloud documentation for various options. 
+
+To create a policy 
+- Click "Policies" in the top menu
+- Click New and in the presented screen provide the values for the policy. 
+
+All fields are self explanatory. For information about what the "Type" means read the documentation. For e.g Optional means it is optional to provide a value.  In the sample policy shown below 
+- the name of the policy is *firefly-two-day-RSA-certs*
+- the validity of all certs issued by **Firefly** is 2 days 
+- the subject enforces that common name / DNS SAN must end with `.svc.cluster.local`
+- the rest of the subject fields are locked to a certain value and the information provided in the CSR will be not used. 
+- the key constraint is set to "Required" and the only allowed value is **RSA 2048**
+- the issuance parameters are set with specific values that will be set in the issued certificate.
+
+![Firefly Policy](../images/fireflyca-policy.png)
+
+Make sure to save and review the policy you create. 
+
+**NOTE** Create two additonal policies similar to above and name them *firefly-ten-day-RSA-certs* and *firefly-hundred-day-RSA-certs* . For the former set the validity to 10 days and for the latter set it to 100 days. 
+
+The idea is to have different policies that cater to different scenarios that *Firefly* will fulfill. 
+
+### Creating a service account to tie Firefly runtime to Venafi Control Plane. 
+Before you create a service account in the UI, generate a public/private key pair. You can choose a mechanism that works best for you. For this demo simply run the following. 
+
+```
+openssl genrsa -out firefly-key.pem 2048
+openssl rsa -in firefly-key.pem -pubout > firefly-key.pub
+```
+
+The public key will be used in the service account configuration in the Venafi Control Plane. The private key will be mounted in the Kubernetes pod. For the purposes of a simple demo, we will create a Kubernetes secret with the key. This is not recommended for production environments. 
+
+Creating a service account also requires a team and associated members. In the UI, click on Teams , create a team, define membership rules based on SSO claims or assign people directly. This demo is not covering the exact steps for creating Teams and assumes you have a team defined. 
+
+Click on Service Accounts and set the required fields. 
+The sample service account as shown the picture below has the following settings
+- Name : firefly-service-account 
+- Owning Team : firefly-demoers 
+- Validity : 365 days
+- Public Key : The contents of firefly-key.pub 
+
+Save the values and note the *ClientID* This client id is the glue between Venafi Control Plane and Firefly runtime. 
+
+![Firefly Service Account](../images/firefly-sa.png)
+
+### Creating a configuration for Firefly runtime operations
+This is the final step in the process of setting up Firefly for runtime operation. **Firefly** at runtime is associated with a configuration that holds one or more policies. We have created three policies. Each of the policy will cater to different types of workloads associated with a single configuration. 
+
+For e.g the policy created to issue certs with validity of 2 days is likely for highly ephemeral workloads. The 10 day and the 100 day certs may be applicable to different types of workloads.  
+
+To create a configuration,
+- Click "Configurations" in the top menu 
+- Click New and in the presented screen provide a name and the required fields. 
+
+The required fields on the screen are self explanatory. For addtional details, read the documentation. 
+- the name of the config is set to `firefly-config-for-bank-app`
+- the selected Sub CA Provider is what we created as a Sub CA Provider. In this example it is `firefly-provider-with-built-in-ca`
+- the associated policies are the policy we created earlier. You should associate three policies as shown in the screenshot below. 
+- the service account is the one we created earlier as well. 
+
+ Note the metrics below the name of the configuration in the screenshot. As **Firefly** runs, metrics associated with number of certificates issued is shown when you return to the configuration.  
+
+> **Warning**
+>At the time of this writing, URL field for JWKS is required but as we don't have one in this demo it is set to a random string. 
+
+![Firefly Configuration](../images/fireflyca-config.png)
+
+Make sure to save and review the configuration you create. 
+
+## Installing the required Firefly components in Kubernetes
+
+- The [resources](../firefly/config/firefly-resources.yaml) to deploy **Firefly** was generated using `helm template`. In the near future the instructions will be changed to install directly from the Venafi OCI registry. 
+- While the **Firefly** demo can be deployed standalone, it is part of the larger demo set that is in this repo and utilizes the same `settings.sh-template` for configuring the environment. If you don't care about rest of the demos, you don't need to setup all the required variables in your local `settings.sh`
+- You are still required to set the variables used in [Makefile](../firefly/Makefile) in `settings.sh`. All variables start with prefix **JS_**
+- Running **Firefly** in Kubernetes requires enterprise cert-manager (available via TLS Protect Kubernetes) and some of the variables set in `settings.sh` is for connecting to Venafi's private registry to pull the images. 
+- Instructions to get credentils to access enterprise builds are [here](../README.md#assumptions)
+
+### Setting up the environment 
+- Follow the instructions to set up your local environment [here](../README.md#setting-up-your-environment)
+- More specifically to run **Firefly** you will need to set 
+  - JS_ENTERPRISE_CREDENTIALS_FILE (Docker registry secret downloaded from TLS Protect for Kubernetes)
+  - JS_DOCKER_REGISTRY_EMAIL (Any email id that will be set as --docker-email in the docker-registry secret)
+  - JS_VENAFI_CLOUD_API_KEY (Your Venafi TLS Protect Cloud API Key)
+  - JS_VENAFI_FIREFLY_CLIENT_ID (The client id from the Venafi Firefly Service account associated with the configuration)
+
+### Preparing the cluster to run Firefly
+
+### STEP 1
+Change to directory `firefly`. Instructions assume that you are running everything from the directory `demos/firefly`
+
+Run 
+```
+make init
+```
+Running `init` will 
+- create a directory called `artifacts` and all the necessary files required to deploy **Firefly** will be generated here. 
+- create two namespaces in your cluster `sandbox` and `venafi` 
+- configure the `venafi` to have a `Secret` called `docker-registry` that will contain the credentials to pull Venafi TLS Protect for Kubernetes images. For the purpose of this demo the only image that will be pulled is the enterprise cert-manager. You will see the following output.
+
+```
+❯ make init
+namespace/sandbox created
+namespace/venafi created
+Creating docker registry secret. You must have the credentials file to create a secret
+
+secret/venafi-jetstack-enterprise-key created
+```
+
+### STEP 2
+
+**Firefly** requires cert-manager to be installed and running. This step installs cert-manager for you. While this demo instructions installs cert-manager in the `venafi` namespace. 
+
+Run
+```
+make install-cert-manager
+```
+Successful installation of cert-manager will return the control back to your console. 
+
+To review that cert-manager is deployed and all pods are `Running`, run
+
+```
+kubectl get pods -n venafi
+```
+to see
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-889459fcc-k44jj               1/1     Running   0          27s
+cert-manager-cainjector-86c6b5b8fd-dtr8l   1/1     Running   0          27s
+cert-manager-startupapicheck-ph7cz         1/1     Running   0          7s
+cert-manager-webhook-85d67699b-src7t       1/1     Running   0          27s
+```
+
+### STEP 3
+
+Before executing this step review the Helm Chart for Firefly. Feel free to make changes as you see fit. The chart values is in [templates/helm-values.yaml](../firefly/templates/helm-values.yaml)
+
+The values will be replaced and a new file artifacts/firefly/values.yaml will be generated. 
+
+To deploy **Firefly**  run,
+
+```
+make install-firefly
+```
+Successful installation of Firefly will return the control back to your console. 
+
+To review that Firefly is deployed and all pods are `Running`, run
+
+Review that **Firefly** is deployed by running
+
+```
+kubectl get pods -n venafi
+```
+and you will see
+
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-889459fcc-k44jj               1/1     Running   0          2m57s
+cert-manager-cainjector-86c6b5b8fd-dtr8l   1/1     Running   0          2m57s
+cert-manager-webhook-85d67699b-src7t       1/1     Running   0          2m57s
+firefly-5955994b6f-94jgl                   1/1     Running   0          96s
+firefly-5955994b6f-9dh2q                   1/1     Running   0          96s
+```
+
+Note that there are 2 firefly pods deployed and running. This is as defined in the Helm chart (`replicas=2`) Additionally, review the log by running
+```
+kubectl logs -n venafi -l app.kubernetes.io/name=firefly 
+```
+Partial output at the end will say something like this that tells **Firefly** is deployed and running as expected. 
+
+```
+......
+
+I0910 19:05:55.027121       1 client.go:296] agent/bootstrap/vaas/client "msg"="retrieve issued intermediate certificate from VaaS" 
+I0910 19:05:55.078503       1 vaas.go:123] agent/bootstrap/vaas "msg"="issued intermediate certificate from VaaS" "CN"="firefly-1-20230910140547 firefly-built-in-180.svc.cluster.local" "id"="10f48000-500d-11ee-9992-05c5403141b5"
+I0910 19:05:55.082019       1 inmemory.go:49] agent/signer/inmemory "msg"="stored in memory certificate private key bundle" 
+I0910 19:05:55.082054       1 renewer.go:135] agent/agent_renewer "msg"="fetched intermediate certificate from bootstrap" "CN"="firefly-1-20230910140547 firefly-built-in-180.svc.cluster.local"
+I0910 19:05:55.082079       1 renewer.go:169] agent/agent_renewer "msg"="waiting to renew certificate" "renew_time"="2024-01-08 19:05:44 +0000 UTC"
+```
+
+### STEP 4
+Let's validate that **Firefly** can issue certificates 
+
+Review the file [config/certificate.yaml](../firefly/config/certificate.yaml) 
+
+**IMPORTANT** The `policy-name` annotation drives what policy is used for fulling the certificate request. The teams requesting certificates just need to know the name of the policy and the required properties to send in the certificate. Many of the certificate properties have been locked by the administrator and/or set as defaults.  The `firefly.venafi.com/policy-name` annotation for each of the three certificates is set to the a different policy.
+
+Run 
+```
+make create-certificates
+```
+
+This will create the certificates in the `sandbox` namespace and can be validated by running,
+
+```
+kubectl get Certificate -n sandbox
+```
+The output will be 
+
+```
+NAME                                    READY   SECRET                                  AGE
+cert-hundred-days-1.svc.cluster.local   True    cert-hundred-days-1.svc.cluster.local   3m
+cert-ten-days-1.svc.cluster.local       True    cert-ten-days-1.svc.cluster.local       3m
+cert-two-days-1.svc.cluster.local       True    cert-two-days-1.svc.cluster.local       3m
+```
+
+Optionally, look at the associated `CertificateRequest` and `Secret` resources. 
+To look at `CertificateRequest` resources run 
+
+```
+kubectl get CertificateRequests -n sandbox 
+```
+The output will be
+
+```
+NAME                                          APPROVED   DENIED   READY   ISSUER    REQUESTOR                                         AGE
+cert-hundred-days-1.svc.cluster.local-sbw7t   True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
+cert-ten-days-1.svc.cluster.local-x6djj       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
+cert-two-days-1.svc.cluster.local-kjsqd       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
+```
+Note that the issuer is set to **Firefly**
+
+To confirm the validity of each of the certificate optionally run 
+
+Run the following , 
+```
+kubectl get secret cert-two-days-1.svc.cluster.local -n sandbox -o jsonpath="{.data.tls\.crt}" | base64 -d | openssl x509 -text | grep  CN=cert-two-days-1.svc.cluster.local -B4
+```
+to see
+
+```
+        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=2023-05-20-2014 firefly-built-in-180.svc.cluster.local
+        Validity
+            Not Before: May 21 03:16:00 2023 GMT
+            Not After : May 23 03:16:00 2023 GMT
+        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 3, CN=cert-two-days-1.svc.cluster.local
+```
+
+Run the following, 
+```
+kubectl get secret cert-ten-days-1.svc.cluster.local -n sandbox -o jsonpath="{.data.tls\.crt}" | base64 -d | openssl x509 -text | grep  CN=cert-ten-days-1.svc.cluster.local -B4
+```
+
+to see 
+```
+        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=2023-05-20-2014 firefly-built-in-180.svc.cluster.local
+        Validity
+            Not Before: May 21 03:15:50 2023 GMT
+            Not After : May 31 03:15:50 2023 GMT
+        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 2, CN=cert-ten-days-1.svc.cluster.local
+```
+Run the following
+```
+kubectl get secret cert-hundred-days-1.svc.cluster.local -n sandbox -o jsonpath="{.data.tls\.crt}" | base64 -d | openssl x509 -text | grep  CN=cert-hundred-days-1.svc.cluster.local -B4
+```
+to see
+```
+        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=2023-05-20-2014 firefly-built-in-180.svc.cluster.local
+        Validity
+            Not Before: May 21 03:15:39 2023 GMT
+            Not After : Aug 29 03:15:39 2023 GMT
+        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 1, CN=cert-hundred-days-1.svc.cluster.local
+```
+
+## Access the Venafi Control Plane to view the Issuer Certificates and the associated metrics
+
+Access the UI,
+- Click "Issuer Certificates" in the top menu 
+
+All the Issuer certificates and the metrics will be presented for the security team to monitor and review as shown below 
+
+![Certs issued by Firefly](../images/firefly-certs-issued.png)
+
+If TLS Protect for Kubernetes agent is deployed in-cluster, the dashboard will show the certificate details.  Login to TLSPK dashboard for detailed access to each certificate. 
+
+## Cleanup
+To clean up everything in your Kubernetes cluster, just run
+
+```
+make cleanup
+```
+**Advanced** If you also want to clean up the issuing certificates from TLS Protect Cloud there are a couple of helper targets. This will also help understand how the Venafi Control Plane API's work. More details at [developer.venafi.com](developer.venafi.com)  
+
+Run `make get-firefly-intermediate-certificate-ids`. This will list the id and common name for all issuing certificates. Change the target `delete-firefly-intermediateCertificates` to set the id and then run `make delete-firefly-intermediateCertificates` to remove issuing certificate.
+
+# Configure Firefly to sign Istio mesh workloads
+
+Now that we have validated Firefly and have issued a few certificates let us extend our Firefly setup to sign all incoming Istio mesh workloads. In this section we will be installing a few additional components in the cluster. 
+
+The 3 policies that we created earlier was specific to `Certificate` resources that we created. In order to sign mesh workloads we will need to create an addtional policy.
+
+## Creating a policy for istio control & data plane
+
+In this demo we will create one policy that covers certificates required for both control and data plane. You can choose to create multiple policies as needed.
+
+Similar to how we created a policy before create a new policy called `firefly-istio-service-mesh-policy` You can name it whatever you need it to be. See below for the properties that needs to be set for the policy and also a screenshot.
+
+| Property          | Type |
+| :---              |    :----:   | 
+| Validity   | 1 Day        | 
+| Commmon Name      | `istiod.istio-system.svc`<br>`^.*`       |
+| DNS(SAN)   | `istio-csr.venafi.svc`<br>`cert-manager-istio-csr.venafi.svc`<br>`istiod.istio-system.svc`        | 
+| URI Addresss (SAN)   | `^spiffe://cluster\.local/ns/.*/sa/.*`        | 
+| Key Constraint   | RSA 2048        | 
+| Key Usage   | Key Encipherment <br> Digital Signature        | 
+| Extended Key Usage   | Server Authentication <br> Client Authentication        | 
+
+![Policy for Istio](../images/firefly-istio-policy.png)
+
+## Associating the new policy to Firefly configuration
+
+Access the configuration and attach the new policy and save it. 
+
+> **_IMPORTANT NOTE:_**  If you have a Firefly deployment running in your cluster, it does not automatically pick up the changes to the configuration you just made. You will need to undeploy and redeploy Firefly. 
+
+## Setup Firefly 
+### Clean start
+This step is required only if you have Firefly running. Simply run 
+`make cleanup` to remove everything we created in the first section. 
+
+### Deploying Firefly
+Click [Preparing the cluster to run firefly](#preparing-the-cluster-to-run-firefly) to setup Firefly. Follow STEPS 1..3
+
+## Setting up Istio and the required components
+
+### Step 1
+
+We will create a couple of namespaces `istio-system` and `mesh-apps`. Review `namespaces/mesh-apps.yaml` and you will notice that we have a label `istio-injection: enabled` to ensure all workloads are mesh enabled. 
+
+Additionally, review [templates/servicemesh/istio-csr-values.yaml](../firefly/templates/servicemesh/istio-csr-values.yaml) This is the chart that configures how Venafi cert-manager istio-csr is installed and configured. You will note that there is a specific annotation that tells istio-csr what policy to use for signing all mesh workloads. In this demo, the policy used is `firefly-istio-service-mesh-policy`
+`
+
+Run
+```
+make mesh-step1
+```
+
+This will create two namespaces and you should see the below output 
+```
+namespace/istio-system created
+namespace/mesh-apps created
+```
+
+### STEP 2
+istio-csr requires a trust anchor that needs to be mounted when installed. The reference to `ica-cert` in [templates/servicemesh/istio-csr-values.yaml](../firefly/templates/servicemesh/istio-csr-values.yaml) is for the trust anchor. This will be different in your case. If you are using Venafi Trust Protection Platform the intermediate that signed the certificate is bootstrapped to Firefly should be used. If you are using the Venafi Built-In CA then the intermediate can be downloaded from the UI. Review the target `_create_venafi_builtin_trust_anchor` to understand what needs to be done. The referenced file `venafi-builtin-ica.pem` does not exist in the repo intentionally. 
+
+Run 
+```
+make mesh-step2
+```
+
+This will hold the PEM in a secret. You will see the below output 
+```
+secret/ica-cert created
+```
+
+### STEP 3
+With all the pre-requisites for istio-csr taken care of, we will now install using Helm. 
+Run 
+```
+make mesh-step3
+```
+and you will see the following output 
+```
+Installing Venafi istio CSR agent.....
+Release "cert-manager-istio-csr" does not exist. Installing it now.
+Pulled: eu.gcr.io/jetstack-secure-enterprise/charts/cert-manager-istio-csr:v0.7.0
+Digest: sha256:7e874825a1fd722fbdd398a66e90eccf08c589d9b1b9d235a851a4f9f8ea4b0a
+NAME: cert-manager-istio-csr
+LAST DEPLOYED: Mon Sep 11 11:10:23 2023
+NAMESPACE: venafi
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+```
+
+Validate that all the components are running using
+```
+kubectl get pods -n venafi
+```
+and you should see 
+
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-889459fcc-28mq9               1/1     Running   0          11m
+cert-manager-cainjector-86c6b5b8fd-jgbsz   1/1     Running   0          11m
+cert-manager-istio-csr-7db569bff7-qwkck    1/1     Running   0          106s
+cert-manager-webhook-85d67699b-dclsb       1/1     Running   0          11m
+firefly-5955994b6f-2xpxt                   1/1     Running   0          10m
+firefly-5955994b6f-4jtlx                   1/1     Running   0          10m
+```
+
+Additionally, this also creates the `istiod` certificate that will be bootstrapped to Istio
+
+Review the certificate created by Firefly for Istio by running
+```
+kubectl get certificate istiod -n istio-system
+```
+You can additonally inspect the secret bootstrapped to Istio by running 
+```
+ kubectl get secret istiod-tls -n istio-system -o jsonpath="{.data.tls\.crt}" | base64 -d | openssl x509 -text | grep Issuer -A4
+```
+and you should see 
+```
+        Issuer: C = US, ST = TX, L = Frisco, O = Venafi Inc, OU = Firefly Unit, CN = firefly-1-20230911110137 firefly-built-in-180.svc.cluster.local
+        Validity
+            Not Before: Sep 11 16:10:25 2023 GMT
+            Not After : Sep 12 16:10:25 2023 GMT
+        Subject: CN = istiod.istio-system.svc
+
+```
+This is the `istiod` secret that Istio will use for signing all incoming mesh workloads. 
+### STEP 4
+
+We will now install Istio by running the following. Istio is installed using the `IstioOperator` . The file is located at [templates/servicemesh/istio-operator.yaml](../firefly/templates/servicemesh/istio-operator.yaml) for review. 
+
+Run 
+```
+make mesh-step4 
+```
+and you should see
+```
+✔ Istio core installed                                                                                                                                                     
+✔ Istiod installed                                                                                                                                                         
+✔ Egress gateways installed                                                                                                                                                
+✔ Ingress gateways installed                                                                                                                                               
+✔ Installation complete                                                                                                                                                    Making this installation the default for injection and validation.
+
+Thank you for installing Istio 1.17.
+```
+
+### STEP 5
+In this step we will create a `PeerAuthentication` to ensure all workloads communicate to each other STRICTLY using mTLS. 
+
+Run
+```
+make mesh-step5
+```
+You will see 
+```
+peerauthentication.security.istio.io/global created
+```
+Let's inspect the `PeerAuthentication` resource by running 
+```
+kubectl get PeerAuthentication -n istio-system
+```
+to see that mTLS mode is set to STRICT
+```
+NAME     MODE     AGE
+global   STRICT   55s
+```
+
+### STEP 6
+While all the mesh workloads will use **Firefly** for their identities, we also need a public certificate to access the Ingress Gateway. The sample application that we will eventually deploy will be accessed from the browser. Venafi will issue a public certificate that is trusted by the browser. The certificate will be issued by a `VenafiIssuer`. 
+The template for issuer is located here [templates/tlspc/public-cert-issuer.yaml](../firefly/templates/tlspc/public-cert-issuer.yaml) 
+The template for certificate is located here [templates/tlspc/public-cert.yaml](../firefly/templates/tlspc/public-cert.yaml)
+
+If you don't need to attach a certificate for your Gateway you can ignore this step.
+
+Run 
+```
+make mesh-step6
+```
+to create an issuer and certificate. You will see the following output 
+```
+secret/tlspc-secret created
+issuer.cert-manager.io/tlspc-public-cert-issuer created
+certificate.cert-manager.io/storefront-vtlspc.example.com created
+```
+
+### STEP7
+This is an optional step and will require you to adapt depending on where your cluster is running and if you need create a DNS entry to access the gateway. 
+This demo is setup on GKE with loadbalancer / domains managed by GCP. If this is not applicable to you, review the target and create appropriate DNS entries. 
+
+Basically, you need to run 
+```
+kubectl get svc istio-ingressgateway -n istio-system
+```
+and associate the provisioned loadblancer IP/hostname to your DNS. 
+To automatically do that in Google Cloud for a domain you own, just run
+```
+make mesh-step7
+```
+
+### STEP 8
+It's time to deploy a sample application. The sample application will be deployed in a namespace called `mesh-apps`. 
+Run
+```
+make mesh-step8
+```
+
+Validate that the sample app is deployed. Run ,
+```
+kubectl get pods -n mesh-apps
+```
+to see
+```
+NAME                                     READY   STATUS    RESTARTS   AGE
+adservice-b9df46fb6-6pdpz                2/2     Running   0          1m13s
+cartservice-5dc9cfbf7-tkwgh              2/2     Running   0          1m13s
+checkoutservice-7447798d5b-mvm7b         2/2     Running   0          1m13s
+currencyservice-8697f5d6c6-xcmq4         2/2     Running   0          1m13s
+emailservice-9bc8d6b8-zchm8              2/2     Running   0          1m12s
+frontend-f8f86fbb-zzkm2                  2/2     Running   0          1m12s
+paymentservice-c49577b64-njrpx           2/2     Running   0          1m12s
+productcatalogservice-58b97787d8-72cnq   2/2     Running   0          1m12s
+recommendationservice-6dd7c4df7b-jflmg   2/2     Running   0          1m12s
+redis-cart-5c6fbf7bf8-gpz7b              2/2     Running   0          1m12s
+shippingservice-655465ff54-f47dz         2/2     Running   0          1m11s
+```
+
+Let's validate that the certificates issued to all the mesh workloads are indeed issued by **Firefly**
+
+Run
+```
+make print-cert
+```
+`print-cert` is a target that prints the cert assoicated with frontend. You can choose to change the script to look at other certificates as well. You will see an output similar to below
+
+```
+Pod name is frontend-f8f86fbb-zzkm2 
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            c4:2e:42:a4:8e:46:03:1d:d6:32:ba:0f:5e:c3:76:2b
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = US, ST = TX, L = Frisco, O = Venafi Inc, OU = Firefly Unit, CN = firefly-1-20230911110137 firefly-built-in-180.svc.cluster.local
+        Validity
+            Not Before: Sep 11 17:37:08 2023 GMT
+            Not After : Sep 12 17:37:08 2023 GMT
+```
+The mesh identity is valid for 24 hours as defined by a policy in the Venafi Control Plane. Access Venafi Control Plane and the dashboard to review the metrics associated with this issuer. 
