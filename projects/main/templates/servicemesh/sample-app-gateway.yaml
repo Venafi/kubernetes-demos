@@ -16,9 +16,9 @@ spec:
       mode: SIMPLE
       serverCertificate: "sds"
       privateKey: "sds"
-      credentialName: "REPLACE_WITH_HOST_NAME"
+      credentialName: "${VEN_DNS_FOR_SAMPLE_APP}"
     hosts:
-    - "REPLACE_WITH_HOST_NAME"
+    - "${VEN_DNS_FOR_SAMPLE_APP}"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -26,7 +26,7 @@ metadata:
   name: bookinfo
 spec:
   hosts:
-  - "REPLACE_WITH_HOST_NAME"
+  - "${VEN_DNS_FOR_SAMPLE_APP}"
   gateways:
   - bookinfo-gateway
   http:
