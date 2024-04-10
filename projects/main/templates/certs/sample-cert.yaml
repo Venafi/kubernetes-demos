@@ -23,6 +23,6 @@ spec:
     - sample-cert01.svc.cluster.local
   commonName: sample-cert01.svc.cluster.local
   issuerRef:
-    name: "venafi-tpp-cluster-issuer"
+    name: "venafi-tpp-privateca-cluster-issuer"
     kind: "VenafiClusterIssuer"
     group: "jetstack.io"

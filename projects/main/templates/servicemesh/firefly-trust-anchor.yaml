@@ -9,7 +9,7 @@ spec:
   # those issued by Let's Encrypt, Google, Amazon and others.
   #- useDefaultCAs: true  
   - secret:
-      name: "firefly-ica-root-cert"
+      name: "venafi-trust-anchor"
       key: "ca.crt"
   target:
     # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in

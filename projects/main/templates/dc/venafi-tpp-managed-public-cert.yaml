@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ${VEN_DNS_FOR_SAMPLE_APP}
+  namespace: istio-system
+spec:
+  secretName: ${VEN_DNS_FOR_SAMPLE_APP}
+  duration: 72h
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - ${VEN_DNS_FOR_SAMPLE_APP}
+  commonName: ${VEN_DNS_FOR_SAMPLE_APP}
+  issuerRef:
+    name: venafi-tpp-publicca-cluster-issuer
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"
+--- 
