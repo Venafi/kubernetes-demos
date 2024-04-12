@@ -391,7 +391,9 @@ _create-tlspc-public-cert-issuer:
      > artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml
 _create-tlspc-public-cert:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-managed-public-cert.yaml \
+	@cat templates/cloud/venafi-cloud-managed-public-cert.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
+	> artifacts/venafi-install/venafi-cloud-managed-public-cert-tmp.yaml
+	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/venafi-install/venafi-cloud-managed-public-cert-tmp.yaml \
      > artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
 
@@ -401,24 +403,33 @@ _create-tpp-public-cert-issuer:
      > artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml
 _create-tpp-public-cert:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-managed-public-cert.yaml \
+	@cat templates/dc/venafi-tpp-managed-public-cert.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
+	> artifacts/venafi-install/venafi-tpp-managed-public-cert-tmp.yaml
+	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/venafi-install/venafi-tpp-managed-public-cert-tmp.yaml \
      > artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 
 mesh-step7:
-	@echo "Create DNS entry for ${VEN_DNS_FOR_SAMPLE_APP} to map to Gateway host/ip"
+	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
+
+_create_entry_in_GCP_CloudDNS:
+	@../scripts/gcp/map-dns-to-gateway.sh ${VEN_GCP_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
+
+	@$(MAKE) -C ../scripts map-mesh-gateway-ip-to-dns --warn-undefined-variables
 
 mesh-step8: _install-sample-app _create_gateway_resources
 _install-sample-app:
 	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml
 
 _create_gateway_resources:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/servicemesh/sample-app-gateway.yaml \
+	@cat templates/servicemesh/sample-app-gateway.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
+	> artifacts/samples/sample-app-gateway-tmp.yaml
+	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/samples/sample-app-gateway-tmp.yaml \
      > artifacts/samples/sample-app-gateway.yaml
 	@kubectl -n mesh-apps apply -f artifacts/samples/sample-app-gateway.yaml
 	@echo "####################################################################################################"
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
-	@echo "######### Access application using https://${VEN_DNS_FOR_SAMPLE_APP}     ###"
+	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}     ###"
 	@echo "####################################################################################################"
 
 clean-mesh-setup:
