@@ -38,3 +38,4 @@ projects/ven01/registry/venafi_registry_secret.yaml
 main/venafi-cloud-built-in-root.pem
 main/vars.sh
 projects/ven02/vars.sh
+cloud-settings.sh

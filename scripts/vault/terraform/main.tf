@@ -15,7 +15,7 @@
  */
 /*
 Sample script for creating a Intermediate Certificate Authority in Vault. 
-Script adopted from https://github.com/jetstack/cert-manager-demos/tree/master/istio-csr/install-vault/terraform@MattiasGees
+Script adopted from https://github.com/venafi/cert-manager-demos/tree/master/istio-csr/install-vault/terraform@MattiasGees
 NOT FOR PRODUCTION USE
 */
 
@@ -62,47 +62,47 @@ resource "vault_generic_endpoint" "gatesy" {
 EOT
 }
 
-resource "vault_mount" "jetstack-demo-pki-root" {
-  path        = "jetstack-demo-pki-root"
+resource "vault_mount" "venafi-demo-pki-root" {
+  path        = "venafi-demo-pki-root"
   type        = "pki"
-  description = "This is Jetstack Secure Demo Root CA"
+  description = "This is Venafi Cloud Demo Root CA"
   max_lease_ttl_seconds = 315360000
 }
 
-resource "vault_pki_secret_backend_root_cert" "jetstack-demo-pki-root" {
+resource "vault_pki_secret_backend_root_cert" "venafi-demo-pki-root" {
 
-  backend = vault_mount.jetstack-demo-pki-root.path
+  backend = vault_mount.venafi-demo-pki-root.path
 
   type                  = "internal"
-  common_name           = "Jetstack Secure Root CA"
+  common_name           = "Venafi Cloud Demo Root CA"
   ttl                   = 315360000
   format                = "pem"
   private_key_format    = "der"
   key_type              = "rsa"
   key_bits              = 4096
   exclude_cn_from_sans  = true
-  ou                    = "Jetstack Secure"
-  organization          = "Jetstack Ltd"
+  ou                    = "Venafi Cloud"
+  organization          = "Venafi Inc."
 }
 
 resource "local_file" "ca" {
-    content     = "${vault_pki_secret_backend_root_cert.jetstack-demo-pki-root.certificate}"
+    content     = "${vault_pki_secret_backend_root_cert.venafi-demo-pki-root.certificate}"
     filename = "ca.pem"
 }
 
 # Create PKI engine
 
-resource "vault_mount" "jetstack-demo-mesh-ca" {
-  path        = "jetstack-demo-mesh-ca"
+resource "vault_mount" "venafi-demo-mesh-ca" {
+  path        = "venafi-demo-mesh-ca"
   type        = "pki"
   max_lease_ttl_seconds = 31536000
-  description = "Jetstack Secure Demo ICA"
+  description = "Venafi Cloud Demo ICA"
 }
 
-resource "vault_pki_secret_backend_role" "jetstack-secure-istio-csr" {
+resource "vault_pki_secret_backend_role" "venafi-secure-istio-csr" {
 
-  backend = vault_mount.jetstack-demo-mesh-ca.path
-  name    = "jetstack-secure-istio-csr"
+  backend = vault_mount.venafi-demo-mesh-ca.path
+  name    = "venafi-secure-istio-csr"
   
   allow_any_name                     = true
   allow_glob_domains                 = false
@@ -131,32 +131,32 @@ resource "vault_pki_secret_backend_role" "jetstack-secure-istio-csr" {
 }
 
 resource "vault_pki_secret_backend_intermediate_cert_request" "intermediate" {
-  depends_on = [ vault_mount.jetstack-demo-mesh-ca ]
-  backend = vault_mount.jetstack-demo-mesh-ca.path
+  depends_on = [ vault_mount.venafi-demo-mesh-ca ]
+  backend = vault_mount.venafi-demo-mesh-ca.path
   type = "internal"
-  common_name = "Jetstack Secure Demo ICA"
-  ou = "Jetstack Secure"
-  organization = "Jetstack Ltd"
+  common_name = "Venafi Cloud Demo ICA"
+  ou = "Venafi Cloud"
+  organization = "Venafi Inc."
   country = "US"
 }
 
 resource "vault_pki_secret_backend_root_sign_intermediate" "root" {
   depends_on = [ vault_pki_secret_backend_intermediate_cert_request.intermediate ]
-  backend = "jetstack-demo-pki-root"
+  backend = "venafi-demo-pki-root"
   csr = vault_pki_secret_backend_intermediate_cert_request.intermediate.csr
-  common_name = "Jetstack Secure Demo ICA"
-  ou = "Jetstack Secure"
-  organization = "Jetstack Ltd"
+  common_name = "Venafi Cloud Demo ICA"
+  ou = "Venafi Cloud"
+  organization = "Venafi Inc."
   ttl = 157680000
 }
 
 data "vault_generic_secret" "root_ca_chain" {
-  depends_on = [vault_pki_secret_backend_root_cert.jetstack-demo-pki-root]
-  path     = "jetstack-demo-pki-root/cert/ca"
+  depends_on = [vault_pki_secret_backend_root_cert.venafi-demo-pki-root]
+  path     = "venafi-demo-pki-root/cert/ca"
 }
 
 resource "vault_pki_secret_backend_intermediate_set_signed" "intermediate" { 
-  backend = vault_mount.jetstack-demo-mesh-ca.path
+  backend = vault_mount.venafi-demo-mesh-ca.path
   certificate = <<-EOT
 ${vault_pki_secret_backend_root_sign_intermediate.root.certificate}
 EOT
@@ -168,7 +168,7 @@ resource "vault_policy" "pki-istio-ca" {
   name = "pki-istio-ca"
 
   policy = <<EOT
-path "jetstack-demo-mesh-ca/*" {
+path "venafi-demo-mesh-ca/*" {
   capabilities = ["create","update"]
 }
 EOT

@@ -7,39 +7,39 @@ SHELL := bash
 SHELL := /bin/sh
 
 # Include personal settings
- include ../settings.sh
+ include ../cloud-settings.sh
 
 ## GCP Targets 
 create-gke-cluster:
-	@echo 'Creating GKE Cluster for ${JS_GCP_PROJECT_ID} in region ${JS_GCP_REGION}'
-	@./gcp/gke-cluster.sh ${JS_GCP_PROJECT_ID} ${JS_GCP_REGION} ${JS_K8S_CLUSTER_NAME}
+	@echo 'Creating GKE Cluster for ${VEN_GCP_PROJECT_ID} in region ${VEN_GCP_REGION}'
+	@./gcp/gke-cluster.sh ${VEN_GCP_PROJECT_ID} ${VEN_GCP_REGION} ${VEN_CLUSTER_NAME}
 
 remove-gke-cluster:
-	@gcloud container clusters delete ${JS_K8S_CLUSTER_NAME} --region ${JS_GCP_REGION}
+	@gcloud container clusters delete ${VEN_CLUSTER_NAME} --region ${VEN_GCP_REGION}
 
 create-google-cas:
-	@./gcp/cas.sh ${JS_GCP_PROJECT_ID} ${JS_GCP_REGION} ${JS_JETSTACKER_DOMAIN_NAME} ${JS_GCP_CAS_NAME} ${JS_GCP_CAS_POOL_NAME} ${JS_GCP_CAS_POOL_TIER}
+	@./gcp/cas.sh ${VEN_GCP_PROJECT_ID} ${VEN_GCP_REGION} ${VEN_DOMAIN_NAME} ${VEN_GCP_CAS_NAME} ${VEN_GCP_CAS_POOL_NAME} ${VEN_GCP_CAS_POOL_TIER}
 
 remove-google-cas:
-	@./gcp/cas-delete.sh ${JS_GCP_PROJECT_ID} ${JS_GCP_REGION} ${JS_JETSTACKER_DOMAIN_NAME} ${JS_GCP_CAS_NAME} ${JS_GCP_CAS_POOL_NAME}
+	@./gcp/cas-delete.sh ${VEN_GCP_PROJECT_ID} ${VEN_GCP_REGION} ${VEN_DOMAIN_NAME} ${VEN_GCP_CAS_NAME} ${VEN_GCP_CAS_POOL_NAME}
 
 map-mesh-gateway-ip-to-dns:
 	@rm -f transaction.yaml
-	@./gcp/map-dns-to-gateway.sh ${JS_GCP_ZONE} ${JS_JETSTACKER_DOMAIN_NAME}
+	@./gcp/map-dns-to-gateway.sh ${VEN_GCP_ZONE} ${VEN_DOMAIN_NAME}
 
 
 ## AWS Targets
 
 # Create EKS Cluster
 create-eks-cluster:
-	@echo 'Creating EKS Cluster creation with ${JS_AWS_PROFILE_NAME} in region ${JS_AWS_REGION}'
-	@./aws/aws-cluster.sh ${JS_AWS_PROFILE_NAME} ${JS_AWS_REGION} ${JS_K8S_CLUSTER_NAME}
+	@echo 'Creating EKS Cluster creation with ${VEN_AWS_PROFILE_NAME} in region ${VEN_AWS_REGION}'
+	@./aws/aws-cluster.sh ${VEN_AWS_PROFILE_NAME} ${VEN_AWS_REGION} ${VEN_CLUSTER_NAME}
 
 remove-eks-cluster:
-ifeq ($(JS_AWS_PROFILE_NAME),none)
-	@eksctl delete cluster --region ${JS_AWS_REGION} --name=${JS_K8S_CLUSTER_NAME}
+ifeq ($(VEN_AWS_PROFILE_NAME),none)
+	@eksctl delete cluster --region ${VEN_AWS_REGION} --name=${VEN_CLUSTER_NAME}
 else
-	@eksctl delete cluster --profile ${JS_AWS_PROFILE_NAME} --region ${JS_AWS_REGION} --name=${JS_K8S_CLUSTER_NAME}
+	@eksctl delete cluster --profile ${VEN_AWS_PROFILE_NAME} --region ${VEN_AWS_REGION} --name=${VEN_CLUSTER_NAME}
 endif
 
 create-aws-pca:
