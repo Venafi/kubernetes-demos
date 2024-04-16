@@ -11,6 +11,8 @@ SHELL := /bin/sh
  include vars.sh
  # Include version settings
  include versions.sh
+# Include optionally - use cloud-settings-template.sh to create cloud-setting.sh
+-include cloud-settings.sh
 
 ########################################################################################################################
 #  Review each command in the targets. 
@@ -409,13 +411,11 @@ _create-tpp-public-cert:
      > artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 
-mesh-step7:
-	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
-
+mesh-step7: _create_entry_in_GCP_CloudDNS
+	
 _create_entry_in_GCP_CloudDNS:
+	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
 	@../scripts/gcp/map-dns-to-gateway.sh ${VEN_GCP_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
-
-	@$(MAKE) -C ../scripts map-mesh-gateway-ip-to-dns --warn-undefined-variables
 
 mesh-step8: _install-sample-app _create_gateway_resources
 _install-sample-app:
@@ -429,7 +429,7 @@ _create_gateway_resources:
 	@kubectl -n mesh-apps apply -f artifacts/samples/sample-app-gateway.yaml
 	@echo "####################################################################################################"
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
-	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}     ###"
+	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}/productpage    ###"
 	@echo "####################################################################################################"
 
 clean-mesh-setup:
@@ -470,4 +470,13 @@ delete-firefly-intermediateCertificates:
 	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/22905760-f2a3-11ee-9a43-23436c6a32e0' \
 	--header 'tppl-api-key: ${VEN_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
-	
+
+#helper target to generate a public/private key pair for routing discoverd certs from VCP to TPP
+
+generate-key-pair:
+	@openssl ecparam -name secp521r1 -genkey -noout -out tlspc-to-dc-key.pem
+	@openssl ec -in tlspc-to-dc-key.pem -pubout -out tlspc-to-dc-key.pub
+	@echo @@@@@@@ The public key contents below should be used for service account in Venafi Control Plane @@@@@@@
+	@cat tlspc-to-dc-key.pub
+	@echo @@@@@@@ The public key contents above should be used for service account in Venafi Control Plane @@@@@@@
+
