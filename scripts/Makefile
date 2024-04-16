@@ -9,6 +9,8 @@ SHELL := /bin/sh
 # Include personal settings
  include ../cloud-settings.sh
 
+create-cluster: create-gke-cluster
+
 ## GCP Targets 
 create-gke-cluster:
 	@echo 'Creating GKE Cluster for ${VEN_GCP_PROJECT_ID} in region ${VEN_GCP_REGION}'

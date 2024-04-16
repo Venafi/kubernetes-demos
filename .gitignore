@@ -39,3 +39,5 @@ main/venafi-cloud-built-in-root.pem
 main/vars.sh
 projects/ven02/vars.sh
 cloud-settings.sh
+main/tlspc-to-dc-key.pem
+main/tlspc-to-dc-key.pub
