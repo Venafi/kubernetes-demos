@@ -97,7 +97,7 @@ app:
     issuer:
       # Issuer name set on created CertificateRequests for both istio-csr's
       # serving certificate and incoming gRPC CSRs.
-      name: "venafi-firefly-issuer"
+      name: "firefly-mesh-wi-issuer"
       # Issuer kind set on created CertificateRequests for both istio-csr's
       # serving certificate and incoming gRPC CSRs.
       kind: Issuer

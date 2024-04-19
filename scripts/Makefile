@@ -7,7 +7,7 @@ SHELL := bash
 SHELL := /bin/sh
 
 # Include personal settings
- include ../cloud-settings.sh
+ include ../main/cloud-settings.sh
 
 create-cluster: create-gke-cluster
 

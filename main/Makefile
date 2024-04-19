@@ -14,6 +14,11 @@ SHELL := /bin/sh
 # Include optionally - use cloud-settings-template.sh to create cloud-setting.sh
 -include cloud-settings.sh
 
+check-env:
+ifndef VEN_CLOUD_API_KEY
+	@(echo "VEN_CLOUD_API_KEY not defined. "; exit 1)
+endif 
+
 ########################################################################################################################
 #  Review each command in the targets. 
 
@@ -250,11 +255,14 @@ create-venafi-tpp-privateca-cluster-issuer: _create-rbac-for-connections _create
 ################################### END Venafi Data center Targets #####################################
 
 ################################## SAMPLES ##################################
-seed-data-tpp: VEN_CLUSTER_ISSUER=venafi-tpp-privateca-cluster-issuer
-seed-data-tpp: _seed-data
+#seed-data-tpp: VEN_CLUSTER_ISSUER=venafi-tpp-privateca-cluster-issuer
+#seed-data-tpp: _seed-data
 
-seed-data-cloud: VEN_CLUSTER_ISSUER=venafi-cloud-privateca-cluster-issuer
-seed-data-cloud: _seed-data
+#seed-data-cloud: VEN_CLUSTER_ISSUER=venafi-cloud-privateca-cluster-issuer
+#seed-data-cloud: _seed-data
+
+seed-data: VEN_CLUSTER_ISSUER=venafi-privateca-cluster-issuer
+seed-data: _seed-data
 
 _seed-data:
 	@echo "Creating certificate resources with issuer as ${VEN_CLUSTER_ISSUER}"
@@ -354,7 +362,7 @@ mesh-setup:
 mesh-step1: mesh-setup
 	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/helm/istio-csr-values.yaml \
      > artifacts/venafi-install/istio-csr-values.yaml
-	@kubectl apply -n istio-system -f templates/servicemesh/venafi-firefly-issuer.yaml 
+	@kubectl apply -n istio-system -f templates/servicemesh/firefly-mesh-wi-issuer.yaml 
 
 _create_sourceCA:
 	@cp ${VEN_TRUST_ANCHOR_ROOT_CA_PEM} artifacts/venafi-install/venafi-trust-anchor-root-ca.pem
@@ -442,7 +450,7 @@ clean-mesh-setup:
 	@kubectl delete -f artifacts/venafi-install/peerauthentication.yaml || true
 	@istioctl uninstall -y -f artifacts/venafi-install/istio-config.yaml || true
 	@helm uninstall -n venafi cert-manager-istio-csr || true
-	@kubectl -n istio-system delete -f templates/servicemesh/venafi-firefly-issuer.yaml || true
+	@kubectl -n istio-system delete -f templates/servicemesh/firefly-mesh-wi-issuer.yaml || true
 	#more to delete here.
 	@kubectl -n istio-system delete -f artifacts/venafi-install/firefly-trust-anchor.yaml || true
 	@kubectl delete secret venafi-trust-anchor --namespace='venafi' || true
@@ -467,7 +475,7 @@ print-svid:
 #helper target to clean up unused Firefly intermediates
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/22905760-f2a3-11ee-9a43-23436c6a32e0' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/e931c810-f36e-11ee-a89e-b3d87834cdaf' \
 	--header 'tppl-api-key: ${VEN_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 
