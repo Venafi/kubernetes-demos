@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-server-config
+  namespace: sandbox
+data:
+  redis-config: |
+    maxmemory 2mb
+    maxmemory-policy allkeys-lru
+    port 0
+    tls-port 6379
+    tls-cert-file /redis-master-ssl/certs/tls.crt
+    tls-key-file /redis-master-ssl/certs/tls.key
+    tls-ca-cert-dir /etc/ssl/certs
+    tls-auth-clients yes
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-server-app
+  namespace: sandbox
+  labels:
+    app: redis-server-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-server-app
+  template:
+    metadata:
+      labels:
+        app: redis-server-app
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        command:
+          - redis-server
+          - "/redis-master/redis.conf"    
+        env:
+        - name: MASTER
+          value: "true"
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            cpu: "0.1"
+        volumeMounts:
+        - mountPath: /redis-master-data
+          name: data
+        - mountPath: /redis-master
+          name: config
+        - mountPath: /redis-master-ssl/certs
+          name: redis-server-cert
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: redis-server-cert
+          csi:
+            driver: csi.cert-manager.io
+            readOnly: true
+            volumeAttributes:
+                  csi.cert-manager.io/issuer-name: venafi-privateca-cluster-issuer
+                  csi.cert-manager.io/issuer-kind: VenafiClusterIssuer
+                  csi.cert-manager.io/issuer-group: jetstack.io
+                  csi.cert-manager.io/dns-names: redis-server01.svc.cluster.local
+                  csi.cert-manager.io/common-name: redis-server01.svc.cluster.local
+        - name: config
+          configMap:
+            name: redis-server-config
+            items:
+            - key: redis-config
+              path: redis.conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-server
+  namespace: sandbox
+  labels:
+    app: redis-server-app
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-server-app
+  ports:
+  - name: redis-server-app
+    port: 6379
+    targetPort: 6379

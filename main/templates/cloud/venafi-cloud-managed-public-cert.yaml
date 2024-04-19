@@ -12,7 +12,7 @@ spec:
     - REPLACE_WITH_SUB_DOMAIN.${VEN_DOMAIN_FOR_SAMPLE_APP}
   commonName: REPLACE_WITH_SUB_DOMAIN.${VEN_DOMAIN_FOR_SAMPLE_APP}
   issuerRef:
-    name: venafi-cloud-publicca-cluster-issuer
+    name: venafi-publicca-cluster-issuer
     kind: "VenafiClusterIssuer"
     group: "jetstack.io"
 --- 
