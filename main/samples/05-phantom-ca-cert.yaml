@@ -14,6 +14,7 @@ metadata:
 spec:
   isCA: true
   secretName: phantom-ca-key-pair
+  duration: 2184h
   commonName: phantom-ca
   issuerRef:
     name: selfsigned-issuer
@@ -36,7 +37,7 @@ metadata:
   namespace: sandbox
 spec:
   secretName: phantom-ca-issued.svc.cluster.local
-  duration: 2160h
+  duration: 2184h
   subject:
     organizations: 
      - MIM Lab
