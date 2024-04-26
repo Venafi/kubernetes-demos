@@ -5,7 +5,7 @@ metadata:
   namespace: sandbox
 spec:
   secretName: ghost-rider.svc.cluster.local
-  duration: 2160h
+  duration: 2184h
   subject:
     organizations: 
      - Venafi Inc
