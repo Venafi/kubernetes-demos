@@ -163,7 +163,8 @@ Credentials for certificate discovery
 secret/agent-credentials created
 Credentials for Venafi Firefly
 Credentials for Firefly
-secret/venafi-credentials created```
+secret/venafi-credentials created
+```
 
 **NOTE** There is a separate target called `init-dc` that can be used for Venafi TLS Protect Datacenter. You will need to first set the `vars.sh` with the required values.  
 
@@ -203,7 +204,6 @@ This command asks for a verbal confirmation asking you if you have associated th
 Have you attached the Firefly service account to your config in the UI? [y/N]
 ```
 Typing `y` will start the install process and will take about 2-3 minutes to complete 
-```
 
 Once complete, you should see the following that confirms the installation
 
@@ -309,7 +309,7 @@ cert-hundred-days-1.svc.cluster.local-sbw7t   True                True    firefl
 cert-ten-days-1.svc.cluster.local-x6djj       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
 cert-two-days-1.svc.cluster.local-kjsqd       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
 ```
-Note that the issuer is set to **Firefly**
+Note that the issuer is set to **firefly**
 
 To confirm the validity of each of the certificate optionally run 
 
