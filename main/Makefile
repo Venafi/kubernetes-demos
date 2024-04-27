@@ -55,7 +55,7 @@ create-sa-for-discovery:
 		--name "demo-agent-${RESOURCE_SUFFIX}" \
 		--credential-file "artifacts/venafi-install/venafi_agent_secret.json" \
 		--credential-format "secret" \
-		--owning-team "platform-admin" \
+		--owning-team "${VEN_TEAM_NAME}" \
 		--validity 3 \
 		--api-key ${VEN_CLOUD_API_KEY}
 
@@ -77,7 +77,7 @@ create-sa-for-registry:
 		--name "demo-secret-${RESOURCE_SUFFIX}" \
 		--credential-file "artifacts/venafi-install/venafi_registry_secret.json" \
 		--credential-format "secret" \
-		--owning-team "platform-admin" \
+		--owning-team "${VEN_TEAM_NAME}" \
 		--validity 3 \
 		--scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
 		--api-key ${VEN_CLOUD_API_KEY}
@@ -99,7 +99,7 @@ create-sa-for-firefly:
 	--name "demo-firefly-${RESOURCE_SUFFIX}" \
 	--credential-file "artifacts/venafi-install/venafi_firefly_secret.json" \
 	--credential-format "secret" \
-	--owning-team "platform-admin" \
+	--owning-team "${VEN_TEAM_NAME}" \
 	--validity 3 \
 	--api-key ${VEN_CLOUD_API_KEY}
 
