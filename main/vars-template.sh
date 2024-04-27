@@ -2,7 +2,7 @@
 
 export VEN_CLOUD_API_KEY :=REPLACE_WITH_CLOUD_API_KEY
 export VEN_ZONE_PRIVATE_CA :="Cloud App\\venafi-builtin" # E.g. Certificates\\Private-CA OR Venafi Cloud App\\issuing-template 
-
+export VEN_TEAM_NAME :=platform-admin
 
 ##### BEGIN Required only if using data center ######
 export VEN_SERVER_URL :=https://venafi.example.com/vedsdk
