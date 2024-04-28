@@ -86,7 +86,7 @@ spec:
     namespace:
        matchNames: 
        - "sandbox"
-       - "istio-system"
+       - "*istio-system"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
