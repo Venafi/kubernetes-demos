@@ -1,0 +1,254 @@
+# Number of replicas of istio-csr to run.
+replicaCount: 1
+
+image:
+  # Target image registry. This value is prepended to the target image repository, if set.
+  # For example:
+  #   registry: quay.io
+  #   repository: jetstack/cert-manager-istio-csr
+  # +docs:property
+  # registry: quay.io
+
+  # Target image repository.
+  repository: ${VEN_CONTAINER_REGISTRY}/istio-csr/cert-manager-istio-csr
+
+  # Override the image tag to deploy by setting this variable.
+  # If no value is set, the chart's appVersion is used.
+  # +docs:property
+  tag: ${VEN_ISTIO_CSR_VERSION}
+
+  # Target image digest. Override any tag, if set.
+  # For example:
+  #   digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+  # +docs:property
+  # digest: sha256:...
+
+  # Kubernetes imagePullPolicy on Deployment.
+  pullPolicy: IfNotPresent
+
+# Optional secrets used for pulling the istio-csr container image.
+imagePullSecrets:
+- name: ${VEN_DOCKER_REGISTRY_SECRET}
+
+
+service:
+  # Service type to expose istio-csr gRPC service.
+  type: ClusterIP
+  # Service port to expose istio-csr gRPC service.
+  port: 443
+  # Service nodePort to expose istio-csr gRPC service.
+  # +docs:type=number
+  # +docs:property
+  # nodePort:
+
+app:
+  # Verbosity of istio-csr logging.
+  logLevel: 1 # 1-5
+
+  metrics:
+    # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
+    port: 9402
+    # Service to expose metrics endpoint.
+    service:
+      # Create a Service resource to expose metrics endpoint.
+      enabled: true
+      # Service type to expose metrics.
+      type: ClusterIP
+      # The ServiceMonitor resource for this Service.
+      servicemonitor:
+        # Create Prometheus ServiceMonitor resource for approver-policy.
+        enabled: false
+        # The value for the "prometheus" label on the ServiceMonitor. This allows
+        # for multiple Prometheus instances selecting difference ServiceMonitors 
+        # using label selectors.
+        prometheusInstance: default
+        # The interval that the Prometheus will scrape for metrics.
+        interval: 10s
+        # The timeout on each metric probe request.
+        scrapeTimeout: 5s
+        # Additional labels to give the ServiceMonitor resource.
+        labels: {}
+
+  readinessProbe:
+    # Container port to expose istio-csr HTTP readiness probe on default network interface.
+    port: 6060
+    # Path to expose istio-csr HTTP readiness probe on default network interface.
+    path: "/readyz"
+
+  certmanager:
+    # Namespace to create CertificateRequests for both istio-csr's serving
+    # certificate and incoming gRPC CSRs.
+    namespace: aks-istio-system
+    # Don't delete created CertificateRequests once they have been signed.
+    # WARNING: do not enable this option in production, or environments with
+    # any non-trivial number of workloads for an extended period of time. Doing
+    # so will balloon the resource consumption of both ETCD and the API server,
+    # leading to errors and slow down. This option is intended for debugging
+    # purposes only, for limited periods of time.
+    preserveCertificateRequests: true
+    # Additional annotations to include on certificate requests.
+    # Takes key/value pairs in the format:
+    #  additionalAnnotations:
+    #    - name: custom.cert-manager.io/policy-name
+    #      value: istio-csr
+    additionalAnnotations:
+    - name: firefly.venafi.com/policy-name
+      value: firefly-istio-service-mesh-policy
+    issuer:
+      # Issuer name set on created CertificateRequests for both istio-csr's
+      # serving certificate and incoming gRPC CSRs.
+      name: "firefly-mesh-wi-issuer"
+      # Issuer kind set on created CertificateRequests for both istio-csr's
+      # serving certificate and incoming gRPC CSRs.
+      kind: Issuer
+      # Issuer group name set on created CertificateRequests for both
+      # istio-csr's serving certificate and incoming gRPC CSRs.
+      group: firefly.venafi.com
+
+  tls:
+    # The Istio cluster's trust domain.
+    trustDomain: "cluster.local"
+    # An optional file location to a PEM encoded root CA that the root CA
+    # ConfigMap in all namespaces will be populated with. If empty, the CA
+    # returned from cert-manager for the serving certificate will be used.
+    rootCAFile: /var/run/secrets/firefly/ca.crt
+    # The DNS names to request for the server's serving certificate which is
+    # presented to istio-agents. istio-agents must route to istio-csr using one
+    # of these DNS names.
+    certificateDNSNames:
+    - cert-manager-istio-csr.venafi.svc
+    # Requested duration of gRPC serving certificate. Will be automatically
+    # renewed.
+    # Based on NIST 800-204A recommendations (SM-DR13).
+    # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
+    certificateDuration: 1h
+    # Provide additional DNS names to request on the istiod certificate. Useful if istiod 
+    # should be accessible via multiple DNS names and/or outside of the cluster.
+    istiodAdditionalDNSNames: []
+    # Requested duration of istio's Certificate. Will be automatically
+    # renewed.
+    # Based on NIST 800-204A recommendations (SM-DR13).
+    # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
+    # Warning: cert-manager does not allow a duration on Certificates less than
+    # 1 hour.
+    istiodCertificateDuration: 1h
+    istiodCertificateRenewBefore: 30m
+    # Create the default certificate as part of install.
+    istiodCertificateEnable: true
+    # Number of bits to use for istiod-tls Key
+    istiodPrivateKeySize: 2048
+
+  server:
+    # The istio cluster ID to verify incoming CSRs.
+    clusterID: "Kubernetes"
+    # Maximum validity duration that can be requested for a certificate.
+    # istio-csr will request a duration of the smaller of this value, and that of
+    # the incoming gRPC CSR.
+    # Based on NIST 800-204A recommendations (SM-DR13).
+    # https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-204A.pdf
+    maxCertificateDuration: 1h
+    serving:
+      # Container address to serve istio-csr gRPC service.
+      address: 0.0.0.0
+      # Container port to serve istio-csr gRPC service.
+      port: 6443
+      # Number of bits to use for the server's serving certificate, can only be 256 or 384 when signature algorithm is ECDSA.
+      certificateKeySize: 2048
+      # The type of signature algorithm to use when generating private keys. Currently only RSA and ECDSA are supported. By default RSA is used.
+      signatureAlgorithm: "RSA"
+
+  istio:
+    # The istio revisions that are currently installed in the cluster.
+    # Changing this field will modify the DNS names that will be requested for
+    # the istiod certificate. The common name for the istiod certificate is
+    # hard coded to the `default` revision DNS name.
+    # Some issuers may require that the common name on certificates match one
+    # of the DNS names. If 1. Your issuer has this constraint, and 2. You are
+    # not using `default` as a revision, add the `default` revision here
+    # anyway. The resulting certificate will include a DNS name that won't be
+    # used, but will pass this constraint.
+    revisions: ["default"]
+    # The namespace where the istio control-plane is running.
+    namespace: aks-istio-system
+
+  controller:
+    leaderElectionNamespace: aks-istio-system
+    # If set, limit where istio-csr creates configmaps with root ca certificates. If unset, configmap created in ALL namespaces.
+    # Example: maistra.io/member-of=aks-istio-system
+    # +docs:type=string
+    # +docs:property
+    # configmapNamespaceSelector:
+
+# Optional extra volumes. Useful for mounting custom root CAs
+#
+# For example:
+#  volumes:
+#  - name: root-ca
+#    secret:
+#      secretName: root-cert
+#volumes: []
+volumes:
+- name: trust-domain-root
+  configMap:
+   name: venafi-firefly-trust-anchor
+   items:
+     - key: ca.crt
+       path: ca.crt
+
+# Optional extra volume mounts. Useful for mounting custom root CAs
+#
+# For example:
+#  volumeMounts:
+#  - name: root-ca
+#    mountPath: /etc/tls
+#volumeMounts: []
+volumeMounts:
+- name: trust-domain-root
+  mountPath: /var/run/secrets/firefly
+
+# Kubernetes pod resources
+# ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+#
+# For example:
+#  resources:
+#    limits:
+#      cpu: 100m
+#      memory: 128Mi
+#    requests:
+#      cpu: 100m
+#      memory: 128Mi
+resources: {}
+
+# Expects input structure as per specification https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#affinity-v1-core
+#
+# For example:
+#   affinity:
+#     nodeAffinity:
+#      requiredDuringSchedulingIgnoredDuringExecution:
+#        nodeSelectorTerms:
+#        - matchExpressions:
+#          - key: foo.bar.com/role
+#            operator: In
+#            values:
+#            - master
+affinity: {}
+
+# Expects input structure as per specification https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#toleration-v1-core
+#
+# For example:
+#   tolerations:
+#   - key: foo.bar.com/role
+#     operator: Equal
+#     value: master
+#     effect: NoSchedule
+tolerations: []
+
+nodeSelector: {}
+
+# Labels to apply to all resources
+#commonLabels: {}
+commonLabels:
+  labels:
+    environment: development
+    app: mesh-apps
+    issuer: venafi-firefly
