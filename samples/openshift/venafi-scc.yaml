@@ -1,0 +1,60 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: venafi-privileged
+annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    kubernetes.io/description: restricted denies access to all host features and requires
+      pods to be run with a UID, and SELinux context that are allocated to the namespace.  This
+      is the most restrictive SCC and it is used by default for authenticated users.
+    release.openshift.io/create-only: "true"  
+priority: 5
+allowHostPorts: false
+allowHostPID: false
+allowHostNetwork: false
+allowHostDirVolumePlugin: true
+readOnlyRootFilesystem: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedUnsafeSysctls: null
+allowHostIPC: false
+allowedCapabilities:
+  - '*'
+defaultAddCapabilities: null
+requiredDropCapabilities: null
+seccompProfiles:
+  - '*'
+seLinuxContext:
+  type: MustRunAs
+runAsUser:
+  type: RunAsAny
+fsGroup:
+  type: MustRunAs
+supplementalGroups:
+  type: MustRunAs
+users:
+- system:serviceaccount:venafi:cert-manager
+- system:serviceaccount:venafi:cert-manager-approver-policy
+- system:serviceaccount:venafi:cert-manager-cainjector
+- system:serviceaccount:venafi:cert-manager-csi-driver
+- system:serviceaccount:venafi:cert-manager-csi-driver-spiffe-approver
+- system:serviceaccount:venafi:cert-manager-csi-driver-spiffe
+- system:serviceaccount:venafi:cert-manager-webhook
+- system:serviceaccount:venafi:firefly
+- system:serviceaccount:venafi:trust-manager
+- system:serviceaccount:venafi:venafi-connection
+- system:serviceaccount:venafi:venafi-enhanced-issuer
+- system:serviceaccount:venafi:venafi-kubernetes-agent
+groups: []
+volumes:
+- configMap
+- hostPath
+- downwardAPI
+- emptyDir
+- persistentVolumeClaim
+- projected
+- secret
+- tmp
+- plugins
