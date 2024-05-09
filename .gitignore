@@ -41,3 +41,8 @@ projects/ven02/vars.sh
 cloud-settings.sh
 main/tlspc-to-dc-key.pem
 main/tlspc-to-dc-key.pub
+projects/ven03/venafi-registry-secret.yaml
+projects/ven03/venafi-firefly-svc-account-private.key
+projects/ven03/vars.sh
+projects/ven03/venafi-firefly-key.pem
+projects/cert-discovery/vars.sh

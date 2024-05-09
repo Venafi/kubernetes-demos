@@ -1,0 +1,11 @@
+apiVersion: jetstack.io/v1alpha1
+kind: VenafiConnection
+metadata:
+  name: venafi-connection
+spec:
+  vaas:
+#    url: ${VEN_SERVER_URL}
+    apiKey:
+    - secret:
+        name: venafi-cloud-credentials
+        fields: ["venafi-cloud-key"]

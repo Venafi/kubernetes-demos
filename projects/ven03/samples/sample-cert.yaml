@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sample-cert01.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: sample-cert01.svc.cluster.local
+  duration: 96h
+  subject:
+    organizations: 
+     - Venafi Inc
+    organizationalUnits:
+     - TLSPK Demo
+    localities:
+     - Salt Lake City
+    provinces:
+     - Utah
+    countries:
+     - US
+  privateKey:
+    rotationPolicy: Always
+  dnsNames:
+    - sample-cert01.svc.cluster.local
+  commonName: sample-cert01.svc.cluster.local
+  issuerRef:
+    name: "venafi-privateca-cluster-issuer"
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"
