@@ -63,8 +63,8 @@ create-sa-for-registry:
 	@echo "Creating Service Account in Venafi Control Plane for registry secret"
 	@venctl iam service-account registry create \
 		--name "ven02-secret-${RESOURCE_SUFFIX}" \
-		--credential-file "artifacts/venafi-install/venafi_registry_secret.json" \
-		--credential-format "secret" \
+		--output-file "artifacts/venafi-install/venafi_registry_secret.json" \
+		--output "secret" \
 		--owning-team "InfoSec" \
 		--validity 3 \
 		--scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \

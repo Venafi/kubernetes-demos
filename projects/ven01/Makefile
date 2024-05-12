@@ -94,14 +94,14 @@ generate-venafi-manifests:
 	@venctl components kubernetes manifest generate \
 		--namespace venafi \
 		--cert-manager \
-		--cert-manager-version v1.14.2 \
+		--cert-manager-version v1.14.5 \
 		--approver-policy-enterprise \
-		--approver-policy-enterprise-version v0.13.0 \
+		--approver-policy-enterprise-version v0.16.0 \
 		--venafi-enhanced-issuer \
-		--venafi-enhanced-issuer-version v0.11.0 \
+		--venafi-enhanced-issuer-version v0.13.3 \
 		--venafi-enhanced-issuer-values-files vei-values.yaml \
 		--venafi-connection \
-		--venafi-connection-version v0.0.18 \
+		--venafi-connection-version v0.0.20 \
 		--image-pull-secret-names venafi-image-pull-secret  > artifacts/venafi-install/venafi-manifests.yaml
 
 ######## STEP 3 ##############

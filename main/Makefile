@@ -53,8 +53,8 @@ create-sa-for-discovery:
 	@echo "Service account for certificate discovery"
 	@venctl iam service-accounts agent create \
 		--name "demo-agent-${RESOURCE_SUFFIX}" \
-		--credential-file "artifacts/venafi-install/venafi_agent_secret.json" \
-		--credential-format "secret" \
+		--output-file "artifacts/venafi-install/venafi_agent_secret.json" \
+		--output "secret" \
 		--owning-team "${VEN_TEAM_NAME}" \
 		--validity 3 \
 		--api-key ${VEN_CLOUD_API_KEY}
@@ -75,8 +75,8 @@ create-sa-for-registry:
 	@echo "Creating Service Account in Venafi Control Plane for registry secret"
 	@venctl iam service-account registry create \
 		--name "demo-secret-${RESOURCE_SUFFIX}" \
-		--credential-file "artifacts/venafi-install/venafi_registry_secret.json" \
-		--credential-format "secret" \
+		--output-file "artifacts/venafi-install/venafi_registry_secret.json" \
+		--output "secret" \
 		--owning-team "${VEN_TEAM_NAME}" \
 		--validity 3 \
 		--scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
@@ -97,8 +97,8 @@ create-sa-for-firefly:
 	@echo "Creating Service account in Venafi Control Plane for Firefly"
 	@venctl iam service-accounts firefly create \
 	--name "demo-firefly-${RESOURCE_SUFFIX}" \
-	--credential-file "artifacts/venafi-install/venafi_firefly_secret.json" \
-	--credential-format "secret" \
+	--output-file "artifacts/venafi-install/venafi_firefly_secret.json" \
+	--output "secret" \
 	--owning-team "${VEN_TEAM_NAME}" \
 	--validity 3 \
 	--api-key ${VEN_CLOUD_API_KEY}
