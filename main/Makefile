@@ -131,6 +131,8 @@ generate-venafi-manifests:
 		--cert-manager-version ${cert-manager} \
 		--csi-driver \
 		--csi-driver-version ${cert-manager-csi-driver} \
+		--csi-driver-spiffe \
+		--csi-driver-spiffe-version ${cert-manager-csi-driver-spiffe} \
 		--accept-firefly-tos \
 		--firefly \
 		--firefly-version ${firefly} \
@@ -165,17 +167,20 @@ confirm:
 install: confirm
 	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
 		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
 		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests.yaml 
 
 un-install:
 	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
 		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
 		venctl components kubernetes manifest tool destroy --file artifacts/venafi-install/venafi-manifests.yaml 
 
 generate-static-manifests:
 	@echo "Generating static manifests if that's your preferred option"
 	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
 		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
 		venctl components kubernetes manifest tool template --file artifacts/venafi-install/venafi-manifests.yaml > artifacts/venafi-install/kubernetes-manifests.yaml
 
 ################################### BEGIN Venafi Cloud Targets #####################################
