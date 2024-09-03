@@ -56,7 +56,7 @@ create-sa-for-discovery:
 		--output-file "artifacts/venafi-install/venafi_agent_secret.json" \
 		--output "secret" \
 		--owning-team "${VEN_TEAM_NAME}" \
-		--validity 3 \
+		--validity 10 \
 		--api-key ${VEN_CLOUD_API_KEY}
 
 create-discovery-secret: _transform_agent_secret_to_yaml
@@ -78,7 +78,7 @@ create-sa-for-registry:
 		--output-file "artifacts/venafi-install/venafi_registry_secret.json" \
 		--output "secret" \
 		--owning-team "${VEN_TEAM_NAME}" \
-		--validity 3 \
+		--validity 10 \
 		--scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
 		--api-key ${VEN_CLOUD_API_KEY}
 
@@ -100,7 +100,7 @@ create-sa-for-firefly:
 	--output-file "artifacts/venafi-install/venafi_firefly_secret.json" \
 	--output "secret" \
 	--owning-team "${VEN_TEAM_NAME}" \
-	--validity 3 \
+	--validity 10 \
 	--api-key ${VEN_CLOUD_API_KEY}
 
 create-firefly-secret: _transform_firefly_secret_to_yaml

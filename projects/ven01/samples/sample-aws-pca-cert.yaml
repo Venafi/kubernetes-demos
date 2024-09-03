@@ -45,3 +45,55 @@ spec:
     name: awspca-issuer
     kind: AWSPCAIssuer
     group: awspca.cert-manager.io
+
+--- 
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert3-pca-issuer.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: cert3-pca-issuer.svc.cluster.local
+  duration: 2184h
+  renewBefore: 24h
+  subject:
+    organizations:
+      - Venafi Inc
+  usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  commonName: cert3-pca-issuer.svc.cluster.local
+  uris:
+    - spiffe://venafi-dev/ns/sandbox/sa/client-app3
+  issuerRef:
+    name: awspca-issuer
+    kind: AWSPCAIssuer
+    group: awspca.cert-manager.io
+
+--- 
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert4-pca-issuer.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: cert4-pca-issuer.svc.cluster.local
+  duration: 2184h
+  renewBefore: 24h
+  subject:
+    organizations:
+      - Venafi Inc
+  usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+  commonName: cert4-pca-issuer.svc.cluster.local
+  uris:
+    - spiffe://venafi-dev/ns/sandbox/sa/client-app4
+  issuerRef:
+    name: awspca-issuer
+    kind: AWSPCAIssuer
+    group: awspca.cert-manager.io

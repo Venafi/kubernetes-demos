@@ -46,3 +46,4 @@ projects/ven03/venafi-firefly-svc-account-private.key
 projects/ven03/vars.sh
 projects/ven03/venafi-firefly-key.pem
 projects/cert-discovery/vars.sh
+projects/ven01/vars.sh

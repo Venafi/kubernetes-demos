@@ -272,7 +272,7 @@ create-iam-svc-account:
 install-awspca: 
 	@helm upgrade \
 	    --install -f artifacts/venafi-install/aws-pca-issuer-values.yaml aws-privateca-issuer awspca/aws-privateca-issuer \
-		--version v1.2.7 \
+		--version v1.3.0 \
   		--namespace venafi \
 		--wait		
 
