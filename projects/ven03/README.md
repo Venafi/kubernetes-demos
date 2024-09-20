@@ -36,6 +36,8 @@ The demos use a `Makefile` for all operations. Always review the target you are 
 - You have created the the required configurations and policies for Firefly to operate in cluster. This is a one time configuration that can be used across all your clusters. Refer to the section [Configuring Venafi Firefly](#configuring-venafi-firefly) to get started. 
 
 
+# The following section is applicable to Security team only. The steps will walk through configuring Firefly in the Venafi Control Plane. If you are a platform engineer skip this section.
+
 ## Configuring Venafi Firefly 
 Login into [Venafi TLS Protect Cloud](https://ui.venafi.cloud) If you don't have an account you can sign up for a 30 day trial.
 
@@ -104,6 +106,10 @@ The required fields on the screen are self explanatory. For addtional details, r
 
 Make sure to save and review the configuration you create. 
 
+# The following section is applicable to Platform team only. The steps will walk through installation of Venafi components in cluster. 
+
+**NOTE**
+> Make sure your `vars.sh` is setup as documented in the Pre-requisites section.
 
 ## Installing Venafi components in cluster
 
@@ -141,6 +147,9 @@ secret/venafi-credentials created
 
 ### STEP 2
 
+**NOTE** 
+> In the previous step a service account was created. This service account needs to be associated with the Firefly configuration in the UI. If you do not have access to the Venafi UI, ask the security team to associate the service account to the Venafi Firefly configuration. 
+
 The Venafi Kubernetes Manifest Generator is a handy tool (a helmfile wrapper) that can be used for generating the required manifests. The target to generate the required manifests is `make generate-venafi-manifests`. There is detailed documentation covering a lot of details about how the manifest generator works [here](!https://docs.venafi.cloud/vaas/k8s-components/c-vmg-overview/) The CLI `venctl` is also has detailed help. 
 
 Review the target `generate-venafi-manifests` and you will see what it is trying to do . It reads the required versions to install from `versions.sh`. You can choose which components to install based on the usecases that are relevant to you. In this demo we are installing most of the components. 
@@ -156,7 +165,7 @@ Review the contents if you want to. The generated file is `artifacts/venafi-inst
 
 ---
 **NOTE**
-
+Follow this note only if you have cert-manager already installed in the cluster. 
 The generated manifest will require some edits as cert-manager is currently installed. We need to remove references to where cert-manager is set in the `needs`. You can search for `needs` and delete the line `- cert-manager` . 
 ```
 needs:
