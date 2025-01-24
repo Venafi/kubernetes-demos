@@ -209,15 +209,16 @@ Once complete, you should see the following that confirms the installation
 
 ```
 UPDATED RELEASES:
-NAME                         CHART                                      VERSION   DURATION
-venafi-connection            venafi-charts/venafi-connection            v0.0.20         1s
-venafi-kubernetes-agent      venafi-charts/venafi-kubernetes-agent      0.1.47          9s
-cert-manager                 venafi-charts/cert-manager                 v1.14.4        36s
-cert-manager-csi-driver      venafi-charts/cert-manager-csi-driver      v0.8.0          1s
-approver-policy-enterprise   venafi-charts/approver-policy-enterprise   v0.15.0        23s
-venafi-enhanced-issuer       venafi-charts/venafi-enhanced-issuer       v0.13.3        33s
-firefly                      venafi-firefly/firefly                     v1.3.3          9s
-trust-manager                venafi-charts/trust-manager                v0.9.2         23s
+NAME                             NAMESPACE   CHART                                          VERSION   DURATION
+venafi-connection                venafi      venafi-charts/venafi-connection                v0.3.1          2s
+cert-manager                     venafi      venafi-charts/cert-manager                     v1.16.3        28s
+cert-manager-csi-driver          venafi      venafi-charts/cert-manager-csi-driver          v0.10.2         2s
+venafi-enhanced-issuer           venafi      venafi-charts/venafi-enhanced-issuer           v0.15.0        23s
+cert-manager-csi-driver-spiffe   venafi      venafi-charts/cert-manager-csi-driver-spiffe   v0.8.2         23s
+approver-policy-enterprise       venafi      venafi-charts/approver-policy-enterprise       v0.20.0        33s
+venafi-kubernetes-agent          venafi      venafi-charts/venafi-kubernetes-agent          1.4.0          41s
+firefly                          venafi      venafi-firefly/firefly                         v1.5.0         14s
+trust-manager                    venafi      venafi-charts/trust-manager                    v0.15.0        25s
 ```
 
 All of the above components are installed and running in the `venafi` namespace in your cluster. `make install` uses `venctl` to install the components. By simply adding additional kubernetes contexts, you can install the same configuration on addtional clusters. 
@@ -410,7 +411,7 @@ issuer.firefly.venafi.com/firefly-mesh-wi-issuer created
 ```
 
 ### STEP 2
-istio-csr requires a trust anchor that needs to be mounted when installed. The reference to `ca.crt` in [templates/helm/istio-csr-values.yaml](templates/helm/istio-csr-values.yaml) is for the trust anchor. 
+istio-csr requires a trust anchor that needs to be mounted when installed. The reference to `root-cert.pem` in [templates/helm/istio-csr-values.yaml](templates/helm/istio-csr-values.yaml) is for the trust anchor. 
 
 Before you run the target for `step2` review the target `make-step2`. This target calls another target called `_create_sourceCA`. The variable `VEN_TRUST_ANCHOR_ROOT_CA_PEM` should be set in the `vars.sh`. The value will be a path to a PEM file that acts as the trust anchor. The referred PEM file does not exist in the repo. You will need to create it. 
 
@@ -424,7 +425,8 @@ Running the target produces the below output. A trust-manager managed `Bundle` c
 ❯ make mesh-step2
 secret/venafi-trust-anchor created
 Creating Firefly trust anchor
-bundle.trust.cert-manager.io/venafi-firefly-trust-anchor created
+configmap/istio-csr-ca created
+bundle.trust.cert-manager.io/istio-ca-root-cert created
 ```
 Review the `Bundle` by simply running, 
 
@@ -441,24 +443,21 @@ Events:
 ```
 
 ### STEP 3
-With all the pre-requisites for istio-csr taken care of, we will now install it using Helm. 
+With all the pre-requisites for istio-csr taken care of, we will now install it using venctl. Review `mesh-step3` and you will find that it generates venafi manifests and then installs istio-csr
 Run 
 ```
 make mesh-step3
 ```
-and you will see the following output 
+and you will see the following output in the end. There will be more on the screen showing progress. cert-manager is also listed as it's the minimum required dependency. In this demo we use many of the enterprise capabilities that are already installed. 
 ```
 ❯ make mesh-step3
-Installing Venafi istio CSR agent.....
-Release "cert-manager-istio-csr" does not exist. Installing it now.
-Pulled: private-registry.venafi.cloud/charts/cert-manager-istio-csr:v0.8.1
-Digest: sha256:0986900f0ec5e52c023da59f420039bc4d80fcdf0ee84795f471bb3e33dbcb6d
-NAME: cert-manager-istio-csr
-LAST DEPLOYED: Fri Apr 26 20:48:57 2024
-NAMESPACE: venafi
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
+Generating Venafi Helm manifests for installing istio-csr
+.........
+........
+UPDATED RELEASES:
+NAME                     NAMESPACE   CHART                                  VERSION   DURATION
+cert-manager             venafi      venafi-charts/cert-manager             v1.16.3         2s
+cert-manager-istio-csr   venafi      venafi-charts/cert-manager-istio-csr   v0.14.0        16s
 ```
 
 Validate that all the components are running using
@@ -468,26 +467,28 @@ kubectl get pods -n venafi
 and you should see 
 
 ```
-NAME                                            READY   STATUS    RESTARTS   AGE
-cert-manager-5ff95778f4-ttbfz                   1/1     Running   0          58m
-cert-manager-approver-policy-5bb776797f-z42m6   1/1     Running   0          57m
-cert-manager-cainjector-6b9c5fffd5-fb487        1/1     Running   0          58m
-cert-manager-csi-driver-r85pp                   3/3     Running   0          57m
-cert-manager-istio-csr-6f9d6c846b-4pzkk         1/1     Running   0          47s
-cert-manager-webhook-84545cd465-st7kt           1/1     Running   0          58m
-firefly-84b44bdb77-hj5r6                        1/1     Running   0          56m
-firefly-84b44bdb77-htdqs                        1/1     Running   0          56m
-trust-manager-667ddb8554-dplp5                  1/1     Running   0          56m
-venafi-enhanced-issuer-f59c984f5-6vm56          1/1     Running   0          57m
-venafi-enhanced-issuer-f59c984f5-psjpl          1/1     Running   0          57m
-venafi-kubernetes-agent-865f8c68b9-9q9c7        1/1     Running   0          58m
+NAME                                                      READY   STATUS    RESTARTS      AGE
+cert-manager-approver-policy-6cc4f596c-gztv8              1/1     Running   0             14m
+cert-manager-cainjector-67bdf7bdd6-b5tm7                  1/1     Running   0             15m
+cert-manager-cc756548f-5l6qk                              1/1     Running   0             15m
+cert-manager-csi-driver-cnxnb                             3/3     Running   1 (14m ago)   14m
+cert-manager-csi-driver-spiffe-approver-7b5df6bb7-xv6nb   1/1     Running   0             14m
+cert-manager-csi-driver-spiffe-driver-fnbzd               3/3     Running   1 (13m ago)   14m
+cert-manager-istio-csr-794cd6dfb9-dcvbr                   1/1     Running   0             12m
+cert-manager-webhook-67cbd84cc9-bb28q                     1/1     Running   0             15m
+firefly-54c68867c9-dlvgn                                  1/1     Running   0             13m
+firefly-54c68867c9-kht84                                  1/1     Running   0             13m
+trust-manager-7bc6c6cc6-z65v8                             1/1     Running   0             13m
+venafi-enhanced-issuer-69c56f45f-9g6nr                    1/1     Running   0             14m
+venafi-enhanced-issuer-69c56f45f-fq497                    1/1     Running   0             14m
+venafi-kubernetes-agent-58d748cd57-lsxbz                  1/1     Running   0             14m
 ```
 
-Additionally, this also creates the `istiod` certificate that will be bootstrapped to Istio
+Additionally, this also creates the `istiod-dynamic` certificate that will be bootstrapped to Istio
 
 Review the certificate created by Firefly for Istio by running
 ```
-kubectl get certificate istiod -n istio-system
+kubectl get certificate istiod-dynamic -n istio-system
 ```
 You can additonally inspect the secret bootstrapped to Istio by running 
 ```
@@ -495,10 +496,10 @@ You can additonally inspect the secret bootstrapped to Istio by running
 ```
 and you should see 
 ```
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20240426195248 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20250124103526 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Apr 27 01:48:57 2024 GMT
-            Not After : Apr 27 02:48:57 2024 GMT
+            Not Before: Jan 24 16:37:14 2025 GMT
+            Not After : Jan 24 17:37:14 2025 GMT
         Subject: CN=istiod.istio-system.svc
 ```
 This is the `istiod` secret that Istio will use for signing all incoming mesh workloads. 
@@ -511,16 +512,14 @@ Run
 ```
 make mesh-step4 
 ```
-and you should see
+and you should see the following. At the time of writing, the version of istio installed is `1.24.2`
 ```
 ❯ make mesh-step4
-✔ Istio core installed                                                                                                                         
-✔ Istiod installed                                                                                                                             
-✔ Egress gateways installed                                                                                                                    
-✔ Ingress gateways installed                                                                                                                   
-✔ Installation complete                                                                                                                        Making this installation the default for injection and validation.
-
-Thank you for installing Istio 1.17.
+✔ Istio core installed ⛵️                                                                                                                                             
+✔ Istiod installed 🧠                                                                                                                                                 
+✔ Egress gateways installed 🛫                                                                                                                                        
+✔ Ingress gateways installed 🛬                                                                                                                                       
+✔ Installation complete   
 ```
 
 ### STEP 5
@@ -613,16 +612,15 @@ make print-svid
 ```
 ❯ make print-svid
 Pod name is ratings-v1-6484c4d9bb-gxf48 
-Warning: Reading certificate from stdin since no -in or -new option is given
 Certificate:
     Data:
         Version: 3 (0x2)
         Serial Number:
-            25:c7:fa:df:94:22:ab:69:70:dd:2a:0b:2c:b1:96:7f
+            37:1d:14:4e:e5:92:30:c6:35:0b:6c:98:92:56:89:c5
         Signature Algorithm: sha256WithRSAEncryption
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20240426195248 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20250124103526 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Apr 27 02:07:19 2024 GMT
-            Not After : Apr 27 03:07:19 2024 GMT
+            Not Before: Jan 24 16:38:31 2025 GMT
+            Not After : Jan 24 17:38:31 2025 GMT
 ```
 The mesh identity is valid for 1 hour as defined by a policy in the Venafi Control Plane. Access Venafi Control Plane and the dashboard to review the metrics associated with this issuer. 

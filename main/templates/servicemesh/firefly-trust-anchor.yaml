@@ -1,7 +1,7 @@
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
-  name: venafi-firefly-trust-anchor
+  name: istio-ca-root-cert
 spec:
   sources:
   # Include a bundle of publicly trusted certificates which can be
@@ -10,12 +10,12 @@ spec:
   #- useDefaultCAs: true  
   - secret:
       name: "venafi-trust-anchor"
-      key: "ca.crt"
+      key: "root-cert.pem"
   target:
     # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in
     # every namespace based on the sources above.
     configMap:
-      key: "ca.crt"
+      key: "root-cert.pem"
     namespaceSelector:
       matchLabels:
          issuer: "venafi-firefly"

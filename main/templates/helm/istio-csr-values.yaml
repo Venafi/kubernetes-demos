@@ -1,50 +1,3 @@
-# nameOverride replaces the name of the chart in the Chart.yaml file, when this
-# is used to construct Kubernetes object names.
-# +docs:property
-# nameOverride: approver-policy
-
-# Number of replicas of istio-csr to run.
-replicaCount: 1
-
-image:
-  # Target image registry. This value is prepended to the target image repository, if set.
-  # For example:
-  #   registry: quay.io
-  #   repository: jetstack/cert-manager-istio-csr
-  # +docs:property
-  # registry: quay.io
-
-  # Target image repository.
-  repository: ${VEN_CONTAINER_REGISTRY}/istio-csr/cert-manager-istio-csr
-
-  # Override the image tag to deploy by setting this variable.
-  # If no value is set, the chart's appVersion is used.
-  # +docs:property
-  tag: ${VEN_ISTIO_CSR_VERSION}
-
-  # Target image digest. Override any tag, if set.
-  # For example:
-  #   digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-  # +docs:property
-  # digest: sha256:...
-
-  # Kubernetes imagePullPolicy on Deployment.
-  pullPolicy: IfNotPresent
-
-# Optional secrets used for pulling the istio-csr container image.
-imagePullSecrets:
-- name: ${VEN_DOCKER_REGISTRY_SECRET}
-
-service:
-  # Service type to expose istio-csr gRPC service.
-  type: ClusterIP
-  # Service port to expose istio-csr gRPC service.
-  port: 443
-  # Service nodePort to expose istio-csr gRPC service.
-  # +docs:type=number
-  # +docs:property
-  # nodePort:
-
 app:
   # Verbosity of istio-csr logging.
   logLevel: 1 # 1-5
@@ -79,13 +32,31 @@ app:
   # The "issuer-name", "issuer-kind" and "issuer-group" keys must be present in
   # the ConfigMap for it to be used.
   runtimeIssuanceConfigMap: ""
-
+  runtimeConfiguration:
+    # Create the runtime-configuration ConfigMap.
+    create: false
+    # Name of a ConfigMap in the installation namespace to watch, providing
+    # runtime configuration of an issuer to use.
+    #
+    # If create is set to true, then this name is used to create the ConfigMap,
+    # otherwise the ConfigMap must exist, and the "issuer-name", "issuer-kind"
+    # and "issuer-group" keys must be present in it.
+    name: "istio-csr-ca"
+    issuer:
+      # Issuer name set on created CertificateRequests for both istio-csr's
+      # serving certificate and incoming gRPC CSRs.
+      name: firefly-mesh-wi-issuer
+      # Issuer kind set on created CertificateRequests for both istio-csr's
+      # serving certificate and incoming gRPC CSRs.
+      kind: Issuer
+      # Issuer group name set on created CertificateRequests for both
+      # istio-csr's serving certificate and incoming gRPC CSRs.
+      group: venafi.firefly.com
   readinessProbe:
     # Container port to expose istio-csr HTTP readiness probe on default network interface.
     port: 6060
     # Path to expose istio-csr HTTP readiness probe on default network interface.
     path: "/readyz"
-
   certmanager:
     # Namespace to create CertificateRequests for both istio-csr's serving
     # certificate and incoming gRPC CSRs.
@@ -106,23 +77,31 @@ app:
     - name: firefly.venafi.com/policy-name
       value: firefly-istio-service-mesh-policy
     issuer:
+      # Enable the default issuer, this is the issuer used when no runtime
+      # configuration is provided.
+      #
+      # When enabled, the istio-csr Pod will not be "Ready" until the issuer
+      # has been used to issue the istio-csr GRPC certificate.
+      #
+      # For istio-csr to function, either this or runtime configuration must be
+      # enabled.
+      enabled: false
       # Issuer name set on created CertificateRequests for both istio-csr's
       # serving certificate and incoming gRPC CSRs.
-      name: "firefly-mesh-wi-issuer"
+      name: firefly-mesh-wi-issuer
       # Issuer kind set on created CertificateRequests for both istio-csr's
       # serving certificate and incoming gRPC CSRs.
       kind: Issuer
       # Issuer group name set on created CertificateRequests for both
       # istio-csr's serving certificate and incoming gRPC CSRs.
       group: firefly.venafi.com
-
   tls:
     # The Istio cluster's trust domain.
     trustDomain: "cluster.local"
     # An optional file location to a PEM encoded root CA that the root CA
     # ConfigMap in all namespaces will be populated with. If empty, the CA
     # returned from cert-manager for the serving certificate will be used.
-    rootCAFile: /var/run/secrets/firefly/ca.crt
+    rootCAFile: /var/run/secrets/firefly/root-cert.pem
     # The DNS names to request for the server's serving certificate which is
     # presented to istio-agents. istio-agents must route to istio-csr using one
     # of these DNS names.
@@ -153,6 +132,10 @@ app:
     istiodAdditionalDNSNames: []
 
   server:
+    authenticators:
+      # Enable the client certificate authenticator. This will allow workloads to use preexisting certificates to
+      # authenticate with istio-csr when rotating their certificate.
+      enableClientCert: false
     # The istio cluster ID to verify incoming CSRs.
     clusterID: "Kubernetes"
     # Maximum validity duration that can be requested for a certificate.
@@ -170,7 +153,8 @@ app:
       certificateKeySize: 2048
       # The type of signature algorithm to use when generating private keys. Currently only RSA and ECDSA are supported. By default RSA is used.
       signatureAlgorithm: "RSA"
-
+    # A comma-separated list of service accounts that are allowed to use node authentication for CSRs, e.g. "istio-system/ztunnel".
+    caTrustedNodeAccounts: ""
   istio:
     # The istio revisions that are currently installed in the cluster.
     # Changing this field will modify the DNS names that will be requested for
@@ -204,7 +188,14 @@ app:
     # [API Priority and Fairness](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/),
     # to avoid overloading the server.
     #disableKubernetesClientRateLimiter: false
-
+# Optional extra labels for deployment.
+deploymentLabels: {}
+# Optional extra annotations for deployment.
+deploymentAnnotations: {}
+# Optional extra labels for pod.
+podLabels: {}
+# Optional extra annotations for pod.
+podAnnotations: {}
 # Optional extra volumes. Useful for mounting custom root CAs
 #
 # For example:
@@ -212,14 +203,14 @@ app:
 #  - name: root-ca
 #    secret:
 #      secretName: root-cert
-#volumes: []
 volumes:
 - name: trust-domain-root
   configMap:
-   name: venafi-firefly-trust-anchor
+#   name: venafi-firefly-trust-anchor
+   name: istio-ca-root-cert
    items:
-     - key: ca.crt
-       path: ca.crt
+     - key: root-cert.pem
+       path: root-cert.pem
 
 # Optional extra volume mounts. Useful for mounting custom root CAs
 #
@@ -227,7 +218,7 @@ volumes:
 #  volumeMounts:
 #  - name: root-ca
 #    mountPath: /etc/tls
-#volumeMounts: []
+
 volumeMounts:
 - name: trust-domain-root
   mountPath: /var/run/secrets/firefly
@@ -268,7 +259,17 @@ affinity: {}
 #     value: master
 #     effect: NoSchedule
 tolerations: []
-
+# List of Kubernetes TopologySpreadConstraints. For more information, see [TopologySpreadConstraint v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#topologyspreadconstraint-v1-core).
+# For example:
+#   topologySpreadConstraints:
+#   - maxSkew: 2
+#     topologyKey: topology.kubernetes.io/zone
+#     whenUnsatisfiable: ScheduleAnyway
+#     labelSelector:
+#       matchLabels:
+#         app.kubernetes.io/name: cert-manager-istio-csr
+#         app.kubernetes.io/instance: istio-csr
+topologySpreadConstraints: []
 # Kubernetes node selector: node labels for pod assignment.
 # +docs:property=nodeSelector
 nodeSelector:
@@ -281,3 +282,14 @@ commonLabels: {}
 #    environment: development
 #    app: mesh-apps
 #    issuer: venafi-firefly
+# Create resources alongside installing istio-csr, via Helm values. Can accept an array of YAML-formatted
+# resources. Each array entry can include multiple YAML documents, separated by '---'.
+#
+# For example:
+# extraObjects:
+#   - |
+#     apiVersion: v1
+#     kind: ConfigMap
+#     metadata:
+#       name: '{{ template "cert-manager-istio-csr.fullname" . }}-extra-configmap'
+extraObjects: []
