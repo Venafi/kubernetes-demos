@@ -371,22 +371,32 @@ mesh-step1: mesh-setup
 
 _create_sourceCA:
 	@cp ${VEN_TRUST_ANCHOR_ROOT_CA_PEM} artifacts/venafi-install/venafi-trust-anchor-root-ca.pem
-	@kubectl create secret generic venafi-trust-anchor --namespace='venafi' --from-file=ca.crt=artifacts/venafi-install/venafi-trust-anchor-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@kubectl create secret generic venafi-trust-anchor --namespace='venafi' --from-file=root-cert.pem=artifacts/venafi-install/venafi-trust-anchor-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 mesh-step2: _create_sourceCA
 	@echo "Creating Firefly trust anchor"
+
+	@kubectl create configmap istio-csr-ca --namespace='venafi' \
+		--from-literal=issuer-name=firefly-mesh-wi-issuer \
+		--from-literal=issuer-kind=Issuer \
+		--from-literal=issuer-group=firefly.venafi.com \
+		--dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
 	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/servicemesh/firefly-trust-anchor.yaml \
      > artifacts/venafi-install/firefly-trust-anchor.yaml
 	@kubectl apply -n istio-system -f artifacts/venafi-install/firefly-trust-anchor.yaml
 
 mesh-step3:
-	@echo 'Installing Venafi istio CSR agent.....'
-	@helm upgrade \
-	    --install -f artifacts/venafi-install/istio-csr-values.yaml cert-manager-istio-csr \
-  		--namespace venafi \
-		oci://${VEN_CONTAINER_REGISTRY}/charts/cert-manager-istio-csr \
-  		--version ${VEN_ISTIO_CSR_VERSION} \
-		--wait
+	@echo "Generating Venafi Helm manifests for installing istio-csr"
+	@venctl components kubernetes manifest generate \
+		--namespace venafi \
+		--istio-csr \
+		--istio-csr-version ${cert-manager-istio-csr} \
+		--istio-csr-values-files istio-csr-values.yaml \
+		--image-pull-secret-names venafi-image-pull-secret  > artifacts/venafi-install/venafi-manifests-istio.yaml
+
+	@ISTIO_TRUST_DOMAIN=cluster.local \
+		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests-istio.yaml 
 
 mesh-step4: _install-and-configure-istio
 
@@ -454,7 +464,8 @@ clean-mesh-setup:
 	@kubectl delete -f artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml || true
 	@kubectl delete -f artifacts/venafi-install/peerauthentication.yaml || true
 	@istioctl uninstall -y -f artifacts/venafi-install/istio-config.yaml || true
-	@helm uninstall -n venafi cert-manager-istio-csr || true
+	@ISTIO_TRUST_DOMAIN=cluster.local \
+		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests-istio.yaml
 	@kubectl -n istio-system delete -f templates/servicemesh/firefly-mesh-wi-issuer.yaml || true
 	#more to delete here.
 	@kubectl -n istio-system delete -f artifacts/venafi-install/firefly-trust-anchor.yaml || true
