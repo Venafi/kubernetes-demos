@@ -409,7 +409,17 @@ _create-peer-authentication:
 	@cp templates/servicemesh/peerauthentication.yaml artifacts/venafi-install/peerauthentication.yaml
 	@kubectl apply -f artifacts/venafi-install/peerauthentication.yaml
 
-mesh-step6-cloud: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
+mesh-step6:
+	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
+
+mesh-step7: _install-istio-tools
+
+_install-istio-tools:
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/grafana.yaml
+
+mesh-step8-cloud: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
 
 _create-tlspc-public-cert-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml \
@@ -422,7 +432,7 @@ _create-tlspc-public-cert:
      > artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
 
-mesh-step6-tpp: _create-tpp-public-cert-issuer _create-tpp-public-cert
+mesh-step8-tpp: _create-tpp-public-cert-issuer _create-tpp-public-cert
 _create-tpp-public-cert-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-publicca-cluster-issuer.yaml \
      > artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml
@@ -434,13 +444,20 @@ _create-tpp-public-cert:
      > artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 	@kubectl apply -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
 
-mesh-step7: _create_entry_in_GCP_CloudDNS
+#mesh-step9: _create_entry_in_GCP_CloudDNS
+mesh-step9: _create_entry_in_AWS_Route53
 	
 _create_entry_in_GCP_CloudDNS:
 	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
 	@../scripts/gcp/map-dns-to-gateway.sh ${VEN_GCP_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
 
-mesh-step8: _install-sample-app _create_gateway_resources
+_create_entry_in_AWS_Route53:
+	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
+	@../scripts/aws/map-dns-to-gateway.sh ${VEN_AWS_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
+
+
+mesh-step10:  _create_gateway_resources
+
 _install-sample-app:
 	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml
 
@@ -452,12 +469,17 @@ _create_gateway_resources:
 	@kubectl -n mesh-apps apply -f artifacts/samples/sample-app-gateway.yaml
 	@echo "####################################################################################################"
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
-	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}/productpage    ###"
+	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}/      ###"
 	@echo "####################################################################################################"
 
+	
 clean-mesh-setup:
 	@kubectl -n mesh-apps delete -f artifacts/samples/sample-app-gateway.yaml || true
 	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml || true
+	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml || true
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml || true
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml || true
+	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/grafana.yaml || true
 	@kubectl delete -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml || true
 	@kubectl delete -f artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml || true
 	@kubectl delete -f artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml || true
@@ -504,3 +526,14 @@ generate-key-pair:
 	@cat tlspc-to-dc-key.pub
 	@echo @@@@@@@ The public key contents above should be used for service account in Venafi Control Plane @@@@@@@
 
+create-gcloud-cluster:
+	@$(MAKE) -C ../scripts create-gke-cluster --warn-undefined-variables 
+
+create-gcloud-cas:
+	@$(MAKE) -C ../scripts create-google-cas --warn-undefined-variables
+
+_remove-gcloud-cluster:
+	@$(MAKE) -C ../scripts remove-gke-cluster --warn-undefined-variables
+
+gcp-full-cleanup: _remove-gcloud-cluster
+	@$(MAKE) -C ../scripts remove-google-cas --warn-undefined-variables

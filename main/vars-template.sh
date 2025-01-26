@@ -15,6 +15,7 @@ export VEN_TPP_CA_BUNDLE_PEM_FILE :=./venafi-tpp-server-ca.pem
 ### BEGIN - Required only for service mesh usecase #####
 export VEN_ZONE_PUBLIC_CA :="My-Apps\\public-ca" # E.g. TPP-Certificates\\\\Public-CA OR Venafi Cloud App\\issuing-template 
 export VEN_DOMAIN_FOR_SAMPLE_APP :=example.com
+export VEN_AWS_ZONE :=foobar
 
 export VEN_CLOUD_BUILTIN_ICA_ROOT_CA_PEM :=./venafi-cloud-built-in-root.pem
 export VEN_CLOUD_ZKPKI_ICA_ROOT_CA_PEM :=./venafi-cloud-zkpki-root.pem
