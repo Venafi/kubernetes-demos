@@ -16,9 +16,9 @@ spec:
       mode: SIMPLE
       serverCertificate: "sds"
       privateKey: "sds"
-      credentialName: "REPLACE_WITH_SUB_DOMAIN.${VEN_DOMAIN_FOR_SAMPLE_APP}"
+      credentialName: "REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}"
     hosts:
-    - "REPLACE_WITH_SUB_DOMAIN.${VEN_DOMAIN_FOR_SAMPLE_APP}"
+    - "REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -26,7 +26,7 @@ metadata:
   name: storefront-virtualservice
 spec:
   hosts:
-  - "REPLACE_WITH_SUB_DOMAIN.${VEN_DOMAIN_FOR_SAMPLE_APP}"
+  - "REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}"
   gateways:
   - storefront-gateway
   http:

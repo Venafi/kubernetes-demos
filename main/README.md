@@ -16,16 +16,16 @@ The demos use a `Makefile` for all operations. Always review the target you are 
 
 - Copy file `vars-template.sh` as `vars.sh`. The `Makefile` uses `vars.sh` to load your specific settings.
 
-    > Replace the value for `VEN_CLOUD_API_KEY` with the value of `apiKey` from your Venafi Control Plane tenant. 
+    > Replace the value for `CYBR_CLOUD_API_KEY` with the value of `apiKey` from your Venafi Control Plane tenant. 
 
-    > Replace the value for `VEN_ZONE_PRIVATE_CA` with the value of the issuing template path. If you don't know what this is, login to Venafi Control Plane, create a issuing template with Venafi BuiltIn CA and create an application. The ZONE is of the form application/issuing-template. Refer to Venafi Control Plane documention for details about how to create an application , assign ownership, etc. 
+    > Replace the value for `CYBR_ZONE_PRIVATE_CA` with the value of the issuing template path. If you don't know what this is, login to Venafi Control Plane, create a issuing template with Venafi BuiltIn CA and create an application. The ZONE is of the form application/issuing-template. Refer to Venafi Control Plane documention for details about how to create an application , assign ownership, etc. 
 
     > No other variables are required to be setup at this time. We will revisit the other variables as needed. 
 
 - Optionally copy `cloud-settings-template.sh` as `cloud-settings.sh`. This file is optionally included in the `Makefile` and you can use only if you want to automate things in Google Cloud
 - All commands from terminal will be executed from the `main` folder. After you clone the repo change the directory to `main` 
 
-- You have created the the required configurations and policies for Firefly to operate in cluster. This is a one time configuration that can be used across all your clusters. Refer to the section [Configuring Venafi Firefly](#configuring-venafi-firefly) to get started. 
+- You have created the required configurations and policies for Firefly to operate in cluster. This is a one time configuration that can be used across all your clusters. Refer to the section [Configuring Venafi Firefly](#configuring-venafi-firefly) to get started. 
 
 
 
@@ -33,9 +33,9 @@ The demos use a `Makefile` for all operations. Always review the target you are 
 Login into [Venafi TLS Protect Cloud](https://ui.venafi.cloud) If you don't have an account you can sign up for a 30 day trial.
 
 ### Creating a Team
-If you haven't already created a team and assiged members to it. 
+If you haven't already created a team and assigned members to it. 
 - Go to Settings / Teams
-- Click New and provide a name and role for the team. For eg, `platform-admin` and Role as `System Administrator`.  Make sure to assign membership. Set the team name in `vars.sh`. The name of the variable is `VEN_TEAM_NAME`
+- Click New and provide a name and role for the team. For eg, `platform-admin` and Role as `System Administrator`.  Make sure to assign membership. Set the team name in `vars.sh`. The name of the variable is `CYBR_TEAM_NAME`
 
 ### Creating a Sub CA Provider 
 The first step to getting started with **Firefly** is to create a subordinate CA provider. Several upstream CA's are supported but for the purposes of setting up this demo environment 
@@ -83,7 +83,7 @@ Similar to how we created a policy before create a new policy called `firefly-is
 | :---              |    :----:   | 
 | Validity   | 1 Hour        | 
 | Commmon Name      | `istiod.istio-system.svc`<br>`^.*`       |
-| DNS(SAN)   | `istio-csr.venafi.svc`<br>`cert-manager-istio-csr.venafi.svc`<br>`istiod.istio-system.svc`        | 
+| DNS(SAN)   | `istio-csr.cyberark.svc`<br>`cert-manager-istio-csr.cyberark.svc`<br>`istiod.istio-system.svc`        | 
 | URI Addresss (SAN)   | `^spiffe://cluster\.local/ns/.*/sa/.*`        | 
 | Key Constraint   | RSA 2048        | 
 | Key Usage   | Key Encipherment <br> Digital Signature        | 
@@ -144,18 +144,18 @@ Service account for certificate discovery
 Creating a new service account for the Venafi Kubernetes Agent
  ✅    Running prerequisite checks
 Service Account id=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-Service account was created successfully file=artifacts/venafi-install/venafi_agent_secret.json format=secret
+Service account was created successfully file=artifacts/cyberark-install/cybr_mis_agent_secret.json format=secret
 Creating Service Account in Venafi Control Plane for registry secret
 Creating a new service account for Venafi OCI registry
  ✅    Running prerequisite checks
 Service Account id=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-Service account was created successfully file=artifacts/venafi-install/venafi_registry_secret.json format=secret scopes="[enterprise-cert-manager enterprise-approver-policy enterprise-venafi-issuer]"
+Service account was created successfully file=artifacts/cyberark-install/cybr_mis_registry_secret.json format=secret scopes="[cert-manager-components enterprise-approver-policy enterprise-venafi-issuer]"
 Creating Service account in Venafi Control Plane for Firefly
 Creating a new service account for the Venafi Firefly
  ✅    Running prerequisite checks
 Service Account id=ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-Service account was created successfully file=artifacts/venafi-install/venafi_firefly_secret.json format=secret
-namespace/venafi created
+Service account was created successfully file=artifacts/cyberark-install/cybr_mis_firefly_secret.json format=secret
+namespace/cyberark created
 namespace/sandbox created
 Credentials for venafi registry
 secret/venafi-image-pull-secret created
@@ -181,7 +181,7 @@ make generate-venafi-manifests
 You will see an output that simply says 
 `Generating Venafi Helm manifests for installation` 
 
-Review the contents if you want to. The generated file is `artifacts/venafi-install/venafi-manifests.yaml` 
+Review the contents if you want to. The generated file is `artifacts/cyberark-install/venafi-manifests.yaml` 
 
 ### STEP 3
 
@@ -210,18 +210,18 @@ Once complete, you should see the following that confirms the installation
 ```
 UPDATED RELEASES:
 NAME                             NAMESPACE   CHART                                          VERSION   DURATION
-venafi-connection                venafi      venafi-charts/venafi-connection                v0.3.1          2s
-cert-manager                     venafi      venafi-charts/cert-manager                     v1.16.3        28s
-cert-manager-csi-driver          venafi      venafi-charts/cert-manager-csi-driver          v0.10.2         2s
-venafi-enhanced-issuer           venafi      venafi-charts/venafi-enhanced-issuer           v0.15.0        23s
-cert-manager-csi-driver-spiffe   venafi      venafi-charts/cert-manager-csi-driver-spiffe   v0.8.2         23s
-approver-policy-enterprise       venafi      venafi-charts/approver-policy-enterprise       v0.20.0        33s
-venafi-kubernetes-agent          venafi      venafi-charts/venafi-kubernetes-agent          1.4.0          41s
-firefly                          venafi      venafi-firefly/firefly                         v1.5.0         14s
-trust-manager                    venafi      venafi-charts/trust-manager                    v0.15.0        25s
+venafi-connection                cyberark    venafi-charts/venafi-connection                v0.3.1          2s
+cert-manager                     cyberark    venafi-charts/cert-manager                     v1.16.3        23s
+cert-manager-csi-driver          cyberark    venafi-charts/cert-manager-csi-driver          v0.10.2         0s
+venafi-enhanced-issuer           cyberark    venafi-charts/venafi-enhanced-issuer           v0.15.0        23s
+cert-manager-csi-driver-spiffe   cyberark    venafi-charts/cert-manager-csi-driver-spiffe   v0.8.2         29s
+approver-policy-enterprise       cyberark    venafi-charts/approver-policy-enterprise       v0.20.0        33s
+venafi-kubernetes-agent          cyberark    venafi-charts/venafi-kubernetes-agent          1.4.0          39s
+firefly                          cyberark    venafi-firefly/firefly                         v1.5.0         10s
+trust-manager                    cyberark    venafi-charts/trust-manager                    v0.15.0        27s
 ```
 
-All of the above components are installed and running in the `venafi` namespace in your cluster. `make install` uses `venctl` to install the components. By simply adding additional kubernetes contexts, you can install the same configuration on addtional clusters. 
+All of the above components are installed and running in the `cyberark` namespace in your cluster. `make install` uses `venctl` to install the components. By simply adding additional kubernetes contexts, you can install the same configuration on addtional clusters. 
 
 ### STEP 4
 
@@ -249,7 +249,7 @@ Creating an issuer. We will now create an issuer using the `ZONE` defined in `va
 ```
 make create-venafi-cloud-privateca-cluster-issuer 
 ```
-This will create a few new resources. A `VenafiConnection` resource and a `VenafiClusterIssuer` resource. The `VenafiConnection` resource will be in the `venafi` namespace and the cluster issuer is as the name suggests cluster scoped.
+This will create a few new resources. A `VenafiConnection` resource and a `VenafiClusterIssuer` resource. The `VenafiConnection` resource will be in the `cyberark` namespace and the cluster issuer is as the name suggests, cluster-scoped.
 The output you see will be 
 
 ```
@@ -305,10 +305,10 @@ kubectl get CertificateRequests -n sandbox
 The output will be
 
 ```
-NAME                                          APPROVED   DENIED   READY   ISSUER    REQUESTOR                                         AGE
-cert-hundred-days-1.svc.cluster.local-sbw7t   True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
-cert-ten-days-1.svc.cluster.local-x6djj       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
-cert-two-days-1.svc.cluster.local-kjsqd       True                True    firefly   system:serviceaccount:venafi:cert-manager   3m
+NAME                                      APPROVED   DENIED   READY   ISSUER    REQUESTER                                     AGE
+cert-hundred-days-1.svc.cluster.local-1   True                True    firefly   system:serviceaccount:cyberark:cert-manager   25s
+cert-ten-days-1.svc.cluster.local-1       True                True    firefly   system:serviceaccount:cyberark:cert-manager   25s
+cert-two-days-1.svc.cluster.local-1       True                True    firefly   system:serviceaccount:cyberark:cert-manager   25s
 ```
 Note that the issuer is set to **firefly**
 
@@ -321,11 +321,11 @@ kubectl get secret cert-two-days-1.svc.cluster.local -n sandbox -o jsonpath="{.d
 to see
 
 ```
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20240426195248 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=CyberArk Inc, OU=Firefly Unit, CN=firefly-1-20250208113912 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Apr 27 01:09:17 2024 GMT
-            Not After : Apr 29 01:09:17 2024 GMT
-        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 3, CN=cert-two-days-1.svc.cluster.local
+            Not Before: Feb  8 17:42:03 2025 GMT
+            Not After : Feb 10 17:42:03 2025 GMT
+        Subject: C=USA, ST=MA, L=Newton, O=CyberArk Inc, OU=Firefly Unit 3, CN=cert-two-days-1.svc.cluster.local
 ```
 
 Run the following, 
@@ -335,11 +335,11 @@ kubectl get secret cert-ten-days-1.svc.cluster.local -n sandbox -o jsonpath="{.d
 
 to see 
 ```
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20240426195248 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=CyberArk Inc, OU=Firefly Unit, CN=firefly-1-20250208113912 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Apr 27 01:09:17 2024 GMT
-            Not After : May  7 01:09:17 2024 GMT
-        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 2, CN=cert-ten-days-1.svc.cluster.local
+            Not Before: Feb  8 17:42:03 2025 GMT
+            Not After : Feb 18 17:42:03 2025 GMT
+        Subject: C=USA, ST=MA, L=Newton, O=CyberArk Inc, OU=Firefly Unit 2, CN=cert-ten-days-1.svc.cluster.local
 ```
 
 Run the following
@@ -348,11 +348,11 @@ kubectl get secret cert-hundred-days-1.svc.cluster.local -n sandbox -o jsonpath=
 ```
 to see
 ```
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20240426195248 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=CyberArk Inc, OU=Firefly Unit, CN=firefly-1-20250208113912 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Apr 27 01:09:17 2024 GMT
-            Not After : Aug  5 01:09:17 2024 GMT
-        Subject: C=USA, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit 1, CN=cert-hundred-days-1.svc.cluster.local
+            Not Before: Feb  8 17:42:03 2025 GMT
+            Not After : May 19 17:42:03 2025 GMT
+        Subject: C=USA, ST=MA, L=Newton, O=CyberArk Inc, OU=Firefly Unit 1, CN=cert-hundred-days-1.svc.cluster.local
 ```
 
 ## Access the Venafi Control Plane to view the Issuer Certificates and the associated metrics
@@ -374,8 +374,8 @@ This will create a few secrets, few certificates and a few pods in the `sandbox`
 
 If you are operating in a cluster where you may already have a certificates, you don't need to seed any sample data. The purpose of this step is to demonstrate the Venafi discovery capabilities. 
 One of the service accounts that we created during the initial step was to setup the discovery of certificates from clusters. 
-After about couple of minutes or so login to the UI and access "Installtions / Kubernetes Clusters".
-You should see a cluster registered as `demo-cluster-<random number>` 
+After about couple of minutes or so login to the UI and access "Installations / Kubernetes Clusters".
+You should see a cluster registered as `mis-demo-cluster-<random number>` 
 
 Click on the cluster name and then click `View Certificates`. Pick one of the certificates, For eg. `cipher-snake.svc.cluster.local` and click on it. Review the details. You will notice that the Key size is likely non-compliant. Review the `Installations` by clicking on it. Expand the cluster resources to find that this certificate is actually in use in a workload and it's lifecycle is not managed at all. 
 
@@ -413,17 +413,17 @@ issuer.firefly.venafi.com/firefly-mesh-wi-issuer created
 ### STEP 2
 istio-csr requires a trust anchor that needs to be mounted when installed. The reference to `root-cert.pem` in [templates/helm/istio-csr-values.yaml](templates/helm/istio-csr-values.yaml) is for the trust anchor. 
 
-Before you run the target for `step2` review the target `make-step2`. This target calls another target called `_create_sourceCA`. The variable `VEN_TRUST_ANCHOR_ROOT_CA_PEM` should be set in the `vars.sh`. The value will be a path to a PEM file that acts as the trust anchor. The referred PEM file does not exist in the repo. You will need to create it. 
+Before you run the target for `step2` review the target `make-step2`. This target calls another target called `_create_sourceCA`. The variable `CYBR_TRUST_ANCHOR_ROOT_CA_PEM` should be set in the `vars.sh`. The value will be a path to a PEM file that acts as the trust anchor. The referred PEM file does not exist in the repo. You will need to create the PEM file. You can populate the contents of this file by accessing Venafi Control Plane and downloading the CA. For this demo it will be the root of venafi built in CA. 
 
 Run 
 ```
 make mesh-step2
 ```
 
-Running the target produces the below output. A trust-manager managed `Bundle` called `venafi-firefly-trust-anchor` is created that is automatically managed. `istio-csr` uses the `Bundle` and will make it automatically available if/when `secret/venafi-trust-anchor` changes.  
+Running the target produces the below output. A trust-manager managed `Bundle` called `istio-ca-root-cert` is created that is automatically managed. `istio-csr` uses the `Bundle` and will make it automatically available when `secret/cyberark-trust-anchor` changes.  
 ```
 ❯ make mesh-step2
-secret/venafi-trust-anchor created
+secret/cyberark-trust-anchor created
 Creating Firefly trust anchor
 configmap/istio-csr-ca created
 bundle.trust.cert-manager.io/istio-ca-root-cert created
@@ -431,15 +431,17 @@ bundle.trust.cert-manager.io/istio-ca-root-cert created
 Review the `Bundle` by simply running, 
 
 ```
-kubectl describe Bundle -n istio-system 
+kubectl describe Bundle istio-ca-root-cert -n istio-system 
 ```
 and you will see 
 
 ```
+...
+...
 Events:
-  Type    Reason  Age    From     Message
-  ----    ------  ----   ----     -------
-  Normal  Synced  2m47s  bundles  Successfully synced Bundle to namespaces that match this label selector: issuer=venafi-firefly
+  Type    Reason  Age   From     Message
+  ----    ------  ----  ----     -------
+  Normal  Synced  29s   bundles  Successfully synced Bundle to namespaces that match this label selector: issuer=cyberark-firefly
 ```
 
 ### STEP 3
@@ -456,37 +458,37 @@ Generating Venafi Helm manifests for installing istio-csr
 ........
 UPDATED RELEASES:
 NAME                     NAMESPACE   CHART                                  VERSION   DURATION
-cert-manager             venafi      venafi-charts/cert-manager             v1.16.3         2s
-cert-manager-istio-csr   venafi      venafi-charts/cert-manager-istio-csr   v0.14.0        16s
+cert-manager             cyberark    venafi-charts/cert-manager             v1.16.3         2s
+cert-manager-istio-csr   cyberark    venafi-charts/cert-manager-istio-csr   v0.14.0        14s
 ```
 
 Validate that all the components are running using
 ```
-kubectl get pods -n venafi
+kubectl get pods -n cyberark
 ```
 and you should see 
 
 ```
-NAME                                                      READY   STATUS    RESTARTS      AGE
-cert-manager-approver-policy-6cc4f596c-gztv8              1/1     Running   0             14m
-cert-manager-cainjector-67bdf7bdd6-b5tm7                  1/1     Running   0             15m
-cert-manager-cc756548f-5l6qk                              1/1     Running   0             15m
-cert-manager-csi-driver-cnxnb                             3/3     Running   1 (14m ago)   14m
-cert-manager-csi-driver-spiffe-approver-7b5df6bb7-xv6nb   1/1     Running   0             14m
-cert-manager-csi-driver-spiffe-driver-fnbzd               3/3     Running   1 (13m ago)   14m
-cert-manager-istio-csr-794cd6dfb9-dcvbr                   1/1     Running   0             12m
-cert-manager-webhook-67cbd84cc9-bb28q                     1/1     Running   0             15m
-firefly-54c68867c9-dlvgn                                  1/1     Running   0             13m
-firefly-54c68867c9-kht84                                  1/1     Running   0             13m
-trust-manager-7bc6c6cc6-z65v8                             1/1     Running   0             13m
-venafi-enhanced-issuer-69c56f45f-9g6nr                    1/1     Running   0             14m
-venafi-enhanced-issuer-69c56f45f-fq497                    1/1     Running   0             14m
-venafi-kubernetes-agent-58d748cd57-lsxbz                  1/1     Running   0             14m
+NAME                                                      READY   STATUS    RESTARTS        AGE
+cert-manager-7b5fbf4c8c-xtq6p                             1/1     Running   0               10m
+cert-manager-approver-policy-86c9f87b69-lds9m             1/1     Running   0               10m
+cert-manager-cainjector-7bdb4b49fb-nzsq2                  1/1     Running   0               10m
+cert-manager-csi-driver-9wrcz                             3/3     Running   1 (9m28s ago)   10m
+cert-manager-csi-driver-spiffe-approver-7b5df6bb7-8g4tk   1/1     Running   0               10m
+cert-manager-csi-driver-spiffe-driver-wgfhj               3/3     Running   0               10m
+cert-manager-istio-csr-67555f88f-x79xx                    1/1     Running   0               69s
+cert-manager-webhook-67cbd84cc9-sr5rl                     1/1     Running   0               10m
+firefly-54c68867c9-4d266                                  1/1     Running   0               9m24s
+firefly-54c68867c9-vjfkz                                  1/1     Running   0               9m24s
+trust-manager-ffc4dd9f8-7zpv9                             1/1     Running   0               9m23s
+venafi-enhanced-issuer-69c56f45f-m55pz                    1/1     Running   0               10m
+venafi-enhanced-issuer-69c56f45f-wgjc5                    1/1     Running   0               10m
+venafi-kubernetes-agent-f874f6774-hr7tx                   1/1     Running   0               10m
 ```
 
-Additionally, this also creates the `istiod-dynamic` certificate that will be bootstrapped to Istio
+The `istio-csr` installation automatically creates a new certificate called `istiod-dynamic`  that will be bootstrapped to Istio for signing all mesh workloads
 
-Review the certificate created by Firefly for Istio by running
+Review the certificate issued by Fireflyfor Istio by running
 ```
 kubectl get certificate istiod-dynamic -n istio-system
 ```
@@ -496,17 +498,17 @@ You can additonally inspect the secret bootstrapped to Istio by running
 ```
 and you should see 
 ```
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20250124103526 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=CyberArk Inc, OU=Firefly Unit, CN=firefly-1-20250208113912 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Jan 24 16:37:14 2025 GMT
-            Not After : Jan 24 17:37:14 2025 GMT
+            Not Before: Feb  8 17:47:31 2025 GMT
+            Not After : Feb  8 18:47:31 2025 GMT
         Subject: CN=istiod.istio-system.svc
 ```
 This is the `istiod` secret that Istio will use for signing all incoming mesh workloads. 
 
 ### STEP 4
 
-We will now install Istio by running the following. Istio is installed using the `IstioOperator` . The file is located at [templates/servicemesh/istio-config.yaml](templates/servicemesh/istio-config.yaml) for review. Note the `caAddress` and the setting for `CA_SERVER`. The `caAddress` points to `istio-csr` service and the built in `CA_SERVER` is turned off. 
+We will now install Istio by running the following. Istio is installed using the `IstioOperator` . The file is located at [templates/servicemesh/istio-config.yaml](templates/servicemesh/istio-config.yaml) for review. Note the `caAddress` and the setting for `CA_SERVER`. The `caAddress` points to `istio-csr` service and the built in `CA_SERVER` is turned off. The `caAddress` needs to be correctly pointing for Istio to work with `istio-csr`
 
 Run 
 ```
@@ -543,84 +545,142 @@ NAME     MODE     AGE
 global   STRICT   55s
 ```
 
-### STEP 6 - **Optional**
-While all the mesh workloads will use **Firefly** for their identities, we also need a public certificate to access the Ingress Gateway. The sample application that we will eventually deploy will be accessed from the browser. Venafi will issue a public certificate that is trusted by the browser. The certificate will be issued by a `VenafiClusterIssuer`. 
-The template for issuer is located here [templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml](templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml) 
-The template for certificate is located here [templates/cloud/venafi-cloud-managed-public-cert.yaml](templates/cloud/venafi-cloud-managed-public-cert.yaml)
+### STEP 6
+With all the components installed in cluster and istio configured to use Firefly issued certificate for signing mesh workloads, let's deploy a sample app. You can choose to install your own sample app into `mesh-apps` namespace by ignoring this step. In this demo we will install a custom swag store application. 
 
-If you don't need to attach a certificate for your Gateway you can ignore this step.
-
-There are two options for this step. Either using Venafi Cloud or the data center to issue a public certificate. You are also required to set the variable `VEN_ZONE_PUBLIC_CA` and `VEN_DOMAIN_FOR_SAMPLE_APP` The Zone is used for issuing a publicly trusted certificate. You can issue a private certificate if your browser configured to trust the CA. The DNS will be used to configured the Gateway.  The target to get a certificate from Venafi cloud is `mesh-step6-cloud` and from data center is `mesh-step6-tpp`
-
-Run 
-```
-make mesh-step6-cloud
-```
-to create an issuer and certificate. You will see the following output 
-```
-❯ make mesh-step6-cloud
-venaficlusterissuer.jetstack.io/venafi-publicca-cluster-issuer created
-certificate.cert-manager.io/5419352604.example.com created
-```
-
-### STEP7 - **Optional**
-This is an optional step and will require you to adapt depending on where your cluster is running and if you need create a DNS entry to access the gateway. 
-This demo is setup on GKE with loadbalancer / domains managed by GCP. If this is not applicable to you, review the target and create appropriate DNS entries. 
-You are also **REQUIRED** to setup `cloud-settings.sh` and configure your Google Project settings.  
-
-Basically, you need to run 
-```
-kubectl get svc istio-ingressgateway -n istio-system
-```
-and associate the provisioned loadblancer IP/hostname to your DNS. 
-**If you are not using Google Cloud, skip this step. 
-To automatically do that in Google Cloud for a domain you own, just run
-```
-make mesh-step7
-```
-
-### STEP 8
-It's time to deploy a sample application. The sample application will be deployed in a namespace called `mesh-apps`. 
 Run
 ```
-make mesh-step8
+make mesh-step6
 ```
-
-Validate that the sample app is deployed. Run ,
+This will install a sample app in the `mesh-apps` namespace. It will take a few minutes for all the pods to be deployed and go into `Running` state. Validate that all the pods are deployed and running by simply running 
 ```
 kubectl get pods -n mesh-apps
 ```
-to see
+and you will see the following. Note that all pods have 2 containers as this namespace has a label `istio-injection=enabled`
+
 ```
-NAME                             READY   STATUS    RESTARTS   AGE
-details-v1-698d88b-7jbpw         2/2     Running   0          29s
-productpage-v1-675fc69cf-lczlb   2/2     Running   0          29s
-ratings-v1-6484c4d9bb-gxf48      2/2     Running   0          29s
-reviews-v1-5b5d6494f4-j754q      2/2     Running   0          29s
-reviews-v2-5b667bcbf8-mlvhm      2/2     Running   0          29s
-reviews-v3-5b9bd44f4-cs8bx       2/2     Running   0          29s
+NAME                                     READY   STATUS    RESTARTS   AGE
+adservice-8744f64bd-bbmz2                2/2     Running   0          62s
+cartservice-6bc9b49975-4sq2m             2/2     Running   0          62s
+checkoutservice-66965f79db-cb8nr         2/2     Running   0          62s
+currencyservice-74bcdd8c58-2rnmn         2/2     Running   0          61s
+emailservice-848bd6c94d-mbdsh            2/2     Running   0          61s
+frontend-64776cfd7f-6s8bw                2/2     Running   0          61s
+paymentservice-7f658cdf44-pbg5r          2/2     Running   0          61s
+productcatalogservice-78d5ffb44d-vgk7f   2/2     Running   0          61s
+recommendationservice-7bc9cf9d4-jfzp8    2/2     Running   0          60s
+redis-cart-777db56c5f-th8cw              2/2     Running   0          60s
+shippingservice-7ddbb47576-n7c26         2/2     Running   0          60s
 ```
 
-Let's validate that the certificates issued to all the mesh workloads are indeed issued by **Firefly**
-
+As we also configured **Firefly** to issue all certs, let's inspect what the certificate in the workload looks like. 
 Run
 ```
 make print-svid
 ```
-`print-svid` is a target that prints the cert assoicated with ratings. You can choose to change the script to look at other certificates as well. You will see an output similar to below
-
+to see 
 ```
-❯ make print-svid
-Pod name is ratings-v1-6484c4d9bb-gxf48 
+Pod name is frontend-7d9b98c747-bxb9d 
 Certificate:
     Data:
         Version: 3 (0x2)
         Serial Number:
-            37:1d:14:4e:e5:92:30:c6:35:0b:6c:98:92:56:89:c5
+            42:86:b7:92:a3:26:bf:00:b4:cd:26:c5:83:39:e7:c9
         Signature Algorithm: sha256WithRSAEncryption
-        Issuer: C=US, ST=TX, L=Frisco, O=Venafi Inc, OU=Firefly Unit, CN=firefly-1-20250124103526 firefly-built-in-180.svc.cluster.local
+        Issuer: C=US, ST=TX, L=Frisco, O=CyberArk Inc, OU=Firefly Unit, CN=firefly-1-20250208113912 firefly-built-in-180.svc.cluster.local
         Validity
-            Not Before: Jan 24 16:38:31 2025 GMT
-            Not After : Jan 24 17:38:31 2025 GMT
+            Not Before: Feb  8 22:27:47 2025 GMT
+            Not After : Feb  8 23:27:47 2025 GMT
+        .....
+        .....
+             X509v3 Subject Alternative Name: 
+                URI:spiffe://cluster.local/ns/mesh-apps/sa/frontend      
+        .....
 ```
-The mesh identity is valid for 1 hour as defined by a policy in the Venafi Control Plane. Access Venafi Control Plane and the dashboard to review the metrics associated with this issuer. 
+
+Note that the Issuer for the workload is **Firefly** and the accessing the UI will provide you addition information. The mesh identity is valid for 1 hour as defined by a policy in the Venafi Control Plane. Access Venafi Control Plane and the dashboard to review the metrics associated with this issuer. 
+
+Test the app by simply running 
+
+```
+kubectl -n mesh-apps port-forward service/frontend 8120:80
+```
+and access the application on your browser as `http://localhost:8120`
+
+## Optional Steps
+
+### STEP 7 **Optional**
+Optionally, add istio tools Kiali, Grafana and Prometheus to your installation. Run
+
+```
+make mesh-step7
+```
+and you should see kiali , prometheus and grafana installed in the `istio-system` namespace. You can access kiali by running `istioctl dashboard kiali` to look at the traffic, the workload identities , etc. 
+
+
+### STEP 8 - **Optional**
+If you prefer to access the sample application with a DNS that you can configure and access instead of doing a port-forward and using local host, we will need to configure the Istio Gateway resources. We also need a public certificate to access the Ingress Gateway. Venafi will issue a public certificate that is trusted by the browser. The certificate will be issued by a `VenafiClusterIssuer`. 
+The template for issuer is located here [templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml](templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml) 
+The template for certificate is located here [templates/cloud/venafi-cloud-managed-public-cert.yaml](templates/cloud/venafi-cloud-managed-public-cert.yaml)
+
+There are two options for this step. Either using Venafi Cloud or the data center to issue a public certificate. You are also required to set the variable `CYBR_ZONE_PUBLIC_CA` and `CYBR_DOMAIN_FOR_SAMPLE_APP` The Zone is used for issuing a publicly trusted certificate. You can issue a private certificate if your browser configured to trust the CA. The DNS will be used to configured the Gateway.  The target to get a certificate from Venafi cloud is `mesh-step8-cloud` and from data center is `mesh-step8-tpp`
+
+Run 
+```
+make mesh-step8-cloud
+```
+to create an issuer and certificate. You will see the following output 
+```
+❯ make mesh-step8-cloud
+venaficlusterissuer.jetstack.io/venafi-publicca-cluster-issuer created
+certificate.cert-manager.io/5419352604.example.com created
+```
+
+### STEP9- **Optional**
+If you have completed STEP8 that means you have access to a valid DOMAIN and can add a record set. The demo is scripted to run `aws/map-dns-to-gateway.sh` Review the script and change it as you see fit. 
+You will notice that the script retrieves the IP address from the ingress gateway service. Some environments will provide you a hostname and not ip. 
+You are also **REQUIRED** to setup `cloud-settings.sh` and configure your AWS Route53 settings. Make sure you are authenticated to the account where you intend to add a DNS record. 
+
+If you are to manually perform this step, basically, you need to run 
+```
+kubectl get svc istio-ingressgateway -n istio-system
+```
+and associate the provisioned loadblancer IP/hostname to your DNS. 
+To automatically add an entry to AWS Rout53 for a domain you have access to, just run
+```
+make mesh-step9
+```
+and you will see
+
+```
+Create DNS entry for 3018580802.example.com to map to Gateway host/ip
+Zone is AAAABBBBCCCCDDDD
+DNS is 3018580802.example.com
+{
+    "ChangeInfo": {
+        "Id": "/change/C064230619T9XHRGPQ6CF",
+        "Status": "PENDING",
+        "SubmittedAt": "2025-02-09T01:41:27.515000+00:00"
+    }
+}
+```
+
+### STEP 10 - **Optional**
+If you have completed STEPS  8 and 9, you can create the required gateway resources. The gateway resource template is located here [templates/servicemesh/sample-app-gateway.yaml](templates/servicemesh/sample-app-gateway.yaml) Review the file. This will be used for creating a gateway resource that is mapped to the frontend sample service.
+
+Run 
+```
+make mesh-step10
+```
+and you will see
+```
+gateway.networking.istio.io/storefront-gateway created
+virtualservice.networking.istio.io/storefront-virtualservice created
+serviceentry.networking.istio.io/allow-egress-googleapis created
+serviceentry.networking.istio.io/allow-egress-google-metadata created
+virtualservice.networking.istio.io/frontend created
+####################################################################################################
+######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########
+######### Access application using https://3018580802.example.com/     ###
+####################################################################################################
+```

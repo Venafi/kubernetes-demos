@@ -86,8 +86,8 @@ subjects:
 # The users who should be bound to the policies defined.
 - kind: ServiceAccount
   name: cert-manager-csi-driver
-  namespace: venafi
+  namespace: cyberark
 - kind: ServiceAccount
   name: cert-manager
-  namespace: venafi
+  namespace: cyberark
 

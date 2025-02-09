@@ -10,4 +10,4 @@ recordvalue="$(kubectl get services --namespace istio-system istio-ingressgatewa
 
 aws --profile basic route53 change-resource-record-sets \
   --hosted-zone-id ${ZONE} \
-  --change-batch '{"Changes":[{"Action":"CREATE","ResourceRecordSet":{"Name":"'${DNS_NAME}.'","Type":"CNAME","TTL":300,"ResourceRecords":[{"Value":"'${recordvalue}'"}]}}]}'  
+  --change-batch '{"Changes":[{"Action":"CREATE","ResourceRecordSet":{"Name":"'${DNS_NAME}.'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'${recordvalue}'"}]}}]}'  

@@ -15,8 +15,8 @@ SHELL := /bin/sh
 -include cloud-settings.sh
 
 check-env:
-ifndef VEN_CLOUD_API_KEY
-	@(echo "VEN_CLOUD_API_KEY not defined. "; exit 1)
+ifndef CYBR_CLOUD_API_KEY
+	@(echo "CYBR_CLOUD_API_KEY not defined. "; exit 1)
 endif 
 
 ########################################################################################################################
@@ -37,7 +37,7 @@ init-dc: _init setup-datacenter-config
 
 mkdirs:
 	@rm -rf artifacts
-	@mkdir -p artifacts/venafi-install
+	@mkdir -p artifacts/cyberark-install
 	@mkdir -p artifacts/config
 	@mkdir -p artifacts/samples
 
@@ -53,19 +53,19 @@ create-sa-for-discovery:
 	@echo "Service account for certificate discovery"
 	@venctl iam service-accounts agent create \
 		--name "demo-agent-${RESOURCE_SUFFIX}" \
-		--output-file "artifacts/venafi-install/venafi_agent_secret.json" \
+		--output-file "artifacts/cyberark-install/cybr_mis_agent_secret.json" \
 		--output "secret" \
-		--owning-team "${VEN_TEAM_NAME}" \
+		--owning-team "${CYBR_TEAM_NAME}" \
 		--validity 10 \
-		--api-key ${VEN_CLOUD_API_KEY}
+		--api-key ${CYBR_CLOUD_API_KEY}
 
 create-discovery-secret: _transform_agent_secret_to_yaml
 	@echo "Credentials for certificate discovery"
-	@kubectl -n venafi apply -f artifacts/venafi-install/venafi_agent_secret.yaml || true
+	@kubectl -n cyberark apply -f artifacts/cyberark-install/cybr_mis_agent_secret.yaml || true
 
 _transform_agent_secret_to_yaml:
-	@jq -r '.private_key' artifacts/venafi-install/venafi_agent_secret.json > artifacts/venafi-install/venafi_agent_secret.yaml
-	@jq -r '.client_id' artifacts/venafi-install/venafi_agent_secret.json > artifacts/venafi-install/venafi_agent_client_id.txt
+	@jq -r '.private_key' artifacts/cyberark-install/cybr_mis_agent_secret.json > artifacts/cyberark-install/cybr_mis_agent_secret.yaml
+	@jq -r '.client_id' artifacts/cyberark-install/cybr_mis_agent_secret.json > artifacts/cyberark-install/cybr_mis_agent_client_id.txt
 
 ####################### END  - Targets to create Venafi Kubernetes Agent Service Account and secret ####################### 
 
@@ -75,19 +75,19 @@ create-sa-for-registry:
 	@echo "Creating Service Account in Venafi Control Plane for registry secret"
 	@venctl iam service-account registry create \
 		--name "demo-secret-${RESOURCE_SUFFIX}" \
-		--output-file "artifacts/venafi-install/venafi_registry_secret.json" \
+		--output-file "artifacts/cyberark-install/cybr_mis_registry_secret.json" \
 		--output "secret" \
-		--owning-team "${VEN_TEAM_NAME}" \
+		--owning-team "${CYBR_TEAM_NAME}" \
 		--validity 10 \
 		--scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
-		--api-key ${VEN_CLOUD_API_KEY}
+		--api-key ${CYBR_CLOUD_API_KEY}
 
 create-registry-secret: _transform_registry_secret_to_yaml
 	@echo "Credentials for venafi registry"
-	@kubectl -n venafi apply -f artifacts/venafi-install/venafi_registry_secret.yaml || true
+	@kubectl -n cyberark apply -f artifacts/cyberark-install/cybr_mis_registry_secret.yaml || true
 
 _transform_registry_secret_to_yaml:
-	@jq -r '.image_pull_secret' artifacts/venafi-install/venafi_registry_secret.json > artifacts/venafi-install/venafi_registry_secret.yaml
+	@jq -r '.image_pull_secret' artifacts/cyberark-install/cybr_mis_registry_secret.json > artifacts/cyberark-install/cybr_mis_registry_secret.yaml
 
 ####################### END - Targets to create Venafi Registry Service Account and secret ####################### 
 
@@ -97,26 +97,26 @@ create-sa-for-firefly:
 	@echo "Creating Service account in Venafi Control Plane for Firefly"
 	@venctl iam service-accounts firefly create \
 	--name "demo-firefly-${RESOURCE_SUFFIX}" \
-	--output-file "artifacts/venafi-install/venafi_firefly_secret.json" \
+	--output-file "artifacts/cyberark-install/cybr_mis_firefly_secret.json" \
 	--output "secret" \
-	--owning-team "${VEN_TEAM_NAME}" \
+	--owning-team "${CYBR_TEAM_NAME}" \
 	--validity 10 \
-	--api-key ${VEN_CLOUD_API_KEY}
+	--api-key ${CYBR_CLOUD_API_KEY}
 
 create-firefly-secret: _transform_firefly_secret_to_yaml
 	@echo "Credentials for Firefly"
-	@kubectl -n venafi apply -f artifacts/venafi-install/venafi_firefly_secret.yaml || true
+	@kubectl -n cyberark apply -f artifacts/cyberark-install/cybr_mis_firefly_secret.yaml || true
 
 _transform_firefly_secret_to_yaml:
 	@echo "Credentials for Venafi Firefly"
-	@jq -r '.private_key' artifacts/venafi-install/venafi_firefly_secret.json > artifacts/venafi-install/venafi_firefly_secret.yaml
-	@jq -r '.client_id' artifacts/venafi-install/venafi_firefly_secret.json > artifacts/venafi-install/venafi_firefly_client_id.txt
+	@jq -r '.private_key' artifacts/cyberark-install/cybr_mis_firefly_secret.json > artifacts/cyberark-install/cybr_mis_firefly_secret.yaml
+	@jq -r '.client_id' artifacts/cyberark-install/cybr_mis_firefly_secret.json > artifacts/cyberark-install/cybr_mis_firefly_client_id.txt
 
 
 ####################### END - Targets to create Venafi Firefly Service Account and secret ####################### 
 
 create-namespaces:
-	@kubectl apply -f namespaces/venafi.yaml
+	@kubectl apply -f namespaces/cyberark.yaml
 	@kubectl apply -f namespaces/sandbox.yaml
 
 configure-namespace: create-registry-secret create-discovery-secret create-firefly-secret
@@ -124,7 +124,7 @@ configure-namespace: create-registry-secret create-discovery-secret create-firef
 generate-venafi-manifests:
 	@echo "Generating Venafi Helm manifests for installation"
 	@venctl components kubernetes manifest generate \
-		--namespace venafi \
+		--namespace cyberark \
 		--approver-policy-enterprise \
 		--approver-policy-enterprise-version ${approver-policy-enterprise} \
 		--cert-manager \
@@ -146,10 +146,10 @@ generate-venafi-manifests:
  		--venafi-kubernetes-agent \
 		--venafi-kubernetes-agent-version ${venafi-kubernetes-agent} \
 		--venafi-kubernetes-agent-values-files venafi-agent.yaml \
-		--image-pull-secret-names venafi-image-pull-secret  > artifacts/venafi-install/venafi-manifests.yaml
+		--image-pull-secret-names venafi-image-pull-secret  > artifacts/cyberark-install/venafi-manifests.yaml
 
-VEN_AGENT_SA_CLIENT_ID ?= $(shell cat artifacts/venafi-install/venafi_agent_client_id.txt)
-VEN_FIREFLY_SA_CLIENT_ID ?= $(shell cat artifacts/venafi-install/venafi_firefly_client_id.txt)
+CYBR_AGENT_SA_CLIENT_ID ?= $(shell cat artifacts/cyberark-install/cybr_mis_agent_client_id.txt)
+CYBR_FIREFLY_SA_CLIENT_ID ?= $(shell cat artifacts/cyberark-install/cybr_mis_firefly_client_id.txt)
 
 confirm:
 	@while [ -z "$$CONFIRM" ]; do \
@@ -159,51 +159,51 @@ confirm:
 	if [ ! $$CONFIRM == "Y" ]; then \
 		echo "######################################################################\n" \
 		echo "The Firefly Config in the UI needs to be associated with the service\n" \
-		echo "account name that maps to client id ${VEN_FIREFLY_SA_CLIENT_ID}\n" \
+		echo "account name that maps to client id ${CYBR_FIREFLY_SA_CLIENT_ID}\n" \
 		echo "######################################################################" ; exit 1 ; \
 	fi \
 	fi
 
 install: confirm
-	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
-		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${CYBR_AGENT_SA_CLIENT_ID} \
+		FIREFLY_VENAFI_CLIENT_ID=${CYBR_FIREFLY_SA_CLIENT_ID} \
 		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests.yaml 
+		venctl components kubernetes manifest tool sync --file artifacts/cyberark-install/venafi-manifests.yaml 
 
 un-install:
-	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
-		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${CYBR_AGENT_SA_CLIENT_ID} \
+		FIREFLY_VENAFI_CLIENT_ID=${CYBR_FIREFLY_SA_CLIENT_ID} \
 		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool destroy --file artifacts/venafi-install/venafi-manifests.yaml 
+		venctl components kubernetes manifest tool destroy --file artifacts/cyberark-install/venafi-manifests.yaml 
 
 generate-static-manifests:
 	@echo "Generating static manifests if that's your preferred option"
-	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${VEN_AGENT_SA_CLIENT_ID} \
-		FIREFLY_VENAFI_CLIENT_ID=${VEN_FIREFLY_SA_CLIENT_ID} \
+	@VENAFI_KUBERNETES_AGENT_CLIENT_ID=${CYBR_AGENT_SA_CLIENT_ID} \
+		FIREFLY_VENAFI_CLIENT_ID=${CYBR_FIREFLY_SA_CLIENT_ID} \
 		CSI_DRIVER_SPIFFE_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool template --file artifacts/venafi-install/venafi-manifests.yaml > artifacts/venafi-install/kubernetes-manifests.yaml
+		venctl components kubernetes manifest tool template --file artifacts/cyberark-install/venafi-manifests.yaml > artifacts/cyberark-install/kubernetes-manifests.yaml
 
 ################################### BEGIN Venafi Cloud Targets #####################################
 setup-cloud-config: create-agent-config-for-cloud create-vei-config-for-cloud
 
 create-vei-config-for-cloud:
-	@cp templates/helm/cloud-vei-values.yaml artifacts/venafi-install/vei-values.yaml 
+	@cp templates/helm/cloud-vei-values.yaml artifacts/cyberark-install/vei-values.yaml 
 
 create-agent-config-for-cloud:
-	@cat templates/helm/venafi-agent.yaml | sed -e "s/REPLACE_WITH_CLUSTER_NAME/demo-cluster-${RESOURCE_SUFFIX}/g" > artifacts/venafi-install/venafi-agent.yaml
+	@cat templates/helm/venafi-agent.yaml | sed -e "s/REPLACE_WITH_CLUSTER_NAME/mis-demo-cluster-${RESOURCE_SUFFIX}/g" > artifacts/cyberark-install/venafi-agent.yaml
 
 _create-venafi-cloud-access-secret: 
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-secret.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/cloud/venafi-cloud-secret.yaml \
      > artifacts/config/venafi-cloud-secret.yaml
 	@kubectl apply -f artifacts/config/venafi-cloud-secret.yaml
 
 _create-venafi-cloud-connection-with-access-token:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-connection.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/cloud/venafi-cloud-connection.yaml \
      > artifacts/config/venafi-cloud-connection.yaml
 	@kubectl apply -f artifacts/config/venafi-cloud-connection.yaml
 
 create-venafi-cloud-privateca-cluster-issuer: _create-rbac-for-connections _create-venafi-cloud-access-secret _create-venafi-cloud-connection-with-access-token
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-privateca-cluster-issuer.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/cloud/venafi-cloud-privateca-cluster-issuer.yaml \
      > artifacts/config/venafi-cloud-privateca-cluster-issuer.yaml
 	@kubectl apply -f artifacts/config/venafi-cloud-privateca-cluster-issuer.yaml
 
@@ -222,37 +222,37 @@ create-certificate-policy:
 ################################### BEGIN Venafi Data center Targets #####################################
 
 get-venafi-token:
-	@vcert getcred --username ${VEN_USER_NAME} \
-		           --password ${VEN_USER_PASS} \
-				   -u ${VEN_SERVER_URL} \
-				   --client-id ${VEN_API_CLIENT} \
+	@vcert getcred --username ${CYBR_USER_NAME} \
+		           --password ${CYBR_USER_PASS} \
+				   -u ${CYBR_SERVER_URL} \
+				   --client-id ${CYBR_API_CLIENT} \
 				   --scope "certificate:manage,revoke" \
 				   --format json | tee /tmp/token
 
 setup-datacenter-config: create-venafi-tpp-trust-anchor create-agent-config-for-dc create-vei-config-for-dc
 
 create-vei-config-for-dc:
-	@cp templates/helm/datacenter-vei-values.yaml artifacts/venafi-install/vei-values.yaml 
+	@cp templates/helm/datacenter-vei-values.yaml artifacts/cyberark-install/vei-values.yaml 
 
 create-agent-config-for-dc:
-	@cat templates/helm/venafi-agent.yaml | sed -e "s/REPLACE_WITH_CLUSTER_NAME/demo-cluster-${RESOURCE_SUFFIX}/g" > artifacts/venafi-install/venafi-agent.yaml
+	@cat templates/helm/venafi-agent.yaml | sed -e "s/REPLACE_WITH_CLUSTER_NAME/mis-demo-cluster-${RESOURCE_SUFFIX}/g" > artifacts/cyberark-install/venafi-agent.yaml
 
 create-venafi-tpp-trust-anchor:
-	@cp ${VEN_TPP_CA_BUNDLE_PEM_FILE} artifacts/config/venafi-server-ca.pem
-	@kubectl create configmap venafi-tpp-ca-bundle --namespace='venafi' --from-file=ca.crt=artifacts/config/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@cp ${CYBR_TPP_CA_BUNDLE_PEM_FILE} artifacts/config/venafi-server-ca.pem
+	@kubectl create configmap venafi-tpp-ca-bundle --namespace='cyberark' --from-file=ca.crt=artifacts/config/venafi-server-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 _create-venafi-tpp-access-secret: 
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-secret.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/dc/venafi-tpp-secret.yaml \
      > artifacts/config/venafi-tpp-secret.yaml
 	@kubectl apply -f artifacts/config/venafi-tpp-secret.yaml
 
 _create-venafi-tpp-connection-with-access-token:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-connection.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/dc/venafi-tpp-connection.yaml \
      > artifacts/config/venafi-tpp-connection.yaml
 	@kubectl apply -f artifacts/config/venafi-tpp-connection.yaml
 
 create-venafi-tpp-privateca-cluster-issuer: _create-rbac-for-connections _create-venafi-tpp-access-secret _create-venafi-tpp-connection-with-access-token
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-privateca-cluster-issuer.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/dc/venafi-tpp-privateca-cluster-issuer.yaml \
      > artifacts/config/venafi-tpp-privateca-cluster-issuer.yaml
 	@kubectl apply -f artifacts/config/venafi-tpp-privateca-cluster-issuer.yaml
 
@@ -260,27 +260,27 @@ create-venafi-tpp-privateca-cluster-issuer: _create-rbac-for-connections _create
 ################################### END Venafi Data center Targets #####################################
 
 ################################## SAMPLES ##################################
-#seed-data-tpp: VEN_CLUSTER_ISSUER=venafi-tpp-privateca-cluster-issuer
+#seed-data-tpp: CYBR_CLUSTER_ISSUER=venafi-tpp-privateca-cluster-issuer
 #seed-data-tpp: _seed-data
 
-#seed-data-cloud: VEN_CLUSTER_ISSUER=venafi-cloud-privateca-cluster-issuer
+#seed-data-cloud: CYBR_CLUSTER_ISSUER=venafi-cloud-privateca-cluster-issuer
 #seed-data-cloud: _seed-data
 
-seed-data: VEN_CLUSTER_ISSUER=venafi-privateca-cluster-issuer
+seed-data: CYBR_CLUSTER_ISSUER=venafi-privateca-cluster-issuer
 seed-data: _seed-data
 
 _seed-data:
-	@echo "Creating certificate resources with issuer as ${VEN_CLUSTER_ISSUER}"
+	@echo "Creating certificate resources with issuer as ${CYBR_CLUSTER_ISSUER}"
 #Self signed cert
 	@./samples/01.unmanaged-kid.sh
 #Cert with long duration mounted on a pod
-	@cat templates/certs/02-expiry-eddie-cert.yaml | sed -e "s/REPLACE_WITH_ISSUER_NAME/${VEN_CLUSTER_ISSUER}/g" > artifacts/samples/02-expiry-eddie-cert.yaml
+	@cat templates/certs/02-expiry-eddie-cert.yaml | sed -e "s/REPLACE_WITH_ISSUER_NAME/${CYBR_CLUSTER_ISSUER}/g" > artifacts/samples/02-expiry-eddie-cert.yaml
 	@kubectl apply -f artifacts/samples/02-expiry-eddie-cert.yaml
 	@./samples/02.expiry-eddie.sh
 #Cert with bad key size
 	@./samples/03.cipher-snake.sh
 #Orphan cert
-	@cat templates/certs/04-ghost-rider-cert.yaml | sed -e "s/REPLACE_WITH_ISSUER_NAME/${VEN_CLUSTER_ISSUER}/g" > artifacts/samples/04-ghost-rider-cert.yaml
+	@cat templates/certs/04-ghost-rider-cert.yaml | sed -e "s/REPLACE_WITH_ISSUER_NAME/${CYBR_CLUSTER_ISSUER}/g" > artifacts/samples/04-ghost-rider-cert.yaml
 	@kubectl apply -f artifacts/samples/04-ghost-rider-cert.yaml
 #phanton ca and cert
 	@kubectl apply -f samples/cert-policy-and-rbac-self-signed.yaml 
@@ -323,8 +323,8 @@ _remove-common-issuer-resources:
 	@kubectl delete -f templates/common/venafi-connection-rbac.yaml || true
 
 remove-secrets:
-	@kubectl -n venafi delete -f artifacts/venafi-install/venafi_agent_secret.yaml || true
-	@kubectl -n venafi delete -f artifacts/venafi-install/venafi_registry_secret.yaml || true
+	@kubectl -n cyberark delete -f artifacts/cyberark-install/cybr_mis_agent_secret.yaml || true
+	@kubectl -n cyberark delete -f artifacts/cyberark-install/cybr_mis_registry_secret.yaml || true
 
 remove-seed-data:
 
@@ -352,7 +352,7 @@ remove-seed-data:
 	@kubectl -n sandbox delete secret unmanaged-kid.svc.cluster.local || true
 
 clean: remove-seed-data remove-sample-firefly-certs remove-policy remove-issuer-resources un-install remove-secrets
-	@kubectl delete -f namespaces/venafi.yaml || true
+	@kubectl delete -f namespaces/cyberark.yaml || true
 	@kubectl delete -f namespaces/sandbox.yaml || true
 	@kubectl delete clusterrole venafi-issuer-cluster-role || true
 	@kubectl delete clusterrolebinding venafi-issuer-cluster-role-binding || true
@@ -365,49 +365,49 @@ mesh-setup:
 	@kubectl apply -f namespaces/mesh-apps.yaml
 
 mesh-step1: mesh-setup
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/helm/istio-csr-values.yaml \
-     > artifacts/venafi-install/istio-csr-values.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/helm/istio-csr-values.yaml \
+     > artifacts/cyberark-install/istio-csr-values.yaml
 	@kubectl apply -n istio-system -f templates/servicemesh/firefly-mesh-wi-issuer.yaml 
 
 _create_sourceCA:
-	@cp ${VEN_TRUST_ANCHOR_ROOT_CA_PEM} artifacts/venafi-install/venafi-trust-anchor-root-ca.pem
-	@kubectl create secret generic venafi-trust-anchor --namespace='venafi' --from-file=root-cert.pem=artifacts/venafi-install/venafi-trust-anchor-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+	@cp ${CYBR_TRUST_ANCHOR_ROOT_CA_PEM} artifacts/cyberark-install/cyberark-trust-anchor-root-ca.pem
+	@kubectl create secret generic cyberark-trust-anchor --namespace='cyberark' --from-file=root-cert.pem=artifacts/cyberark-install/cyberark-trust-anchor-root-ca.pem --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 mesh-step2: _create_sourceCA
 	@echo "Creating Firefly trust anchor"
 
-	@kubectl create configmap istio-csr-ca --namespace='venafi' \
+	@kubectl create configmap istio-csr-ca --namespace='cyberark' \
 		--from-literal=issuer-name=firefly-mesh-wi-issuer \
 		--from-literal=issuer-kind=Issuer \
 		--from-literal=issuer-group=firefly.venafi.com \
 		--dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/servicemesh/firefly-trust-anchor.yaml \
-     > artifacts/venafi-install/firefly-trust-anchor.yaml
-	@kubectl apply -n istio-system -f artifacts/venafi-install/firefly-trust-anchor.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/servicemesh/firefly-trust-anchor.yaml \
+     > artifacts/cyberark-install/firefly-trust-anchor.yaml
+	@kubectl apply -n istio-system -f artifacts/cyberark-install/firefly-trust-anchor.yaml
 
 mesh-step3:
 	@echo "Generating Venafi Helm manifests for installing istio-csr"
 	@venctl components kubernetes manifest generate \
-		--namespace venafi \
+		--namespace cyberark \
 		--istio-csr \
 		--istio-csr-version ${cert-manager-istio-csr} \
 		--istio-csr-values-files istio-csr-values.yaml \
-		--image-pull-secret-names venafi-image-pull-secret  > artifacts/venafi-install/venafi-manifests-istio.yaml
+		--image-pull-secret-names venafi-image-pull-secret  > artifacts/cyberark-install/venafi-manifests-istio.yaml
 
 	@ISTIO_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests-istio.yaml 
+		venctl components kubernetes manifest tool sync --file artifacts/cyberark-install/venafi-manifests-istio.yaml 
 
 mesh-step4: _install-and-configure-istio
 
 _install-and-configure-istio:
-	@cp templates/servicemesh/istio-config.yaml artifacts/venafi-install/istio-config.yaml
-	@istioctl install -y -f artifacts/venafi-install/istio-config.yaml
+	@cp templates/servicemesh/istio-config.yaml artifacts/cyberark-install/istio-config.yaml
+	@istioctl install -y -f artifacts/cyberark-install/istio-config.yaml
 
 mesh-step5: _create-peer-authentication
 _create-peer-authentication:
-	@cp templates/servicemesh/peerauthentication.yaml artifacts/venafi-install/peerauthentication.yaml
-	@kubectl apply -f artifacts/venafi-install/peerauthentication.yaml
+	@cp templates/servicemesh/peerauthentication.yaml artifacts/cyberark-install/peerauthentication.yaml
+	@kubectl apply -f artifacts/cyberark-install/peerauthentication.yaml
 
 mesh-step6:
 	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
@@ -422,39 +422,38 @@ _install-istio-tools:
 mesh-step8-cloud: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
 
 _create-tlspc-public-cert-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml \
-     > artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml
-	@kubectl apply -f artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml \
+     > artifacts/cyberark-install/venafi-cloud-publicca-cluster-issuer.yaml
+	@kubectl apply -f artifacts/cyberark-install/venafi-cloud-publicca-cluster-issuer.yaml
 _create-tlspc-public-cert:
 	@cat templates/cloud/venafi-cloud-managed-public-cert.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
-	> artifacts/venafi-install/venafi-cloud-managed-public-cert-tmp.yaml
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/venafi-install/venafi-cloud-managed-public-cert-tmp.yaml \
-     > artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
-	@kubectl apply -f artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml
+	> artifacts/cyberark-install/venafi-cloud-managed-public-cert-tmp.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < artifacts/cyberark-install/venafi-cloud-managed-public-cert-tmp.yaml \
+     > artifacts/cyberark-install/venafi-cloud-managed-public-cert.yaml
+	@kubectl apply -f artifacts/cyberark-install/venafi-cloud-managed-public-cert.yaml
 
 mesh-step8-tpp: _create-tpp-public-cert-issuer _create-tpp-public-cert
 _create-tpp-public-cert-issuer:
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < templates/dc/venafi-tpp-publicca-cluster-issuer.yaml \
-     > artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml
-	@kubectl apply -f artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/dc/venafi-tpp-publicca-cluster-issuer.yaml \
+     > artifacts/cyberark-install/venafi-tpp-publicca-cluster-issuer.yaml
+	@kubectl apply -f artifacts/cyberark-install/venafi-tpp-publicca-cluster-issuer.yaml
 _create-tpp-public-cert:
 	@cat templates/dc/venafi-tpp-managed-public-cert.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
-	> artifacts/venafi-install/venafi-tpp-managed-public-cert-tmp.yaml
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/venafi-install/venafi-tpp-managed-public-cert-tmp.yaml \
-     > artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
-	@kubectl apply -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml
+	> artifacts/cyberark-install/venafi-tpp-managed-public-cert-tmp.yaml
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < artifacts/cyberark-install/venafi-tpp-managed-public-cert-tmp.yaml \
+     > artifacts/cyberark-install/venafi-tpp-managed-public-cert.yaml
+	@kubectl apply -f artifacts/cyberark-install/venafi-tpp-managed-public-cert.yaml
 
 #mesh-step9: _create_entry_in_GCP_CloudDNS
 mesh-step9: _create_entry_in_AWS_Route53
 	
 _create_entry_in_GCP_CloudDNS:
-	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
-	@../scripts/gcp/map-dns-to-gateway.sh ${VEN_GCP_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
+	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
+	@../scripts/gcp/map-dns-to-gateway.sh ${CYBR_GCP_ZONE} ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP}
 
 _create_entry_in_AWS_Route53:
-	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
-	@../scripts/aws/map-dns-to-gateway.sh ${VEN_AWS_ZONE} ${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}
-
+	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
+	@../scripts/aws/map-dns-to-gateway.sh ${CYBR_AWS_ZONE} ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP}
 
 mesh-step10:  _create_gateway_resources
 
@@ -464,14 +463,13 @@ _install-sample-app:
 _create_gateway_resources:
 	@cat templates/servicemesh/sample-app-gateway.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
 	> artifacts/samples/sample-app-gateway-tmp.yaml
-	@envsubst "$$(printf '$${%s} ' $${!VEN_*})" < artifacts/samples/sample-app-gateway-tmp.yaml \
+	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < artifacts/samples/sample-app-gateway-tmp.yaml \
      > artifacts/samples/sample-app-gateway.yaml
 	@kubectl -n mesh-apps apply -f artifacts/samples/sample-app-gateway.yaml
 	@echo "####################################################################################################"
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
-	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${VEN_DOMAIN_FOR_SAMPLE_APP}/      ###"
+	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP}/     ###"
 	@echo "####################################################################################################"
-
 	
 clean-mesh-setup:
 	@kubectl -n mesh-apps delete -f artifacts/samples/sample-app-gateway.yaml || true
@@ -480,18 +478,18 @@ clean-mesh-setup:
 	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml || true
 	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml || true
 	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/grafana.yaml || true
-	@kubectl delete -f artifacts/venafi-install/venafi-tpp-managed-public-cert.yaml || true
-	@kubectl delete -f artifacts/venafi-install/venafi-tpp-publicca-cluster-issuer.yaml || true
-	@kubectl delete -f artifacts/venafi-install/venafi-cloud-managed-public-cert.yaml || true
-	@kubectl delete -f artifacts/venafi-install/venafi-cloud-publicca-cluster-issuer.yaml || true
-	@kubectl delete -f artifacts/venafi-install/peerauthentication.yaml || true
-	@istioctl uninstall -y -f artifacts/venafi-install/istio-config.yaml || true
+	@kubectl delete -f artifacts/cyberark-install/venafi-tpp-managed-public-cert.yaml || true
+	@kubectl delete -f artifacts/cyberark-install/venafi-tpp-publicca-cluster-issuer.yaml || true
+	@kubectl delete -f artifacts/cyberark-install/venafi-cloud-managed-public-cert.yaml || true
+	@kubectl delete -f artifacts/cyberark-install/venafi-cloud-publicca-cluster-issuer.yaml || true
+	@kubectl delete -f artifacts/cyberark-install/peerauthentication.yaml || true
+	@istioctl uninstall -y -f artifacts/cyberark-install/istio-config.yaml || true
 	@ISTIO_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool sync --file artifacts/venafi-install/venafi-manifests-istio.yaml
+		venctl components kubernetes manifest tool sync --file artifacts/cyberark-install/venafi-manifests-istio.yaml
 	@kubectl -n istio-system delete -f templates/servicemesh/firefly-mesh-wi-issuer.yaml || true
 	#more to delete here.
-	@kubectl -n istio-system delete -f artifacts/venafi-install/firefly-trust-anchor.yaml || true
-	@kubectl delete secret venafi-trust-anchor --namespace='venafi' || true
+	@kubectl -n istio-system delete -f artifacts/cyberark-install/firefly-trust-anchor.yaml || true
+	@kubectl delete secret cyberark-trust-anchor --namespace='cyberark' || true
 	@kubectl delete -f namespaces/mesh-apps.yaml || true
 	@kubectl delete -f namespaces/istio-system.yaml || true
 	@kubectl delete clusterrole istiod-istio-system || true
@@ -500,7 +498,7 @@ clean-mesh-setup:
 	@kubectl delete clusterrolebinding istio-reader-istio-system || true
 	@kubectl get crds | grep 'istio.io' |   xargs -n1 -I{} sh -c "kubectl delete crd {}" || true
 	
-print-svid: PODNAME=$$(kubectl get pods -n mesh-apps -o jsonpath='{.items..metadata.name}' --selector app=ratings ) 
+print-svid: PODNAME=$$(kubectl get pods -n mesh-apps -o jsonpath='{.items..metadata.name}' --selector app=frontend ) 
 print-svid:
 	@echo "Pod name is ${PODNAME}"
 	@istioctl -n mesh-apps proxy-config secret ${PODNAME} \
@@ -513,8 +511,8 @@ print-svid:
 #helper target to clean up unused Firefly intermediates
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/e931c810-f36e-11ee-a89e-b3d87834cdaf' \
-	--header 'tppl-api-key: ${VEN_CLOUD_API_KEY}' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/a3ca3090-e315-11ef-a87f-d19628edae70' \
+	--header 'tppl-api-key: ${CYBR_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 
 #helper target to generate a public/private key pair for routing discoverd certs from VCP to TPP
@@ -537,3 +535,12 @@ _remove-gcloud-cluster:
 
 gcp-full-cleanup: _remove-gcloud-cluster
 	@$(MAKE) -C ../scripts remove-google-cas --warn-undefined-variables
+
+get-all-issuers:
+	@kubectl get ClusterIssuer,Issuer,VenafiClusterIssuer,VenafiIssuer,issuers.firefly.venafi.com --all-namespaces -o custom-columns='Issuer_NAME:.metadata.name,Resource:.apiVersion,STATUS:.status.conditions[].type' 
+
+get-all-policies:
+	@kubectl get crp
+
+get-all-secrets:
+	@kubectl get secrets -A -o json | jq '.items[] | select(.type=="kubernetes.io/tls") | .metadata.name'

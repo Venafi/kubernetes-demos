@@ -5,5 +5,5 @@ metadata:
   name: venafi-privateca-cluster-issuer
 spec:
   venafiConnectionName: venafi-connection
-  zone: ${VEN_ZONE_PRIVATE_CA}
+  zone: ${CYBR_ZONE_PRIVATE_CA}
 ---

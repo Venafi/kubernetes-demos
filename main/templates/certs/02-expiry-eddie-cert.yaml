@@ -8,13 +8,13 @@ spec:
   duration: 2184h
   subject:
     organizations: 
-     - Venafi Inc
+     - CyberArk Inc
     organizationalUnits:
-     - TLSPK Demo
+     - MIS Demo
     localities:
-     - Salt Lake City
+     - Newton
     provinces:
-     - Utah
+     - MA
     countries:
      - US
   privateKey:
