@@ -5,5 +5,5 @@ metadata:
   name: venafi-publicca-cluster-issuer
 spec:
   venafiConnectionName: venafi-connection
-  zone: ${VEN_ZONE_PUBLIC_CA}
+  zone: ${CYBR_ZONE_PUBLIC_CA}
 ---

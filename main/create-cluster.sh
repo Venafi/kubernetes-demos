@@ -1,7 +1,7 @@
 curr_date=$(date +%S%H%M%d%m)
-echo Creating cluster demo-poc-cluster-$curr_date
+echo Creating cluster mis-demo-cluster-$curr_date
 
-cat <<EOF | kind create cluster --name demo-poc-cluster-$curr_date --config=-
+cat <<EOF | kind create cluster --name mis-demo-cluster-$curr_date --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:

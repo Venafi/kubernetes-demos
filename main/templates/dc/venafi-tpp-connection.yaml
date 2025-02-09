@@ -2,10 +2,10 @@ apiVersion: jetstack.io/v1alpha1
 kind: VenafiConnection
 metadata:
   name: venafi-connection
-  namespace: venafi
+  namespace: cyberark
 spec:
   tpp:
-    url: ${VEN_SERVER_URL}
+    url: ${CYBR_SERVER_URL}
     accessToken:
     - secret:
         name: venafi-tpp-credentials

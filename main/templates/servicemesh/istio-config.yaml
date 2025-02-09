@@ -11,7 +11,7 @@ spec:
   values:
     global:
       # Change certificate provider to cert-manager istio agent for istio agent
-      caAddress: cert-manager-istio-csr.venafi.svc:443
+      caAddress: cert-manager-istio-csr.cyberark.svc:443
   components:
     pilot:
       k8s:

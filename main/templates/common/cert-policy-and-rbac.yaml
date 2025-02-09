@@ -113,7 +113,7 @@ subjects:
 # The users who should be bound to the policies defined.
 - kind: ServiceAccount
   name: cert-manager
-  namespace: venafi
+  namespace: cyberark
 - kind: ServiceAccount
   name: cert-manager-istio-csr
-  namespace: venafi
+  namespace: cyberark
