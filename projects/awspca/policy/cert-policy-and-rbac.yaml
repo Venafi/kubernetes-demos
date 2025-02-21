@@ -1,0 +1,64 @@
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-awspca-certs
+spec:
+  allowed:
+    commonName:
+      value: "*.svc.cluster.local"
+      required: false
+    uris:
+      values:
+      - "spiffe://cyberark-dev/ns/sandbox/sa/*"
+      required: true
+    dnsNames:
+      required: false
+      values:
+      - "*"
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+    subject:
+      organizations:
+        values: ["*"]
+  selector:
+    issuerRef:
+      name: "awspca-issuer"
+      kind: "AWSPCAIssuer"
+      group: "awspca.cert-manager.io"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: awspca-issuer-cluster-role
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-awspca-certs"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: awspca-issuer-cluster-role-binding
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: awspca-issuer-cluster-role
+#subjects:
+# The users who should be bound to the policies defined.
+#- kind: ServiceAccount
+#  name: aws-privateca-issuer
+#  namespace: venafi
+subjects:
+# The users who should be bound to the policies defined.
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+
