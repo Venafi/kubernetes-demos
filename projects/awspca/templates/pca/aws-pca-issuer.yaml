@@ -1,0 +1,11 @@
+apiVersion: awspca.cert-manager.io/v1beta1
+kind: AWSPCAIssuer
+metadata:
+  name: awspca-issuer
+  namespace: sandbox
+spec:
+  arn: ${CYBR_AWS_PCA_ARN}
+  region: ${CYBR_AWS_PCA_REGION}
+  secretRef:
+    name: aws-pca-secret
+    namespace: sandbox

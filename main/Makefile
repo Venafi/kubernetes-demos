@@ -387,12 +387,13 @@ mesh-step2: _create_sourceCA
 	@kubectl apply -n istio-system -f artifacts/cyberark-install/firefly-trust-anchor.yaml
 
 mesh-step3:
-	@echo "Generating Venafi Helm manifests for installing istio-csr"
+	@echo "Generating Venafi Helm manifests for installing istio-csr. This assumes cert-manager is already installed."
 	@venctl components kubernetes manifest generate \
 		--namespace cyberark \
 		--istio-csr \
 		--istio-csr-version ${cert-manager-istio-csr} \
 		--istio-csr-values-files istio-csr-values.yaml \
+		--ignore-dependencies \
 		--image-pull-secret-names venafi-image-pull-secret  > artifacts/cyberark-install/venafi-manifests-istio.yaml
 
 	@ISTIO_TRUST_DOMAIN=cluster.local \
@@ -409,17 +410,9 @@ _create-peer-authentication:
 	@cp templates/servicemesh/peerauthentication.yaml artifacts/cyberark-install/peerauthentication.yaml
 	@kubectl apply -f artifacts/cyberark-install/peerauthentication.yaml
 
-mesh-step6:
-	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
+mesh-step6: _install-sample-app
 
-mesh-step7: _install-istio-tools
-
-_install-istio-tools:
-	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml
-	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml
-	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/grafana.yaml
-
-mesh-step8-cloud: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
+mesh-step7-cloud: _create-tlspc-public-cert-issuer _create-tlspc-public-cert
 
 _create-tlspc-public-cert-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml \
@@ -432,7 +425,7 @@ _create-tlspc-public-cert:
      > artifacts/cyberark-install/venafi-cloud-managed-public-cert.yaml
 	@kubectl apply -f artifacts/cyberark-install/venafi-cloud-managed-public-cert.yaml
 
-mesh-step8-tpp: _create-tpp-public-cert-issuer _create-tpp-public-cert
+mesh-step7-tpp: _create-tpp-public-cert-issuer _create-tpp-public-cert
 _create-tpp-public-cert-issuer:
 	@envsubst "$$(printf '$${%s} ' $${!CYBR_*})" < templates/dc/venafi-tpp-publicca-cluster-issuer.yaml \
      > artifacts/cyberark-install/venafi-tpp-publicca-cluster-issuer.yaml
@@ -444,8 +437,8 @@ _create-tpp-public-cert:
      > artifacts/cyberark-install/venafi-tpp-managed-public-cert.yaml
 	@kubectl apply -f artifacts/cyberark-install/venafi-tpp-managed-public-cert.yaml
 
-#mesh-step9: _create_entry_in_GCP_CloudDNS
-mesh-step9: _create_entry_in_AWS_Route53
+#mesh-step8: _create_entry_in_GCP_CloudDNS
+mesh-step8: _create_entry_in_AWS_Route53
 	
 _create_entry_in_GCP_CloudDNS:
 	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
@@ -453,12 +446,13 @@ _create_entry_in_GCP_CloudDNS:
 
 _create_entry_in_AWS_Route53:
 	@echo "Create DNS entry for ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP} to map to Gateway host/ip"
-	@../scripts/aws/map-dns-to-gateway.sh ${CYBR_AWS_ZONE} ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP}
+	@../scripts/aws/map-dns-to-gateway.sh ${CYBR_AWS_ZONE} ${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP} ${CYBR_AWS_PROFILE_NAME}
 
-mesh-step10:  _create_gateway_resources
+mesh-step9:  _create_gateway_resources
 
+#@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml
 _install-sample-app:
-	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml
+	@kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
 
 _create_gateway_resources:
 	@cat templates/servicemesh/sample-app-gateway.yaml | sed -e "s/REPLACE_WITH_SUB_DOMAIN/${RESOURCE_SUFFIX}/g" \
@@ -470,10 +464,16 @@ _create_gateway_resources:
 	@echo "######### Sample apps takes about 60 seconds before pods are Ready in mesh-apps namespace ##########"
 	@echo "######### Access application using https://${RESOURCE_SUFFIX}.${CYBR_DOMAIN_FOR_SAMPLE_APP}/     ###"
 	@echo "####################################################################################################"
-	
+
+mesh-addons: _install-istio-addons
+
+_install-istio-addons:
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/grafana.yaml
+
 clean-mesh-setup:
 	@kubectl -n mesh-apps delete -f artifacts/samples/sample-app-gateway.yaml || true
-	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/bookinfo/platform/kube/bookinfo.yaml || true
 	@kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml || true
 	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/kiali.yaml || true
 	@kubectl delete -f https://raw.githubusercontent.com/istio/istio/refs/heads/release-1.24/samples/addons/prometheus.yaml || true
@@ -485,7 +485,7 @@ clean-mesh-setup:
 	@kubectl delete -f artifacts/cyberark-install/peerauthentication.yaml || true
 	@istioctl uninstall -y -f artifacts/cyberark-install/istio-config.yaml || true
 	@ISTIO_TRUST_DOMAIN=cluster.local \
-		venctl components kubernetes manifest tool sync --file artifacts/cyberark-install/venafi-manifests-istio.yaml
+		venctl components kubernetes manifest tool destroy --file artifacts/cyberark-install/venafi-manifests-istio.yaml
 	@kubectl -n istio-system delete -f templates/servicemesh/firefly-mesh-wi-issuer.yaml || true
 	#more to delete here.
 	@kubectl -n istio-system delete -f artifacts/cyberark-install/firefly-trust-anchor.yaml || true
@@ -511,12 +511,11 @@ print-svid:
 #helper target to clean up unused Firefly intermediates
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/a3ca3090-e315-11ef-a87f-d19628edae70' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/e170fa90-e820-11ef-a427-495c9670892a' \
 	--header 'tppl-api-key: ${CYBR_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 
 #helper target to generate a public/private key pair for routing discoverd certs from VCP to TPP
-
 generate-key-pair:
 	@openssl ecparam -name secp521r1 -genkey -noout -out tlspc-to-dc-key.pem
 	@openssl ec -in tlspc-to-dc-key.pem -pubout -out tlspc-to-dc-key.pub
@@ -543,4 +542,18 @@ get-all-policies:
 	@kubectl get crp
 
 get-all-secrets:
-	@kubectl get secrets -A -o json | jq '.items[] | select(.type=="kubernetes.io/tls") | .metadata.name'
+	#@kubectl get secrets -A -o json | jq '.items[] | select(.type=="kubernetes.io/tls") | .metadata.name'
+	@kubectl get secrets --field-selector type=kubernetes.io/tls --all-namespaces -o=custom-columns='NAMESPACE:metadata.namespace','NAME:metadata.name'
+
+
+install-eso:
+	@helm repo add external-secrets https://charts.external-secrets.io
+
+	@helm install external-secrets \
+		  external-secrets/external-secrets \
+		  -n external-secrets \
+		  --create-namespace \
+	      --set installCRDs=true
+
+uninstall-eso:
+	@helm uninstall --namespace external-secrets external-secrets

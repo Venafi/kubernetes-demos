@@ -524,6 +524,14 @@ and you should see the following. At the time of writing, the version of istio i
 ✔ Installation complete   
 ```
 
+**Optional**
+Optionally, add istio addons Kiali, Grafana and Prometheus to your installation. Run
+
+```
+make mesh-addons
+```
+and you should see kiali , prometheus and grafana installed in the `istio-system` namespace. You can access kiali by running `istioctl dashboard kiali` to look at the traffic, the workload identities , etc. 
+
 ### STEP 5
 In this step we will create a `PeerAuthentication` to ensure all workloads communicate to each other STRICTLY using mTLS. 
 
@@ -609,34 +617,33 @@ and access the application on your browser as `http://localhost:8120`
 
 ## Optional Steps
 
-### STEP 7 **Optional**
-Optionally, add istio tools Kiali, Grafana and Prometheus to your installation. Run
+If you have access to a domain and can create a DNS entry you can optionally complete steps 7, 8 and 9. The following steps will provide you a way to access the sample application using a publicly accessible DNS. 
 
-```
-make mesh-step7
-```
-and you should see kiali , prometheus and grafana installed in the `istio-system` namespace. You can access kiali by running `istioctl dashboard kiali` to look at the traffic, the workload identities , etc. 
+**Pre-requisites**
 
+- you are running this in a cluster where the istio ingress controller service has an external ip.  
+- you have configured a public CA that can issue a certificate to the domain you have access to
+- you have the ability to map the `external-ip` or `host` from the ingress gateway service to a domain  
 
-### STEP 8 - **Optional**
+### STEP 7 - **Optional**
 If you prefer to access the sample application with a DNS that you can configure and access instead of doing a port-forward and using local host, we will need to configure the Istio Gateway resources. We also need a public certificate to access the Ingress Gateway. Venafi will issue a public certificate that is trusted by the browser. The certificate will be issued by a `VenafiClusterIssuer`. 
 The template for issuer is located here [templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml](templates/cloud/venafi-cloud-publicca-cluster-issuer.yaml) 
 The template for certificate is located here [templates/cloud/venafi-cloud-managed-public-cert.yaml](templates/cloud/venafi-cloud-managed-public-cert.yaml)
 
-There are two options for this step. Either using Venafi Cloud or the data center to issue a public certificate. You are also required to set the variable `CYBR_ZONE_PUBLIC_CA` and `CYBR_DOMAIN_FOR_SAMPLE_APP` The Zone is used for issuing a publicly trusted certificate. You can issue a private certificate if your browser configured to trust the CA. The DNS will be used to configured the Gateway.  The target to get a certificate from Venafi cloud is `mesh-step8-cloud` and from data center is `mesh-step8-tpp`
+There are two options for this step. Either using Venafi Cloud or the data center to issue a public certificate. You are also required to set the variable `CYBR_ZONE_PUBLIC_CA` and `CYBR_DOMAIN_FOR_SAMPLE_APP` The Zone is used for issuing a publicly trusted certificate. You can issue a private certificate if your browser configured to trust the CA. The DNS will be used to configured the Gateway.  The target to get a certificate from Venafi cloud is `mesh-step7-cloud` and from data center is `mesh-step7-tpp`
 
 Run 
 ```
-make mesh-step8-cloud
+make mesh-step7-cloud
 ```
 to create an issuer and certificate. You will see the following output 
 ```
-❯ make mesh-step8-cloud
+❯ make mesh-step7-cloud
 venaficlusterissuer.jetstack.io/venafi-publicca-cluster-issuer created
 certificate.cert-manager.io/5419352604.example.com created
 ```
 
-### STEP9- **Optional**
+### STEP8- **Optional**
 If you have completed STEP8 that means you have access to a valid DOMAIN and can add a record set. The demo is scripted to run `aws/map-dns-to-gateway.sh` Review the script and change it as you see fit. 
 You will notice that the script retrieves the IP address from the ingress gateway service. Some environments will provide you a hostname and not ip. 
 You are also **REQUIRED** to setup `cloud-settings.sh` and configure your AWS Route53 settings. Make sure you are authenticated to the account where you intend to add a DNS record. 
@@ -648,7 +655,7 @@ kubectl get svc istio-ingressgateway -n istio-system
 and associate the provisioned loadblancer IP/hostname to your DNS. 
 To automatically add an entry to AWS Rout53 for a domain you have access to, just run
 ```
-make mesh-step9
+make mesh-step8
 ```
 and you will see
 
@@ -665,12 +672,12 @@ DNS is 3018580802.example.com
 }
 ```
 
-### STEP 10 - **Optional**
-If you have completed STEPS  8 and 9, you can create the required gateway resources. The gateway resource template is located here [templates/servicemesh/sample-app-gateway.yaml](templates/servicemesh/sample-app-gateway.yaml) Review the file. This will be used for creating a gateway resource that is mapped to the frontend sample service.
+### STEP 9 - **Optional**
+If you have completed STEPS  7 and 8, you can create the required gateway resources. The gateway resource template is located here [templates/servicemesh/sample-app-gateway.yaml](templates/servicemesh/sample-app-gateway.yaml) Review the file. This will be used for creating a gateway resource that is mapped to the frontend sample service. 
 
 Run 
 ```
-make mesh-step10
+make mesh-step9
 ```
 and you will see
 ```
