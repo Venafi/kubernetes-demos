@@ -19,8 +19,10 @@ export CYBR_AWS_ZONE :=foobar
 
 export CYBR_CLOUD_BUILTIN_ICA_ROOT_CA_PEM :=./venafi-cloud-built-in-root.pem
 export CYBR_CLOUD_ZKPKI_ICA_ROOT_CA_PEM :=./venafi-cloud-zkpki-root.pem
+export CYBR_DC_MSCA_ICA_ROOT_CA_PEM :=./venafi-dc-msca-root.pem
 
 export CYBR_TRUST_ANCHOR_ROOT_CA_PEM :=${CYBR_CLOUD_BUILTIN_ICA_ROOT_CA_PEM}
 #export CYBR_TRUST_ANCHOR_ROOT_CA_PEM :=${CYBR_CLOUD_ZKPKI_ICA_ROOT_CA_PEM}
+#export CYBR_TRUST_ANCHOR_ROOT_CA_PEM :=${CYBR_DC_MSCA_ICA_ROOT_CA_PEM}
 
 ### END - Required only for service mesh usecase #####
