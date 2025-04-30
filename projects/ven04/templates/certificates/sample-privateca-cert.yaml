@@ -1,0 +1,30 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: REPLACE_WITH_SUB_DOMAIN.svc.cluster.local
+  namespace: sandbox
+spec:
+  secretName: REPLACE_WITH_SUB_DOMAIN.svc.cluster.local
+  duration: 72h
+  renewBefore: 24h
+  privateKey:
+    rotationPolicy: Always
+  subject:
+    organizations: 
+     - CyberArk Inc
+    organizationalUnits:
+     - MIS Demo
+    localities:
+     - Newton
+    provinces:
+     - MA
+    countries:
+     - US
+  dnsNames:
+    - REPLACE_WITH_SUB_DOMAIN.svc.cluster.local
+  commonName: REPLACE_WITH_SUB_DOMAIN.svc.cluster.local
+  issuerRef:
+    name: venafi-privateca-cluster-issuer
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"
+--- 

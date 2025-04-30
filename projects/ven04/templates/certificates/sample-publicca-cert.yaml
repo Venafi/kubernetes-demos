@@ -1,0 +1,30 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}
+  namespace: sandbox
+spec:
+  secretName: REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}
+  duration: 72h
+  renewBefore: 24h
+  privateKey:
+    rotationPolicy: Always
+  subject:
+    organizations: 
+     - CyberArk Inc
+    organizationalUnits:
+     - MIS Demo
+    localities:
+     - Newton
+    provinces:
+     - MA
+    countries:
+     - US
+  dnsNames:
+    - REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}
+  commonName: REPLACE_WITH_SUB_DOMAIN.${CYBR_DOMAIN_FOR_SAMPLE_APP}
+  issuerRef:
+    name: venafi-publicca-cluster-issuer
+    kind: "VenafiClusterIssuer"
+    group: "jetstack.io"
+--- 

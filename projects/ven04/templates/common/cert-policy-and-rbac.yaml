@@ -1,0 +1,67 @@
+---
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: cert-policy-for-venafi-certs
+spec:
+  allowed:
+    commonName:
+      value: "*"
+    dnsNames:
+      values: ["*"]
+    subject:
+      organizations:
+        values: ["*"]
+      countries:
+        values: ["*"]
+      organizationalUnits:
+        values: ["*"]
+      localities:
+        values: ["*"]
+      provinces:
+        values: ["*"]
+      streetAddresses:
+        values: ["*"]
+      postalCodes:
+        values: ["*"]
+    usages:
+      - "signing"
+      - "digital signature"
+      - "server auth"
+#  plugins:
+#    venafi:
+#      values:
+#        venafiConnectionName: "venafi-*-connection"
+#        zone: "application-name\\issuing-template-name"      
+  selector:
+    issuerRef:
+      name: "venafi*issuer"
+      kind: "Venafi*Issuer"
+      group: "jetstack.io"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: venafi-issuer-cluster-role
+rules:
+  - apiGroups: ["policy.cert-manager.io"]
+    resources: ["certificaterequestpolicies"]
+    verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
+    resourceNames: ["cert-policy-for-venafi-certs"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: venafi-issuer-cluster-role-binding
+roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: venafi-issuer-cluster-role
+subjects:
+# The users who should be bound to the policies defined.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: cyberark

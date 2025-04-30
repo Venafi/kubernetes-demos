@@ -50,3 +50,5 @@ projects/ven01/vars.sh
 main/venafi-cloud-zkpki-root.pem
 projects/awspca/vars.sh
 projects/awspca/awspca-artifacts/
+main/venafi-dc-msca-root.pem
+projects/ven04/vars.sh
