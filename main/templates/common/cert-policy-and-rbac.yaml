@@ -28,6 +28,7 @@ spec:
       - "signing"
       - "digital signature"
       - "server auth"
+      - "key encipherment"
 #  plugins:
 #    venafi:
 #      values:
