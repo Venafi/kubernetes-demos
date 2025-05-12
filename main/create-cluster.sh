@@ -19,4 +19,7 @@ nodes:
   - containerPort: 443
     hostPort: 443
     protocol: TCP
+  extraMounts:
+  - hostPath: cyberarkCA.pem
+    containerPath: /etc/ssl/certs/cyberarkCA.pem
 EOF

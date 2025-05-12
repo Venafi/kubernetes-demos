@@ -52,3 +52,5 @@ projects/awspca/vars.sh
 projects/awspca/awspca-artifacts/
 main/venafi-dc-msca-root.pem
 projects/ven04/vars.sh
+main/cyberarkCA.pem
+projects/kong-mesh/vars.sh

@@ -1,0 +1,17 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-annotation-certificaterequest
+spec:
+  rules:
+  - name: add-policy-name
+    match:
+      any:
+      - resources:
+          kinds:
+          - CertificateRequest
+    mutate:
+      patchStrategicMerge:
+        metadata:
+          annotations:
+            +(firefly.venafi.com/policy-name): 'firefly-kong-mesh-policy'

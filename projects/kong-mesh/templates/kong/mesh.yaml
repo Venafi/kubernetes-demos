@@ -1,0 +1,18 @@
+apiVersion: kuma.io/v1alpha1
+kind: Mesh
+metadata:
+  name: default
+spec:
+  mtls:
+    enabledBackend: certmanager-1
+    backends:
+    - name: certmanager-1
+      type: certmanager
+      dpCert:
+        rotation:
+          expiration: 1h
+      conf:
+        issuerRef:
+          name: firefly-kong
+          kind: Issuer
+          group: firefly.venafi.com

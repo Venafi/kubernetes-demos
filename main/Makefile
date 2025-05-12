@@ -511,7 +511,7 @@ print-svid:
 #helper target to clean up unused Firefly intermediates
 delete-firefly-intermediateCertificates:
 	@echo "Delete Firefly intermediate certificate"
-	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/e170fa90-e820-11ef-a427-495c9670892a' \
+	@curl --location --request DELETE 'https://api.venafi.cloud/v1/distributedissuers/intermediatecertificates/243dd310-29e0-11f0-9bb2-fd1d725dc567' \
 	--header 'tppl-api-key: ${CYBR_CLOUD_API_KEY}' \
 	--header 'Content-Type: application/json'
 

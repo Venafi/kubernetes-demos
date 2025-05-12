@@ -1,0 +1,92 @@
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: kong-mesh-2d-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-two-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: kong-mesh-2d-1.svc.cluster.local
+    dnsNames:
+    - kong-mesh-2d-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 48h
+    renewBefore: 8h
+    secretName: kong-mesh-2d-1.svc.cluster.local
+    issuerRef:
+      name: firefly-kong
+      group: firefly.venafi.com
+
+--- 
+
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: kong-mesh-10d-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-ten-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: kong-mesh-10d-1.svc.cluster.local
+    dnsNames:
+    - kong-mesh-10d-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 240h
+    renewBefore: 72h
+    secretName: kong-mesh-10d-1.svc.cluster.local
+    issuerRef:
+      name: firefly-kong
+      group: firefly.venafi.com
+--- 
+
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: kong-mesh-100d-1.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-hundred-day-RSA-certs
+  spec:
+    isCA: false
+    commonName: kong-mesh-100d-1.svc.cluster.local
+    dnsNames:
+    - kong-mesh-100d-1.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 2400h
+    renewBefore: 720h
+    secretName: kong-mesh-100d-1.svc.cluster.local
+    issuerRef:
+      name: firefly-kong
+      group: firefly.venafi.com 
+
+--- 
+
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: kong-mesh-test01.svc.cluster.local
+    namespace: sandbox
+    annotations:
+      firefly.venafi.com/policy-name: firefly-kong-mesh-policy
+  spec:
+    isCA: false
+    commonName: kong-mesh-test01.svc.cluster.local
+    dnsNames:
+    - kong-mesh-test01.svc.cluster.local
+    privateKey:
+      algorithm: RSA
+      rotationPolicy: Always
+    duration: 2400h
+    renewBefore: 720h
+    secretName: kong-mesh-test01.svc.cluster.local
+    issuerRef:
+      name: firefly-kong
+      group: firefly.venafi.com 
