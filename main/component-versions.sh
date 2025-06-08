@@ -1,0 +1,15 @@
+# Versions based on output of 
+# venctl components kubernetes manifest print-versions
+export APPROVER_POLICY_ENTERPRISE=v0.20.0
+export AWS_PRIVATECA_ISSUER=v1.4.1
+export CERT_MANAGER=v1.17.1
+export CERT_MANAGER_APPROVER_POLICY=v0.19.0
+export CERT_MANAGER_CSI_DRIVER=v0.10.2
+export CERT_MANAGER_CSI_DRIVER_SPIFFE=v0.8.2
+export CERT_MANAGER_ISTIO_CSR=v0.14.0
+export FIREFLY=v1.6.0
+export OPENSHIFT_ROUTES=v0.7.0
+export TRUST_MANAGER=v0.16.0
+export VENAFI_CONNECTION=v0.4.0
+export VENAFI_ENHANCED_ISSUER=v0.15.0
+export VENAFI_KUBERNETES_AGENT=v1.4.1
