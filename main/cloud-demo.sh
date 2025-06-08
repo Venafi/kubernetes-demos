@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPTS_DIR="$(dirname "$0")/scripts"
+source "$SCRIPTS_DIR/load-variables.sh"
+# source "env-vars.sh"
+# source "component-versions.sh"
+
+# Utility: print usage
+usage() {
+  echo "Usage: $0 <command> [args...]"
+  echo ""
+  echo "Available commands (to be executed in order):"
+  echo ""
+  echo "  01.prep-env                 Prepare environment. Create temporary directories"
+  echo "  02.create-service-accounts  Create CyberArk Certificate Manager Service Accounts."
+  echo "  03.prep-kubernetes          Create namespaces, secrets required for demos"
+  echo "  04.install                  Generate manifests and install CyberArk Certificate Manager in cluster"
+  echo "  05.configure-demo           Create Certificate policies and issuers"
+  echo "  06.create-sample-data       Seed demo environment with sample data"
+  echo "  07.install-istio-csr        Prepare environment for istio-csr and install"
+  echo "  08.install-istio            Install and configure Istio Service Mesh"
+  echo "  show                        Demonstrate CyberArk Certificate Manager capabilities"
+  echo "                              Subcommands: issuers, policies, secrets, svid, app-url, kiali-url, stop-port-forwards"
+  echo "  create-istio-gateway        OPTIONAL - Requires access to DNS, Public CA"
+  echo "  clean                       OPTIONAL - Remove everything"
+  echo ""
+  echo "Examples:"
+  echo "  $0 01.prep-env"
+  echo "  $0 show issuers"
+  echo "  $0 show svid frontend"
+  echo ""
+  echo "NOTE: All scripts must be located in the 'scripts/' directory and be executable."
+  exit 1
+}
+
+# Entry point
+if [ $# -lt 1 ]; then
+  usage
+fi
+
+CMD="$1"
+shift
+
+CMD_SCRIPT="$SCRIPTS_DIR/$CMD.sh"
+
+if [ -x "$CMD_SCRIPT" ]; then
+  echo "Running: $CMD"
+  "$CMD_SCRIPT" "$@"
+else
+  echo "ERROR: Unknown or non-executable command script: $CMD"
+  usage
+fi
