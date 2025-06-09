@@ -22,7 +22,9 @@ usage() {
   echo "  07.install-istio-csr        Prepare environment for istio-csr and install"
   echo "  08.install-istio            Install and configure Istio Service Mesh"
   echo "  show                        Demonstrate CyberArk Certificate Manager capabilities"
-  echo "                              Subcommands: issuers, policies, secrets, svid, app-url, kiali-url, stop-port-forwards"
+  echo "                              Subcommands: issuers, policies, secrets, svid <app>, app-url, kiali-url"
+  echo "                              Advanced: port_forward_service <name> <namespace> <service> <target_port> <local_port>"
+  echo "  stop-port-forwards          Stop all background port forwards"
   echo "  create-istio-gateway        OPTIONAL - Requires access to DNS, Public CA"
   echo "  clean                       OPTIONAL - Remove everything"
   echo ""
@@ -30,6 +32,7 @@ usage() {
   echo "  $0 01.prep-env"
   echo "  $0 show issuers"
   echo "  $0 show svid frontend"
+  echo "  $0 show port_forward_service app2 sandbox nginx 80 9120"
   echo ""
   echo "NOTE: All scripts must be located in the 'scripts/' directory and be executable."
   exit 1
@@ -42,6 +45,20 @@ fi
 
 CMD="$1"
 shift
+
+# This is to make sure stop-port-forwards can be called from top level script as opposed to show stop-port-forwards which does not read well.
+if [ "$CMD" == "stop-port-forwards" ]; then
+  echo "Running: stop-port-forwards"
+  "$SCRIPTS_DIR/show.sh" stop-port-forwards
+  exit $?
+fi
+
+# Special-case the 'show' command with flexible subcommands
+if [ "$CMD" == "show" ]; then
+  echo "Running: show $*"
+  "$SCRIPTS_DIR/show.sh" "$@"
+  exit $?
+fi
 
 CMD_SCRIPT="$SCRIPTS_DIR/$CMD.sh"
 

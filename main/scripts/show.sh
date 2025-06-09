@@ -38,6 +38,7 @@ svid() {
   if [ $# -lt 1 ]; then
     echo "[svid] ERROR: Requires an app label"
     echo "Usage: $0 svid <app-label>"
+    echo "For e.g: Replace <app-label> with frontend"
     exit 1
   fi
   local app_label="$1"
@@ -57,28 +58,51 @@ svid() {
     base64 --decode | openssl x509 -text -noout
 }
 
-# Port-forward to access frontend app in background
-app-url() {
-  if port_in_use 8120; then
-    echo "[app-url] ERROR: Port 8120 is already in use."
+port_forward_service() {
+  local name="$1"
+  local namespace="$2"
+  local service="$3"
+  local target_port="$4"
+  local local_port="$5"
+  local pidfile="/tmp/port-forward-${name}.pid"
+
+  if port_in_use $local_port; then
+    echo "[${name}] ERROR: Port $local_port is already in use."
     exit 1
   fi
-  echo "[app-url] Access the swag shop via http://localhost:8120"
-  kubectl -n mesh-apps port-forward service/frontend 8120:80 &
-  echo $! > /tmp/port-forward-frontend.pid
-  echo "[app-url] Port-forward running in background with PID $(cat /tmp/port-forward-frontend.pid)"
+
+  if curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/ > /dev/null; then
+    echo "[${name}] Running on EC2 — launching port-forward for ${service}..."
+    kubectl -n "$namespace" port-forward svc/"$service" ${local_port}:${target_port} --address=127.0.0.1 &
+    echo $! > "$pidfile"
+    echo "[${name}] Port-forward running with PID $(cat "$pidfile")"
+    TOKEN=$(curl -s -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" http://169.254.169.254/latest/api/token || true)
+    if [ -n "$TOKEN" ]; then
+      EC2_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+    else
+      EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo "<unknown-ec2-ip>")
+    fi
+    echo ""
+    echo "[${name}] From your laptop, run:"
+    echo "  ssh -i <your-key.pem> -L ${local_port}:localhost:${local_port} ubuntu@${EC2_IP}"
+    echo "Then open: http://localhost:${local_port}"
+  else
+    echo "[${name}] Running locally — launching port-forward for ${service}..."
+    kubectl -n "$namespace" port-forward svc/"$service" ${local_port}:${target_port} --address=127.0.0.1 &
+    echo $! > "$pidfile"
+    echo "[${name}] Port-forward running with PID $(cat "$pidfile")"
+    echo "[${name}] Open: http://localhost:${local_port}"
+  fi
+}
+
+# Port-forward to access frontend app in background
+app-url() {
+  port_forward_service "app-url" "mesh-apps" "frontend" 80 8120
 }
 
 # Port-forward to access Kiali dashboard in background
 kiali-url() {
-  if port_in_use 20001; then
-    echo "[kiali-url] ERROR: Port 20001 is already in use."
-    exit 1
-  fi
-  echo "[kiali-url] Access the Kiali dashboard via http://localhost:20001"
-  kubectl port-forward svc/kiali 20001:20001 -n istio-system &
-  echo $! > /tmp/port-forward-kiali.pid
-  echo "[kiali-url] Port-forward running in background with PID $(cat /tmp/port-forward-kiali.pid)"
+  port_forward_service "kiali-url" "istio-system" "kiali" 20001 20001
 }
 
 # Stop background port-forward processes
