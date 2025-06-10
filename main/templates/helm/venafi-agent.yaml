@@ -18,7 +18,7 @@ authentication:
 config:
   # -- Overrides the server if using a proxy in your environment
   # For the EU variant use: https://api.venafi.eu/
-  server: "https://api.venafi.cloud/"
+  server: "${CLOUD_URL}"
   # -- The client-id returned from the Venafi Control Plane
   clientId: ""
   # -- Send data back to the platform every minute unless changed

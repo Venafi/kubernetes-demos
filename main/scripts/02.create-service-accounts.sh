@@ -34,7 +34,8 @@ venctl iam service-accounts agent create \
   --output "secret" \
   --owning-team "${CYBR_TEAM_NAME}" \
   --validity 10 \
-  --api-key "${CYBR_CLOUD_API_KEY}"
+  --api-key "${CYBR_CLOUD_API_KEY}" \
+  --vcp-region "${CYBR_CLOUD_REGION}"
 
 jq -r '.private_key' "${INSTALL_DIR}/cybr_mis_agent_secret.json" > "${INSTALL_DIR}/cybr_mis_agent_secret.yaml"
 jq -r '.client_id' "${INSTALL_DIR}/cybr_mis_agent_secret.json" > "${INSTALL_DIR}/cybr_mis_agent_client_id.txt"
@@ -48,9 +49,13 @@ venctl iam service-account registry create \
   --owning-team "${CYBR_TEAM_NAME}" \
   --validity 10 \
   --scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
-  --api-key "${CYBR_CLOUD_API_KEY}"
+  --api-key "${CYBR_CLOUD_API_KEY}" \
+  --vcp-region "${CYBR_CLOUD_REGION}"
 
 jq -r '.image_pull_secret' "${INSTALL_DIR}/cybr_mis_registry_secret.json" > "${INSTALL_DIR}/cybr_mis_registry_secret.yaml"
+
+#temporary - while we can create registry secret using singapore
+#cp ~/tmp/cybr_mis_registry_secret.yaml "${INSTALL_DIR}/cybr_mis_registry_secret.yaml"
 
 ## 3. CyberArk WIM (Firefly) Service Account
 echo "[create-service-accounts] Creating Firefly (WIM) service account..."
@@ -60,9 +65,14 @@ venctl iam service-accounts firefly create \
   --output "secret" \
   --owning-team "${CYBR_TEAM_NAME}" \
   --validity 10 \
-  --api-key "${CYBR_CLOUD_API_KEY}"
+  --api-key "${CYBR_CLOUD_API_KEY}" \
+  --vcp-region "${CYBR_CLOUD_REGION}"
 
 jq -r '.private_key' "${INSTALL_DIR}/cybr_mis_firefly_secret.json" > "${INSTALL_DIR}/cybr_mis_firefly_secret.yaml"
 jq -r '.client_id' "${INSTALL_DIR}/cybr_mis_firefly_secret.json" > "${INSTALL_DIR}/cybr_mis_firefly_client_id.txt"
 
+echo " "
 echo "[create-service-accounts] All service accounts created successfully."
+echo "####################################################################"
+echo "Associate the Workload Identity Manager Service Account in the UI"
+echo "####################################################################"

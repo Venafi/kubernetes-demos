@@ -31,15 +31,25 @@ fi
 # Validate required files exist
 [[ -s templates/helm/cloud-vei-values.yaml ]] || { echo "[ERROR] Missing template: cloud-vei-values.yaml"; exit 1; }
 [[ -s templates/helm/venafi-agent.yaml ]] || { echo "[ERROR] Missing template: venafi-agent.yaml"; exit 1; }
+[[ -s templates/helm/firefly-values.yaml ]] || { echo "[ERROR] Missing template: firefly-values.yaml"; exit 1; }
 
 echo "Copying templates to ${INSTALL_DIR}..."
+# supply VEI helm
 cp templates/helm/cloud-vei-values.yaml "${INSTALL_DIR}/vei-values.yaml"
+
+# supply venafi agent helm 
 sed -e "s/REPLACE_WITH_CLUSTER_NAME/mis-demo-cluster-${RESOURCE_SUFFIX}/g" \
-  templates/helm/venafi-agent.yaml > "${INSTALL_DIR}/venafi-agent.yaml"
+  templates/helm/venafi-agent.yaml > "${INSTALL_DIR}/venafi-agent-tmp.yaml"
+envsubst < ${INSTALL_DIR}/venafi-agent-tmp.yaml > "${INSTALL_DIR}/venafi-agent.yaml"
+
+# supply firefly helm
+envsubst < templates/helm/firefly-values.yaml > "${INSTALL_DIR}/firefly-values.yaml"
 
 # Generate manifest
 echo "[install] Generating manifest with venctl..."
 venctl components kubernetes manifest generate \
+  --region "${CYBR_CLOUD_REGION}" \
+  --vcp-region "${CYBR_CLOUD_REGION}" \
   --namespace "${K8S_NAMESPACE}" \
   --approver-policy-enterprise \
   --approver-policy-enterprise-version "${APPROVER_POLICY_ENTERPRISE}" \
@@ -52,6 +62,7 @@ venctl components kubernetes manifest generate \
   --accept-firefly-tos \
   --firefly \
   --firefly-version "${FIREFLY}" \
+  --firefly-values-files firefly-values.yaml \
   --trust-manager \
   --trust-manager-version "${TRUST_MANAGER}" \
   --venafi-connection \

@@ -4,6 +4,12 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(dirname "$0")/scripts"
 source "$SCRIPTS_DIR/load-variables.sh"
+echo "#################################################################################"
+echo "#################################################################################"
+echo "[cloud-demo] Using Cyberark Certificate Manager : ${CLOUD_URL}"
+echo "#################################################################################"
+echo "#################################################################################"
+
 # source "env-vars.sh"
 # source "component-versions.sh"
 

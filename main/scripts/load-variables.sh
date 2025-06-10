@@ -25,3 +25,10 @@ for VAR in "${REQUIRED_VARS[@]}"; do
     exit 1
   fi
 done
+
+REGION_NORMALIZED=$(echo "${CYBR_CLOUD_REGION:-}" | tr '[:upper:]' '[:lower:]')
+if [ -z "${CYBR_CLOUD_REGION:-}" ] || [ "$REGION_NORMALIZED" == "us" ]; then
+  export CLOUD_URL="https://api.venafi.cloud"
+else
+  export CLOUD_URL="https://api.${CYBR_CLOUD_REGION}.venafi.cloud"
+fi
