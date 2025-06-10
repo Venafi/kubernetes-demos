@@ -164,7 +164,8 @@ metadata:
   name: venafi-connection
   namespace: ${K8S_NAMESPACE}
 spec:
-  vaas:
+  vcp:
+    url: ${CLOUD_URL}
     apiKey:
       - secret:
           name: venafi-cloud-credentials

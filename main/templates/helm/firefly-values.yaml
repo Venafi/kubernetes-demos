@@ -1,0 +1,8 @@
+deployment:
+  config:
+    bootstrap:
+      vaas:
+        url: ${CLOUD_URL}
+    controller:
+      certManager:
+        caRootChainPopulation: true
