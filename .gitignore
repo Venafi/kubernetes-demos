@@ -55,3 +55,4 @@ projects/ven04/vars.sh
 main/cyberarkCA.pem
 projects/kong-mesh/vars.sh
 main/env-vars.sh
+main/scripts/excluded-uuids.txt

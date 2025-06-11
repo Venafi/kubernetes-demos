@@ -84,7 +84,7 @@ port_forward_service() {
     fi
     echo ""
     echo "[${name}] From your laptop, run:"
-    echo "  ssh -i <your-key.pem> -L ${local_port}:localhost:${local_port} ubuntu@${EC2_IP}"
+    echo "  ssh -L ${local_port}:localhost:${local_port} ubuntu@${EC2_IP} -i <your-key.pem>"
     echo "Then open: http://localhost:${local_port}"
   else
     echo "[${name}] Running locally — launching port-forward for ${service}..."

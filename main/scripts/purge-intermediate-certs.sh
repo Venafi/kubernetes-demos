@@ -2,28 +2,27 @@
 
 set -euo pipefail
 
-SCRIPTS_DIR="$(dirname "$0")"
-#source "$SCRIPTS_DIR/load-variables.sh"
-CYBR_CLOUD_API_KEY=
-CLOUD_URL=https://api.venafi.cloud
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "[purge] Using Cloud URL: $CLOUD_URL"
 echo "[purge] Fetching intermediate certificate UUIDs..."
 
-# === Exclusion list ===
 EXCLUDE_FILE="${SCRIPTS_DIR}/excluded-uuids.txt"
 EXCLUDE_LIST=()
 
 if [[ -f "$EXCLUDE_FILE" ]]; then
   echo "[purge] Loading exclusion list from $EXCLUDE_FILE"
-  mapfile -t EXCLUDE_LIST < "$EXCLUDE_FILE"
+  while IFS= read -r line; do
+    entry=$(echo "$line" | sed 's/#.*//' | xargs)  # strip comment + trim
+    [[ -n "$entry" ]] && EXCLUDE_LIST+=("$entry")
+  done < "$EXCLUDE_FILE"
 fi
 
-# Fetch UUIDs
 UUIDS=$(curl -s --location \
   --header "tppl-api-key: ${CYBR_CLOUD_API_KEY}" \
   --header 'Content-Type: application/json' \
-  "${CLOUD_URL}/v1/distributedissuers/intermediatecertificates" | jq -r '.intermediateCertificates[].id')
+  "${CLOUD_URL}/v1/distributedissuers/intermediatecertificates" \
+  | jq -r '.intermediateCertificates[].id')
 
 if [[ -z "$UUIDS" ]]; then
   echo "[purge] No intermediate certificates found."
@@ -33,22 +32,28 @@ fi
 echo "[purge] Found $(echo "$UUIDS" | wc -l) certificate(s). Filtering and deleting..."
 
 for uuid in $UUIDS; do
-  if printf '%s\n' "${EXCLUDE_LIST[@]}" | grep -q -x "$uuid"; then
-    echo "🚫 Skipping excluded UUID: $uuid"
+  uuid_trimmed=$(echo "$uuid" | tr -d '\t\r' | xargs)
+  if printf '%s\n' "${EXCLUDE_LIST[@]}" | grep -q -x "$uuid_trimmed"; then
+    echo "🚫 Skipping excluded UUID: $uuid_trimmed"
     continue
   fi
 
-  echo "→ Deleting certificate $uuid..."
-  STATUS=$(curl -s -o /dev/null -w "%{http_code}" --location \
-    --request DELETE "${CLOUD_URL}/v1/distributedissuers/intermediatecertificates/${uuid}" \
-    --header "tppl-api-key: ${CYBR_CLOUD_API_KEY}" \
-    --header 'Content-Type: application/json')
+  echo "→ Deleting certificate $uuid_trimmed..."
+  RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" --location \
+  --request DELETE "${CLOUD_URL}/v1/distributedissuers/intermediatecertificates/${uuid_trimmed}" \
+  --header "tppl-api-key: ${CYBR_CLOUD_API_KEY}" \
+  --header 'Content-Type: application/json')
 
-  if [ "$STATUS" = "204" ]; then
-    echo "✅ Deleted $uuid"
-  else
-    echo "❌ Failed to delete $uuid (status: $STATUS)"
-  fi
+  echo "🧾 Response:"
+  echo "$RESPONSE"
+
+  # Extract status and log body
+#  HTTP_BODY=$(echo "$RESPONSE" | sed '/^HTTP_STATUS:/d')
+#  HTTP_STATUS=$(echo "$RESPONSE" | sed -n 's/^HTTP_STATUS://p')
+
+#  echo "❌ Failed to delete $uuid_trimmed (status: $HTTP_STATUS)"
+#  echo "[curl] Response body:"
+#  echo "$HTTP_BODY"
 done
 
 echo "[purge] Complete."
