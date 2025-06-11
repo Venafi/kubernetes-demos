@@ -33,6 +33,7 @@ usage() {
   echo "  stop-port-forwards          Stop all background port forwards"
   echo "  create-istio-gateway        OPTIONAL - Requires access to DNS, Public CA"
   echo "  clean                       OPTIONAL - Remove everything"
+  echo "                              Subcommands: intermediates"
   echo ""
   echo "Examples:"
   echo "  $0 01.prep-env"
@@ -63,6 +64,13 @@ fi
 if [ "$CMD" == "show" ]; then
   echo "Running: show $*"
   "$SCRIPTS_DIR/show.sh" "$@"
+  exit $?
+fi
+
+# Support `clean intermediates` → purge-intermediate-certs.sh
+if [ "$CMD" == "clean" ] && [ "${1:-}" == "intermediates" ]; then
+  echo "Running: clean intermediates (purge intermediate certs)"
+  "$SCRIPTS_DIR/purge-intermediate-certs.sh"
   exit $?
 fi
 
