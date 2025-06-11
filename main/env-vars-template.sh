@@ -1,7 +1,7 @@
 # .env
-export CYBR_TEAM_NAME=platform-admin
+export CYBR_TEAM_NAME=REPLACE_WITH_TEAM_NAME
 export CYBR_CLOUD_API_KEY=REPLACE_WITH_CLOUD_API_KEY
-export CYBR_CLOUD_REGION=us # one of: eu, au, uk, ca, sg, us (default "us")
+export CYBR_CLOUD_REGION=REPLACE_WITH_CLOUD_REGION # one of: eu, au, uk, ca, sg, us (default "us")
 export CYBR_ZONE_PRIVATE_CA=CloudApps\\Default
 
 export K8S_NAMESPACE=cyberark
