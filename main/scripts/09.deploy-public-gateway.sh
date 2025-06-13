@@ -177,8 +177,7 @@ echo ""
 echo "🔎 Verifying created resources..."
 kubectl get certificate "${CERT_NAME}" -n istio-system
 kubectl get secret "${CERT_NAME}" -n istio-system
-kubectl get gateway storefront-gateway -n istio-system
-kubectl get virtualservice storefront-virtualservice -n istio-system
+kubectl get gateway storefront-gateway -n mesh-apps
 
 echo ""
 echo "🚀 What's next:"
@@ -197,4 +196,4 @@ echo "💡 Tip: You can verify the certificate:"
 echo "   kubectl describe certificate ${CERT_NAME} -n istio-system"
 echo ""
 echo "📡 Gateway status:"
-kubectl get gateway storefront-gateway -n istio-system
+kubectl get virtualservice storefront-virtualservice -n mesh-apps
