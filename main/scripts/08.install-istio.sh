@@ -11,14 +11,29 @@ command -v istioctl >/dev/null || { echo "[ERROR] istioctl not found in PATH"; e
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 
-# Patch Istio config for istio-csr DNS name
-echo "[install-istio] Templating Istio install config with correct CSR service name..."
-sed "s|cert-manager-istio-csr.cyberark.svc|cert-manager-istio-csr.${K8S_NAMESPACE}.svc|g" \
-  templates/servicemesh/istio-config.yaml > "${INSTALL_DIR}/istio-config.yaml"
-
 # Install Istio control plane with venafi-integrated CSR
 echo "[install-istio] Installing Istio with custom config..."
-istioctl install -y -f "${INSTALL_DIR}/istio-config.yaml"
+
+istioctl install -y -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+spec:
+  profile: demo
+  hub: gcr.io/istio-release
+  meshConfig:
+    trustDomain: cluster.local
+  values:
+    global:
+      caAddress: cert-manager-istio-csr.${K8S_NAMESPACE}.svc:443
+  components:
+    pilot:
+      k8s:
+        env:
+        - name: ENABLE_CA_SERVER
+          value: "false"
+EOF
 
 # Label app namespace for automatic sidecar injection
 kubectl label namespace mesh-apps istio-injection=enabled --overwrite

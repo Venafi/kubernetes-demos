@@ -7,16 +7,10 @@ echo "[install-istio-csr] Preparing environment for Istio service mesh..."
 # Validate required env vars
 : "${K8S_NAMESPACE:?K8S_NAMESPACE is required}"
 : "${CERT_MANAGER_ISTIO_CSR:?CERT_MANAGER_ISTIO_CSR is required}"
-: "${CYBR_TRUST_ANCHOR_ROOT_CA_PEM:?CYBR_TRUST_ANCHOR_ROOT_CA_PEM is required}"
 : "${ARTIFACTS_DIR:?ARTIFACTS_DIR is required}"
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 VALUES_OUT="${INSTALL_DIR}/istio-csr-values.yaml"
-
-[[ -s "${CYBR_TRUST_ANCHOR_ROOT_CA_PEM}" ]] || {
-  echo "[ERROR] Trust anchor PEM file is missing or empty: ${CYBR_TRUST_ANCHOR_ROOT_CA_PEM}"
-  exit 1
-}
 
 # Generate Helm values file dynamically
 echo "[install-istio-csr] Templating istio-csr Helm values..."
@@ -27,13 +21,15 @@ sed -e "s|cert-manager-istio-csr.cyberark.svc|cert-manager-istio-csr.${K8S_NAMES
 echo "[install-istio-csr] Creating SPIFFE-compatible issuer for mesh identities..."
 kubectl apply -n istio-system -f templates/servicemesh/firefly-mesh-wi-issuer.yaml
 
-# Create trust anchor secret (optionally can use CyberArk Secrets Manager)
-echo "[install-istio-csr] Setting up trust anchor..."
-cp "${CYBR_TRUST_ANCHOR_ROOT_CA_PEM}" "${INSTALL_DIR}/cyberark-trust-anchor-root-ca.pem"
-
+# If using CCM built in automatically provided
+# If others, accounting for value set in env-vars.sh 
+# Ideally the secret cyberark-trust-anchor is created using ESO with Cyberark Secrets Manager so it's managed in one place when 
+# trust needs to be created in multiple clusters.
+CYBR_TRUST_ANCHOR_ROOT_CA_PEM="${CYBR_TRUST_ANCHOR_ROOT_CA_PEM:-${ARTIFACTS_DIR}/venafi-cloud-built-in-root.pem}"
+# Create trust anchor secret from CYBR_TRUST_ANCHOR_ROOT_CA_PEM
 kubectl create secret generic cyberark-trust-anchor \
   --namespace="${K8S_NAMESPACE}" \
-  --from-file=root-cert.pem="${INSTALL_DIR}/cyberark-trust-anchor-root-ca.pem" \
+  --from-file=root-cert.pem="${CYBR_TRUST_ANCHOR_ROOT_CA_PEM}" \
   --dry-run=client --save-config=true -o yaml | kubectl apply -f -
 
 # Create configmap that tells istio-csr how to request SVIDs
