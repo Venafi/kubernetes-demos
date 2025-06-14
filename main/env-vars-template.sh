@@ -26,5 +26,9 @@ export DOMAIN_NAME=REPLACE_WITH_DOMAIN_NAME
 export AWS_ZONE_ID=REPLACE_WITH_ZONEID
 export AWS_PROFILE=REPLACE_WITH_AWS_PROFILE
 
+# This for ensuring loadbalaners in cloud providers are not created with 0.0.0.0 access
+export CIDR=REPLACE_WITH_LOCAL_CIDR
+
+
 #Optional - If you prefer managing trust anchors using Conjur.
 export CYBR_CONJUR_WORKLOAD_APIKEY=REPLACE_WITH_WORKLOAD_APIKEY
