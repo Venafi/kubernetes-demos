@@ -32,7 +32,7 @@ else
   IS_EC2=$(curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/ > /dev/null && echo "true" || echo "false")
 fi
 
-# Skip only if kind AND NOT on EC2
+# Skip only if kind AND NOT on EC2. EC2 is also running kind but we'll use the EC2 IP to access the service.
 if [[ "$IS_KIND" == "true" && "$IS_EC2" == "false" ]]; then
   echo "[deploy-public-gateway] Detected local kind cluster (not EC2). Skipping public gateway deployment."
   exit 0
@@ -47,14 +47,17 @@ if [[ "$IS_EC2" == "false" ]]; then
   fi
 fi
 
+echo "[deploy-public-gateway] Authenticated to AWS - Will attempt to create Route53 entries"
 # Retrieve EC2 public IP for fallback
-EC2_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
-  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
-if [[ -n "$EC2_TOKEN" ]]; then
-  EC2_IP=$(curl -s -H "X-aws-ec2-metadata-token: $EC2_TOKEN" \
-    http://169.254.169.254/latest/meta-data/public-ipv4 || true)
-else
-  EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+if [[ "$IS_EC2" == "true" ]]; then
+  EC2_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
+  if [[ -n "$EC2_TOKEN" ]]; then
+    EC2_IP=$(curl -s -H "X-aws-ec2-metadata-token: $EC2_TOKEN" \
+      http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+  else
+    EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+  fi
 fi
 
 INGRESS_HOSTNAME=$(kubectl get svc istio-ingressgateway -n istio-system -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
@@ -65,15 +68,7 @@ if [[ -n "$INGRESS_HOSTNAME" ]]; then
 elif [[ -n "$INGRESS_IP" ]]; then
   DNS_TARGET="$INGRESS_IP"
 else
-  # fallback to EC2 metadata
-  EC2_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
-    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
-  if [[ -n "$EC2_TOKEN" ]]; then
-    DNS_TARGET=$(curl -s -H "X-aws-ec2-metadata-token: $EC2_TOKEN" \
-      http://169.254.169.254/latest/meta-data/public-ipv4 || true)
-  else
-    DNS_TARGET=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
-  fi
+  DNS_TARGET="$EC2_IP"
 fi
 
 # Run DNS mapping with EC2_IP fallback if needed
@@ -132,12 +127,11 @@ kubectl wait certificate "${CERT_NAME}" -n istio-system \
 
 # Create Gateway and VirtualService
 echo "[deploy-public-gateway] Creating Gateway and routes..."
-cat <<EOF | kubectl apply -f -
+cat <<EOF | kubectl -n mesh-apps apply -f -
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: storefront-gateway
-  namespace: mesh-apps
 spec:
   selector:
     istio: ingressgateway
@@ -158,12 +152,58 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: storefront-virtualservice
-  namespace: mesh-apps  
 spec:
   hosts:
   - "${CERT_NAME}"
   gateways:
   - storefront-gateway
+  http:
+  - route:
+    - destination:
+        host: frontend
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: allow-egress-googleapis
+spec:
+  hosts:
+  - "accounts.google.com" # Used to get token
+  - "*.googleapis.com"
+  ports:
+  - number: 80
+    protocol: HTTP
+    name: http
+  - number: 443
+    protocol: HTTPS
+    name: https
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: allow-egress-google-metadata
+spec:
+  hosts:
+  - metadata.google.internal
+  addresses:
+  - 169.254.169.254 # GCE metadata server
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  - number: 443
+    name: https
+    protocol: HTTPS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: frontend
+spec:
+  hosts:
+  - "frontend.mesh-apps.svc.cluster.local"
   http:
   - route:
     - destination:

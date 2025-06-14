@@ -11,6 +11,27 @@ command -v istioctl >/dev/null || { echo "[ERROR] istioctl not found in PATH"; e
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 
+# -------- Random default for security group used for ingress load balancer --------
+CIDR_FALLBACK="1.2.3.4/32"
+
+if [[ -z "${CIDR:-}" || "$CIDR" == "REPLACE_WITH_LOCAL_CIDR" ]]; then
+  if command -v curl >/dev/null; then
+    PUBLIC_IP=$(curl -s --connect-timeout 2 https://checkip.amazonaws.com || true)
+    if [[ -n "$PUBLIC_IP" && "$PUBLIC_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      CIDR="${PUBLIC_IP}/32"
+      echo "[install-istio] ✅ Using public IP: $CIDR for ingress access"
+    else
+      echo "[install-istio] ⚠️ Could not determine public IP. Falling back to $CIDR_FALLBACK"
+      CIDR="$CIDR_FALLBACK"
+    fi
+  else
+    echo "[install-istio] ⚠️ curl not available. Falling back to $CIDR_FALLBACK"
+    CIDR="$CIDR_FALLBACK"
+  fi
+else
+  echo "[install-istio] ✅ Using provided CIDR: $CIDR"
+fi
+
 # Install Istio control plane with venafi-integrated CSR
 echo "[install-istio] Installing Istio with custom config..."
 
@@ -28,6 +49,14 @@ spec:
     global:
       caAddress: cert-manager-istio-csr.${K8S_NAMESPACE}.svc:443
   components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        service:
+          type: LoadBalancer
+          loadBalancerSourceRanges:
+          - "${CIDR}"
     pilot:
       k8s:
         env:
