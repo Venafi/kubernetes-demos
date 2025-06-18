@@ -35,8 +35,8 @@ archives/firefly/firefly-key.pem
 archives/firefly/firefly-key.pub
 archives/firefly/config/venafi-builtin-ica.pem
 projects/ven01/registry/venafi_registry_secret.yaml
-main/venafi-cloud-built-in-root.pem
-main/vars.sh
+venafi-cloud-built-in-root.pem
+vars.sh
 projects/ven02/vars.sh
 cloud-settings.sh
 main/tlspc-to-dc-key.pem
@@ -47,13 +47,13 @@ projects/ven03/vars.sh
 projects/ven03/venafi-firefly-key.pem
 projects/cert-discovery/vars.sh
 projects/ven01/vars.sh
-main/venafi-cloud-zkpki-root.pem
+venafi-cloud-zkpki-root.pem
 projects/awspca/vars.sh
 projects/awspca/awspca-artifacts/
-main/venafi-dc-msca-root.pem
+venafi-dc-msca-root.pem
 projects/ven04/vars.sh
 main/cyberarkCA.pem
 projects/kong-mesh/vars.sh
-main/env-vars.sh
+env-vars.sh
 main/scripts/excluded-uuids.txt
 archives/main/vars.sh
