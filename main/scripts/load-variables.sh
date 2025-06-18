@@ -1,7 +1,7 @@
 #!/bin/bash
 
-VARS_FILE="$(dirname "$0")/../main/env-vars.sh"
-VERSIONS_FILE="$(dirname "$0")/../main/component-versions.sh"
+VARS_FILE="$(dirname "$0")/../main/env/env-vars.sh"
+VERSIONS_FILE="$(dirname "$0")/../main/env/component-versions.sh"
 
 if [ ! -f "$VARS_FILE" ]; then
   echo "[load-variables] ERROR: env-vars.sh not found at $VARS_FILE"
