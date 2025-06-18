@@ -56,3 +56,4 @@ main/cyberarkCA.pem
 projects/kong-mesh/vars.sh
 main/env-vars.sh
 main/scripts/excluded-uuids.txt
+archives/main/vars.sh
