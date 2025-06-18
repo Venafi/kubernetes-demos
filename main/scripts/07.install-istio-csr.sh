@@ -12,14 +12,28 @@ echo "[install-istio-csr] Preparing environment for Istio service mesh..."
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 VALUES_OUT="${INSTALL_DIR}/istio-csr-values.yaml"
 
-# Generate Helm values file dynamically
+# Helm for istio-csr installation with venctl
 echo "[install-istio-csr] Templating istio-csr Helm values..."
 sed -e "s|cert-manager-istio-csr.cyberark.svc|cert-manager-istio-csr.${K8S_NAMESPACE}.svc|g" \
   templates/helm/istio-csr-values.yaml > "${VALUES_OUT}"
 
 # Create issuer used by istio-csr for signing SVIDs
 echo "[install-istio-csr] Creating SPIFFE-compatible issuer for mesh identities..."
-kubectl apply -n istio-system -f templates/servicemesh/firefly-mesh-wi-issuer.yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: firefly.venafi.com/v1alpha1
+kind: Issuer
+metadata:
+  name: firefly-mesh-wi-issuer
+EOF
+
+# Create configmap that tells istio-csr how to request SVIDs
+echo "[install-istio-csr] Creating istio-csr ConfigMap for Venafi Issuer wiring..."
+kubectl create configmap istio-csr-ca --namespace="${K8S_NAMESPACE}" \
+  --from-literal=issuer-name=firefly-mesh-wi-issuer \
+  --from-literal=issuer-kind=Issuer \
+  --from-literal=issuer-group=firefly.venafi.com \
+  --dry-run=client --save-config=true -o yaml | kubectl apply -f -
+
 
 # If using CCM built in automatically provided
 # If others, accounting for value set in env-vars.sh 
@@ -31,17 +45,31 @@ kubectl create secret generic cyberark-trust-anchor \
   --namespace="${K8S_NAMESPACE}" \
   --from-file=root-cert.pem="${CYBR_TRUST_ANCHOR_ROOT_CA_PEM}" \
   --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-# Create configmap that tells istio-csr how to request SVIDs
-echo "[install-istio-csr] Creating istio-csr ConfigMap for Venafi Issuer wiring..."
-kubectl create configmap istio-csr-ca --namespace="${K8S_NAMESPACE}" \
-  --from-literal=issuer-name=firefly-mesh-wi-issuer \
-  --from-literal=issuer-kind=Issuer \
-  --from-literal=issuer-group=firefly.venafi.com \
-  --dry-run=client --save-config=true -o yaml | kubectl apply -f -
-
-# Apply trust anchor to istio-system (used by SPIRE components and Istio CA fallback)
-kubectl apply -n istio-system -f templates/servicemesh/firefly-trust-anchor.yaml
+  
+# Apply trust anchor to istio-system 
+cat <<EOF | kubectl apply -f -
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: istio-ca-root-cert
+spec:
+  sources:
+  # Include a bundle of publicly trusted certificates which can be
+  # used to validate most TLS certificates on the internet, such as
+  # those issued by Let's Encrypt, Google, Amazon and others.
+  #- useDefaultCAs: true  
+  - secret:
+      name: "cyberark-trust-anchor"
+      key: "root-cert.pem"
+  target:
+    # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in
+    # every namespace based on the sources above.
+    configMap:
+      key: "root-cert.pem"
+    namespaceSelector:
+      matchLabels:
+         issuer: "cyberark-firefly"
+EOF
 
 # Generate manifests for istio-csr component
 echo "[install-istio-csr] Generating manifests for istio-csr..."
