@@ -69,8 +69,17 @@ kubectl label namespace mesh-apps istio-injection=enabled --overwrite
 
 # Apply mTLS PeerAuthentication policy
 echo "[install-istio] Enforcing mTLS across mesh..."
-cp templates/servicemesh/peerauthentication.yaml "${INSTALL_DIR}/peerauthentication.yaml"
-kubectl apply -f "${INSTALL_DIR}/peerauthentication.yaml"
+cat <<EOF | kubectl apply -f -
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "global"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT
+EOF
+
 
 # Install sample microservices demo
 echo "[install-istio] Deploying CyberArk swag shop demo..."

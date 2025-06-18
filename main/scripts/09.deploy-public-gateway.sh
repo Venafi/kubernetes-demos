@@ -47,7 +47,6 @@ if [[ "$IS_EC2" == "false" ]]; then
   fi
 fi
 
-echo "[deploy-public-gateway] Authenticated to AWS - Will attempt to create Route53 entries"
 # Retrieve EC2 public IP for fallback
 if [[ "$IS_EC2" == "true" ]]; then
   EC2_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
