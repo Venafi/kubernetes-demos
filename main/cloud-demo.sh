@@ -39,7 +39,7 @@ usage() {
   echo "  $0 01.prep-env"
   echo "  $0 show issuers"
   echo "  $0 show svid frontend"
-  echo "  $0 show port_forward_service app2 sandbox nginx 80 9120"
+  echo "  $0 show app-url"
   echo ""
   echo "NOTE: All scripts must be located in the 'scripts/' directory and be executable."
   exit 1
