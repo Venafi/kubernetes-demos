@@ -184,5 +184,11 @@ kubectl get deployments -n sandbox
 kubectl get services -n sandbox
 
 echo ""
-echo "[create-sample-data] Sample workloads and certificates created ✅"
-echo "Access CyberArk Certificate Manager UI and review Installations->Kubernetes Clusters for insights. It may take a few minutes"
+echo "✅ [create-sample-data] Sample workloads and certificates created successfully."
+echo ""
+echo "🚀 What's next:"
+echo "→ Access the CyberArk Certificate Manager UI (https://<your-tenant>.venafi.cloud)"
+echo "   Navigate to: *Installations → Kubernetes Clusters*"
+echo "   You should see your new cluster registered and certificate data along with how it's used."
+echo ""
+echo "⏳ Note: It may take a few minutes for data to appear after workloads are created."
