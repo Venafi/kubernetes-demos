@@ -57,3 +57,4 @@ projects/kong-mesh/vars.sh
 env-vars.sh
 main/scripts/excluded-uuids.txt
 archives/main/vars.sh
+eks-config.sh
