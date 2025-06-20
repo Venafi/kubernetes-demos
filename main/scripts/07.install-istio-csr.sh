@@ -62,8 +62,6 @@ spec:
       name: "cyberark-trust-anchor"
       key: "root-cert.pem"
   target:
-    # Data synced to the ConfigMap `my-org.com` or your private CA root at the key `ca.crt` in
-    # every namespace based on the sources above.
     configMap:
       key: "root-cert.pem"
     namespaceSelector:

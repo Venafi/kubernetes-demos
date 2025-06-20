@@ -65,7 +65,7 @@ To create a policy
 | Country   | `Leave it empty`        | Locked | USA | 
 |    |         |  |  | 
 |    |         |  |  | 
-| DNS(SAN)   | `^.*`        | Required | Min=1, Max=10 | 
+| DNS(SAN)   | `^.*`        | Optional | Min=0, Max=10 | 
 | IP Address   | `Leave it empty`        | Forbidden | Min=0, Max=0 | 
 | Email Address   | `Leave it empty`        | Forbidden | Min=0, Max=0 | 
 | URI Address   | `^spiffe://cluster\.local/ns/.*/sa/.*`        | Required | Min=1, Max=10 | 
