@@ -33,7 +33,7 @@ usage() {
   echo "                              Advanced: port_forward_service <name> <namespace> <service> <target_port> <local_port>"
   echo "  stop-port-forwards          Stop all background port forwards"
   echo "  clean                       OPTIONAL - Remove everything"
-  echo "                              Subcommands: intermediates"
+  echo "                              Subcommands: intermediates, configuration, configuration <config_name>"
   echo ""
   echo "Examples:"
   echo "  $0 01.prep-env"
@@ -71,6 +71,15 @@ fi
 if [ "$CMD" == "clean" ] && [ "${1:-}" == "intermediates" ]; then
   echo "Running: clean intermediates (purge intermediate certs)"
   "$SCRIPTS_DIR/purge-intermediate-certs.sh"
+  exit $?
+fi
+
+# Support `clean intermediates` → purge-intermediate-certs.sh
+if [ "$CMD" == "clean" ] && [ "${1:-}" == "configuration" ]; then
+  shift
+  CONFIG_NAME="${1:-firefly-config-built-in-ca}"
+  echo "Running: clean configuration (remove service accounts from WIM config: $CONFIG_NAME)"
+  "$SCRIPTS_DIR/reset-cloud-configuration.sh" "$CONFIG_NAME"
   exit $?
 fi
 

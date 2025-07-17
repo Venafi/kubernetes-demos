@@ -115,6 +115,33 @@ for ns in sandbox cyberark; do
   kubectl delete namespace "$ns" --ignore-not-found
 done
 
+# Handle suffix override from file
+SUFFIX_FILE="${ARTIFACTS_DIR}/resource-suffix.txt"
+if [ -f "$SUFFIX_FILE" ]; then
+  RESOURCE_SUFFIX="$(<"$SUFFIX_FILE")"
+  echo "Overriding RESOURCE_SUFFIX with value from file: $RESOURCE_SUFFIX"
+else
+  : "${RESOURCE_SUFFIX:?RESOURCE_SUFFIX is required or missing from suffix file}"
+fi
+
+echo "[clean] Fetching service accounts matching mis-demo-*-${RESOURCE_SUFFIX}..."
+
+# Fetch all service accounts and filter matching names
+venctl iam service-accounts list \
+  --api-key "${CYBR_CLOUD_API_KEY}" \
+  --api-url "${CLOUD_URL}" \
+  --vcp-region "${CYBR_CLOUD_REGION}" \
+  --log-format json | jq -r --arg suffix "${RESOURCE_SUFFIX}" '
+    .[] | select(.name | test("^mis-demo-.*-" + $suffix + "$")) | .name' | while read -r sa_name; do
+      echo "[clean] 🔥 Deleting service account: $sa_name"
+      venctl iam service-accounts delete \
+        --api-key "${CYBR_CLOUD_API_KEY}" \
+        --api-url "${CLOUD_URL}" \
+        --vcp-region "${CYBR_CLOUD_REGION}" \
+        --name "$sa_name" \
+        --no-prompts || echo "[clean] ❌ Failed to delete: $sa_name"
+done
+
 # Clean up generated CyberArk install artifacts
 if [[ "${PURGE_ARTIFACTS:-}" == "true" ]]; then
   echo "[clean] Removing generated artifacts at: ${ARTIFACTS_DIR}"
