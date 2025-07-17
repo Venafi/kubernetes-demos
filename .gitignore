@@ -58,3 +58,8 @@ env-vars.sh
 main/scripts/excluded-uuids.txt
 archives/main/vars.sh
 eks-config.sh
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
