@@ -65,5 +65,9 @@ jq -r '.certificate' <<< "$RESPONSE" > "$TMP_DIR/${CERT_NAME}.pem"
 jq -r '.chain[]' <<< "$RESPONSE" > "$TMP_DIR/${CERT_NAME}-chain.pem"
 jq -r '.private_key' <<< "$RESPONSE" > "$TMP_DIR/${CERT_NAME}-key.pem"
 
+echo "📜 Certificate Preview:"
+openssl x509 -in $TMP_DIR/${CERT_NAME}.pem -text -noout | head -n 10
+
 echo "✅ Cert saved in: $TMP_DIR"
-ls -l "$TMP_DIR"
+ls -lh "$TMP_DIR"
+
