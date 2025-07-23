@@ -28,7 +28,6 @@ if [[ -x "$(dirname "$0")/show.sh" ]]; then
   "$(dirname "$0")/show.sh" stop-port-forwards || true
 fi
 
-echo "should uninstall first -- work in progress" 
 # Remove Istio observability addons
 echo "[clean] removing observability tools..."
 for addon in kiali prometheus grafana; do
@@ -39,7 +38,6 @@ done
 echo "[clean] removing CyberArk swag shop demo...:"
 kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml || true
 
-
 # uninstall istio
 istioctl uninstall -y --purge || true
 
@@ -49,18 +47,18 @@ istioctl uninstall -y --purge || true
 echo "[clean] Removing install-istio-csr..."
 ISTIO_TRUST_DOMAIN="${ISTIO_TRUST_DOMAIN}" \
 venctl components kubernetes manifest tool destroy \
-  --file "${INSTALL_DIR}/venafi-manifests-istio.yaml"
+  --file "${INSTALL_DIR}/venafi-manifests-istio.yaml" || true
 
 # Remove Istiod dynamic cert
-kubectl -n istio-system delete certificate istiod-dynamic --ignore-not-found
-kubectl -n istio-system delete Issuer firefly-mesh-wi-issuer --ignore-not-found 
-kubectl delete Bundle istio-ca-root-cert --ignore-not-found 
-kubectl -n "$K8S_NAMESPACE" delete secret cyberark-trust-anchor --ignore-not-found 
-kubectl -n "$K8S_NAMESPACE" delete configmap istio-csr-ca  --ignore-not-found
+kubectl -n istio-system delete certificate istiod-dynamic --ignore-not-found || true
+kubectl -n istio-system delete Issuer firefly-mesh-wi-issuer --ignore-not-found || true
+kubectl delete Bundle istio-ca-root-cert --ignore-not-found || true
+kubectl -n "$K8S_NAMESPACE" delete secret cyberark-trust-anchor --ignore-not-found || true
+kubectl -n "$K8S_NAMESPACE" delete configmap istio-csr-ca  --ignore-not-found || true
 
 for ns in mesh-apps istio-system; do
   echo "[clean] Deleting namespace: ${ns}"
-  kubectl delete namespace "$ns" --ignore-not-found
+  kubectl delete namespace "$ns" --ignore-not-found || true
 done
 
 kubectl delete clusterrole istiod-istio-system || true 
@@ -71,32 +69,32 @@ kubectl get crds | grep 'istio.io' |   xargs -n1 -I{} sh -c "kubectl delete crd 
 
 for workload in expiry-eddie unmanaged-kid cipher-snake; do
   echo "[clean] Deleting deployment: ${workload}"
-  kubectl delete deployment "${workload}-nginx" --ignore-not-found
-  kubectl delete service "${workload}-nginx" --ignore-not-found
+  kubectl delete deployment "${workload}-nginx" --ignore-not-found || true
+  kubectl delete service "${workload}-nginx" --ignore-not-found || true
 done
 
 for cert in expiry-eddie ghost-rider; do
   echo "[clean] Deleting certificate: ${cert}"
-  kubectl delete Certificate "${cert}.svc.cluster.local" --ignore-not-found
+  kubectl delete Certificate "${cert}.svc.cluster.local" --ignore-not-found || true
 done
 
 for secret in unmanaged-kid.svc.cluster.local cipher-snake.svc.cluster.local phantom-ca; do
   echo "[clean] Deleting secret: ${secret}"
-  kubectl delete Secret "${secret}" --ignore-not-found
+  kubectl delete Secret "${secret}" --ignore-not-found || true
 done
 
 
 # Delete Cyberark cluster-wide resources
 echo "[clean] Deleting Cyberark Certificate Manager demo RBAC and policies..."
-kubectl delete venaficlusterissuer venafi-privateca-cluster-issuer --ignore-not-found
-kubectl -n ${K8S_NAMESPACE} delete VenafiConnection venafi-connection --ignore-not-found
-kubectl -n ${K8S_NAMESPACE} delete Secret venafi-cloud-credentials --ignore-not-found
-kubectl delete clusterrolebinding read-creds-secret-role-for-venafi-connection --ignore-not-found
-kubectl delete clusterrole read-creds-secret-role-for-venafi-connection --ignore-not-found
-kubectl delete clusterrolebinding venafi-issuer-cluster-role-binding --ignore-not-found
-kubectl delete clusterrole venafi-issuer-cluster-role --ignore-not-found
-kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for-venafi-firefly-certs --ignore-not-found
-kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for-venafi-certs --ignore-not-found
+kubectl delete venaficlusterissuer venafi-privateca-cluster-issuer --ignore-not-found || true
+kubectl -n ${K8S_NAMESPACE} delete VenafiConnection venafi-connection --ignore-not-found || true
+kubectl -n ${K8S_NAMESPACE} delete Secret venafi-cloud-credentials --ignore-not-found || true
+kubectl delete clusterrolebinding read-creds-secret-role-for-venafi-connection --ignore-not-found || true
+kubectl delete clusterrole read-creds-secret-role-for-venafi-connection --ignore-not-found || true
+kubectl delete clusterrolebinding venafi-issuer-cluster-role-binding --ignore-not-found || true
+kubectl delete clusterrole venafi-issuer-cluster-role --ignore-not-found || true
+kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for-venafi-firefly-certs --ignore-not-found || true
+kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for-venafi-certs --ignore-not-found || true
 
 echo "[clean] Uninstall all Cyberark Certificate Manager components..."
 # Read service account client IDs
@@ -108,11 +106,11 @@ CYBR_FIREFLY_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_firefly_client_id.txt")"
 VENAFI_KUBERNETES_AGENT_CLIENT_ID="${CYBR_AGENT_SA_CLIENT_ID}" \
 FIREFLY_VENAFI_CLIENT_ID="${CYBR_FIREFLY_SA_CLIENT_ID}" \
 CSI_DRIVER_SPIFFE_TRUST_DOMAIN="${CSI_DRIVER_SPIFFE_TRUST_DOMAIN}" \
-venctl components kubernetes manifest tool destroy --file "${INSTALL_DIR}/venafi-manifests.yaml"
+venctl components kubernetes manifest tool destroy --file "${INSTALL_DIR}/venafi-manifests.yaml" || true
 
 for ns in sandbox cyberark; do
   echo "[clean] Deleting namespace: ${ns}"
-  kubectl delete namespace "$ns" --ignore-not-found
+  kubectl delete namespace "$ns" --ignore-not-found || true
 done
 
 # Handle suffix override from file
@@ -141,6 +139,96 @@ venctl iam service-accounts list \
         --name "$sa_name" \
         --no-prompts || echo "[clean] ❌ Failed to delete: $sa_name"
 done
+
+
+### Let's attempt to retire and delete the sample certificates in CyberArk Certificate Manager 
+echo "[clean] 🧼 Retiring and deleting sample certificates from CyberArk Certificate Manager..."
+
+# Certificate names to target (these match .certificateName in the API)
+# Some of these are certs we created when create-sample-data was run. 
+# The webhook certs are part of the install and they show up in the inventory
+
+DEMO_CERT_NAMES=(
+  "expiry-eddie.svc.cluster.local"
+  "unmanaged-kid.svc.cluster.local"
+  "Phantom RSA CA"
+  "cipher-snake.svc.cluster.local"
+  "ghost-rider.svc.cluster.local"
+  "trust-manager.cyberark.svc"
+  "cert-manager-webhook-ca"
+  "approver-policy-webhook-ca"
+)
+
+# Step 1: Fetch all certs
+ALL_CERTS_JSON=$(curl -sS -X GET "$CLOUD_URL/outagedetection/v1/certificates" \
+  -H "accept: application/json" \
+  -H "tppl-api-key: $CYBR_CLOUD_API_KEY")
+
+if [[ -z "$ALL_CERTS_JSON" || "$ALL_CERTS_JSON" == "null" ]]; then
+  echo "[clean] ❌ Failed to retrieve certificate list or empty response."
+  exit 1
+fi
+
+MATCHING_IDS=()
+
+# Step 2: Find cert IDs by matching names
+for cert_name in "${DEMO_CERT_NAMES[@]}"; do
+  ID=$(echo "$ALL_CERTS_JSON" | jq -r --arg name "$cert_name" '.certificates[]? | select(.certificateName == $name) | .id')
+  if [[ -n "$ID" ]]; then
+    echo "[clean] 🔎 Found certificate '$cert_name' with ID: $ID"
+    MATCHING_IDS+=("$ID")
+  else
+    echo "[clean] ⚠️ Certificate '$cert_name' not found or already deleted"
+  fi
+done
+
+if [[ ${#MATCHING_IDS[@]} -eq 0 ]]; then
+  echo "[clean] ✅ No matching certificates to retire or delete."
+  exit 0
+fi
+
+IDS_JSON=$(printf '%s\n' "${MATCHING_IDS[@]}" | jq -R . | jq -s .)
+
+# Step 3 - Retire certificates
+echo "[clean] ⏸ Retiring certificates..."
+
+RESPONSE=$(curl -sS -w "%{http_code}" --fail \
+  -X POST "$CLOUD_URL/outagedetection/v1/certificates/retirement" \
+  -H "tppl-api-key: $CYBR_CLOUD_API_KEY" \
+  -H "accept: application/json" \
+  -H "content-type: application/json" \
+  --data "{\"certificateIds\": $IDS_JSON}" \
+  -o /tmp/retire_response.json)
+
+if [[ "$RESPONSE" != "200" && "$RESPONSE" != "204" ]]; then
+  echo "[clean] ❌ Retirement failed (HTTP $RESPONSE)"
+  echo "[clean] Response:"
+  cat /tmp/retire_response.json | jq .
+  exit 1
+else
+  echo "[clean] ✅ Certificates retired"
+fi
+
+# Step 4 - Delete certificates
+echo "[clean] 🗑 Deleting retired certificates..."
+
+RESPONSE=$(curl -sS -w "%{http_code}" --fail \
+  -X POST "$CLOUD_URL/outagedetection/v1/certificates/deletion" \
+  -H "tppl-api-key: $CYBR_CLOUD_API_KEY" \
+  -H "accept: application/json" \
+  -H "content-type: application/json" \
+  --data "{\"certificateIds\": $IDS_JSON}" \
+  -o /tmp/delete_response.json)
+
+if [[ "$RESPONSE" != "200" && "$RESPONSE" != "204" ]]; then
+  echo "[clean] ❌ Deletion failed (HTTP $RESPONSE)"
+  echo "[clean] Response:"
+  cat /tmp/delete_response.json | jq .
+  exit 1
+else
+  echo "[clean] ✅ Certificates deleted"
+fi
+
 
 # Clean up generated CyberArk install artifacts
 if [[ "${PURGE_ARTIFACTS:-}" == "true" ]]; then
