@@ -1,0 +1,10 @@
+CSM_TENANT=my-tenant
+CONJUR_ACCOUNT=conjur
+CSM_WORKLOAD_APIKEY=my-workload-key
+CSM_WORKLOAD_ID=host/data/my-workload
+CERT_SUFFIX="$(date +%S%H%M%d%m)"
+CERT_NAME=cert-${CERT_SUFFIX}.example.com
+URI_NAMES="spiffe://cluster.local/ns/cloudapps/sa/app-sa"
+ZONE=CloudApps\\my-cert-issue-template
+CERT_DURATION=P1D
+ISSUER_NAME=my-cert-issuer
