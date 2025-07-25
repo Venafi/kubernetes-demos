@@ -118,51 +118,41 @@ EOF
 create_certificate_resource "expiry-eddie" "8760h"
 create_certificate_resource "ghost-rider" "2400h"
 
-# NGINX workloads with mounted certs
-create_nginx_workload() {
+# Demo busybox workloads with mounted certs
+create_cert_demo_workload() {
   local prefix="$1"
 
-  echo "[create-sample-data] Creating nginx workload: ${prefix}"
+  echo "[create-sample-data] Creating busybox cert-mount demo: ${prefix}"
   cat <<EOF | kubectl apply -f -
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${prefix}-nginx
-  namespace: sandbox
-spec:
-  type: NodePort
-  ports:
-    - port: 80
-  selector:
-    app: ${prefix}-nginx
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${prefix}-nginx
+  name: ${prefix}-demo
   namespace: sandbox
   labels:
-    app: ${prefix}-nginx
+    app: ${prefix}-demo
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: ${prefix}-nginx
-  strategy:
-    type: Recreate
+      app: ${prefix}-demo
   template:
     metadata:
       labels:
-        app: ${prefix}-nginx
+        app: ${prefix}-demo
     spec:
+      serviceAccountName: default
       containers:
-        - name: ${prefix}-nginx
-          image: nginx:latest
-          ports:
-            - containerPort: 80
+        - name: cert-checker
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "[startup] Showing contents of mounted cert path:";
+              ls -l /etc/demo/ssl;
+              echo "[startup] Sleeping for inspection..."; sleep 3600;
           volumeMounts:
-            - mountPath: "/etc/${prefix}-nginx/ssl"
+            - mountPath: "/etc/demo/ssl"
               name: tls
               readOnly: true
       volumes:
@@ -172,9 +162,10 @@ spec:
 EOF
 }
 
-create_nginx_workload "expiry-eddie"
-create_nginx_workload "unmanaged-kid"
-create_nginx_workload "cipher-snake"
+
+create_cert_demo_workload "expiry-eddie"
+create_cert_demo_workload "unmanaged-kid"
+create_cert_demo_workload "cipher-snake"
 
 # Final validation
 echo "[create-sample-data] Validating resources..."

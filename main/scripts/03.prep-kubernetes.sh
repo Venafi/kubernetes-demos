@@ -10,6 +10,7 @@ echo "[prepare-kubernetes] Creating namespaces and configuring secrets..."
 
 NAMESPACES_DIR="namespaces"
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Validate namespace files
 for ns_file in "${NAMESPACES_DIR}"/*.yaml; do
@@ -31,6 +32,11 @@ for secret in cybr_mis_agent_secret.yaml cybr_mis_registry_secret.yaml cybr_mis_
   echo "[prepare-kubernetes] Applying secret $secret_file to namespace $K8S_NAMESPACE"
   kubectl -n "$K8S_NAMESPACE" apply -f "$secret_file"
 done
+
+set +e
+"$SCRIPTS_DIR/helper/redhat/add-openshift-scc.sh"
+DNS_EXIT_CODE=$?
+set -e
 
 # Placeholder for any pre-requirements
 # e.g., kubectl apply -f crds.yaml
