@@ -69,18 +69,18 @@ kubectl get crds | grep 'istio.io' |   xargs -n1 -I{} sh -c "kubectl delete crd 
 
 for workload in expiry-eddie unmanaged-kid cipher-snake; do
   echo "[clean] Deleting deployment: ${workload}"
-  kubectl delete deployment "${workload}-nginx" --ignore-not-found || true
-  kubectl delete service "${workload}-nginx" --ignore-not-found || true
+  kubectl -n sandbox delete deployment "${workload}-nginx" --ignore-not-found || true
+  kubectl -n sandbox delete service "${workload}-nginx" --ignore-not-found || true
 done
 
 for cert in expiry-eddie ghost-rider; do
   echo "[clean] Deleting certificate: ${cert}"
-  kubectl delete Certificate "${cert}.svc.cluster.local" --ignore-not-found || true
+  kubectl -n sandbox delete Certificate "${cert}.svc.cluster.local" --ignore-not-found || true
 done
 
 for secret in unmanaged-kid.svc.cluster.local cipher-snake.svc.cluster.local phantom-ca; do
   echo "[clean] Deleting secret: ${secret}"
-  kubectl delete Secret "${secret}" --ignore-not-found || true
+  kubectl -n sandbox delete Secret "${secret}" --ignore-not-found || true
 done
 
 

@@ -41,7 +41,7 @@ kind: IstioOperator
 metadata:
   namespace: istio-system
 spec:
-  profile: demo
+  profile: ${ISTIO_INSTALL_PROFILE}
   hub: gcr.io/istio-release
   meshConfig:
     trustDomain: cluster.local
