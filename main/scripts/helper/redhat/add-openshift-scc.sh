@@ -21,33 +21,36 @@ apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
   name: privileged-demo-scc
-priority: 5
-allowHostPorts: false
-allowHostPID: false
-allowHostNetwork: false
 allowHostDirVolumePlugin: true
-readOnlyRootFilesystem: false
+allowHostIPC: true
+allowHostNetwork: true
+allowHostPID: true
+allowHostPorts: true
 allowPrivilegeEscalation: true
 allowPrivilegedContainer: true
-allowedUnsafeSysctls: null
-allowHostIPC: false
 allowedCapabilities:
-  - '*'
+- '*'
+allowedUnsafeSysctls:
+- '*'
+
 defaultAddCapabilities: null
+fsGroup:
+  type: RunAsAny
+groups:
+- system:cluster-admins
+- system:nodes
+- system:masters
+priority: 5
+readOnlyRootFilesystem: false
 requiredDropCapabilities: null
-seccompProfiles:
-  - '*'
-seLinuxContext:
-  type: MustRunAs
 runAsUser:
   type: RunAsAny
-fsGroup:
-  type: MustRunAs
-supplementalGroups:
-  type: MustRunAs
-groups: []  
-volumes:
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
 - '*'
+supplementalGroups:
+  type: RunAsAny
 users:
 - system:serviceaccount:mesh-apps:adservice
 - system:serviceaccount:mesh-apps:cartservice
@@ -60,7 +63,10 @@ users:
 - system:serviceaccount:mesh-apps:productcatalogservice
 - system:serviceaccount:mesh-apps:recommendationservice
 - system:serviceaccount:mesh-apps:shippingservice
+- system:serviceaccount:mesh-apps:default
 - system:serviceaccount:sandbox:default
+volumes:
+- '*'
 EOF
 
 echo "[INFO] SecurityContextConstraints successfully applied."
