@@ -14,6 +14,8 @@ TMP_SUBNET_FILE="subnet-ids-${ROSA_CLUSTER_NAME}.env"
 echo "🚀 Creating network stack via ROSA CLI: $ROSA_NETWORK_STACK_NAME in $ROSA_REGION"
 
 rosa create network \
+  --region "$ROSA_REGION" \
+  --profile "$ROSA_PROFILE" \
   --param Name="$ROSA_NETWORK_STACK_NAME" \
   --param Region="$ROSA_REGION" \
   --param AvailabilityZoneCount=1 \
@@ -59,7 +61,6 @@ for subnet in $public_subnets; do
     --resources "$subnet" \
     --tags Key=kubernetes.io/cluster/$ROSA_CLUSTER_NAME,Value=owned \
            Key=kubernetes.io/role/elb,Value=1
-
 done
 
 for subnet in $private_subnets; do
@@ -70,7 +71,6 @@ for subnet in $private_subnets; do
     --resources "$subnet" \
     --tags Key=kubernetes.io/cluster/$ROSA_CLUSTER_NAME,Value=owned \
            Key=kubernetes.io/role/internal-elb,Value=1
-
 done
 
 echo "✅ Network creation using CloudFormation and subnet tagging complete. $TMP_SUBNET_FILE will be sourced during cluster creation and used for --subnet-ids."
