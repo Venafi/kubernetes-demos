@@ -12,9 +12,15 @@ rosa create account-roles \
   --profile "$ROSA_PROFILE" \
   --yes
 
+if [[ "${ROSA_HOSTED_CP:-false}" == "true" ]]; then
+  ROLE_NAME_SUFFIX="HCP-ROSA-Installer-Role"
+else
+  ROLE_NAME_SUFFIX="Installer-Role"
+fi
+
 INSTALLER_ROLE_ARN=$(aws iam list-roles \
   --profile "$ROSA_PROFILE" \
-  --query "Roles[?RoleName=='${ROSA_AWS_ROLES_PREFIX}-HCP-ROSA-Installer-Role'].Arn" \
+  --query "Roles[?RoleName=='${ROSA_AWS_ROLES_PREFIX}-${ROLE_NAME_SUFFIX}'].Arn" \
   --output text)
 
 if [[ -z "$INSTALLER_ROLE_ARN" ]]; then
