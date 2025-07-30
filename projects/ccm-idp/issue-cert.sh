@@ -49,6 +49,12 @@ issue_cert() {
   local jwt="$1"
   local provider="$2"
 
+  local cn="$provider-$CERT_NAME"
+  local tmp_dir="/tmp/$cn"
+  mkdir -p "$tmp_dir"
+
+  echo "🔐 Requesting certificate for CN: $cn"
+
   local vcp_token
   vcp_token=$(vcert getcred -p vcp \
     --token-url "$VCP_TOKEN_URL" \
@@ -60,21 +66,26 @@ issue_cert() {
     exit 1
   fi
 
-  local cert_file="/tmp/${provider}_cert.pem"
-  local chain_file="/tmp/${provider}_chain.pem"
-
-  echo "📄 Writing certificate to:"
-  echo "  - $cert_file"
-  echo "  - $chain_file"
-
-  vcert enroll --platform "$PLATFORM" \
+  local response_json
+  response_json=$(vcert enroll --platform "$PLATFORM" \
     -t "$vcp_token" \
-    --cn "$provider-$CERT_NAME" \
+    --cn "$cn" \
     -z "$VCP_ZONE" \
     --csr service \
-    --cert-file "$cert_file" \
-    --chain-file "$chain_file" \
-    --no-prompt
+    --chain root-first \
+    --format json \
+    --no-prompt)
+
+  echo "$response_json" > "$tmp_dir/response.json"
+  jq -r '.Certificate' <<< "$response_json" > "$tmp_dir/${cn}.pem"
+  jq -r '.Chain[]' <<< "$response_json" > "$tmp_dir/${cn}-chain.pem"
+  jq -r '.PrivateKey' <<< "$response_json" > "$tmp_dir/${cn}-key.pem"
+
+  echo "\n📜 Certificate Preview:"
+  openssl x509 -in "$tmp_dir/${cn}.pem" -text -noout | head -n 10
+
+  echo "\n✅ Cert saved in: $tmp_dir"
+  ls -lh "$tmp_dir"
 }
 
 main() {
