@@ -10,10 +10,15 @@ patch_security_groups() {
 
   if [[ -z "$ROSA_ALLOWED_CIDRS" ]]; then
     echo "❌ ROSA_ALLOWED_CIDRS must be set in env-vars.sh" | tee -a "$LOG_FILE"
-    exit 0
+    END_TIME=$(date +%s)
+    DURATION=$((END_TIME - START_TIME))
+    echo "🕒 Total elapsed time: $((DURATION / 60)) min $((DURATION % 60)) sec"
+    exit 1
   fi
 
+  # Standard and extended ports for console access
   PORTS=(443 6443 80)
+  ADDITIONAL_PORT_RANGE="1024-65535"
 
   SG_IDS=$(aws ec2 describe-security-groups \
     --region "$ROSA_REGION" \
@@ -24,6 +29,9 @@ patch_security_groups() {
 
   if [[ -z "$SG_IDS" ]]; then
     echo "⚠️ No security groups found with api.openshift.com/name: $ROSA_CLUSTER_NAME" | tee -a "$LOG_FILE"
+    END_TIME=$(date +%s)
+    DURATION=$((END_TIME - START_TIME))
+    echo "🕒 Total elapsed time: $((DURATION / 60)) min $((DURATION % 60)) sec"
     exit 0
   fi
 
@@ -52,11 +60,18 @@ patch_security_groups() {
         echo "   ✅ Rule already exists for port $port and CIDR $ROSA_ALLOWED_CIDRS" | tee -a "$LOG_FILE"
       fi
     done
+
+    echo "   🔎 Checking ephemeral port range $ADDITIONAL_PORT_RANGE for CIDR $ROSA_ALLOWED_CIDRS" | tee -a "$LOG_FILE"
+    aws ec2 authorize-security-group-ingress \
+      --region "$ROSA_REGION" \
+      --profile "$ROSA_PROFILE" \
+      --group-id "$sg_id" \
+      --protocol tcp \
+      --port "$ADDITIONAL_PORT_RANGE" \
+      --cidr "$ROSA_ALLOWED_CIDRS" || true
+
   done
 
-  END_TIME=$(date +%s)
-  DURATION=$((END_TIME - START_TIME))
-  echo "🕒 Total elapsed time: $((DURATION / 60)) min $((DURATION % 60)) sec"
   echo -e "\n✅ Security group patching complete. Log saved to $LOG_FILE"
 }
 
