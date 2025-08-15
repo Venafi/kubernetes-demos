@@ -64,17 +64,34 @@ cd kubernetes-demos/main
 
 The scripts under `scripts/` are executed by `cloud-demo.sh` and orchestrate the demo lifecycle.
 
-| Script                        | Purpose                                                                |
-|------------------------------|-------------------------------------------------------------------------|
-| `01.prep-env`                | Prepares environment, directories, trust chain, resource suffix         |
-| `02.create-service-accounts` | Creates service accounts on CyberArk Cloud                              |
-| `03.prep-kubernetes`         | Sets up namespaces and image pull secrets                               |
-| `04.install`                 | Installs CyberArk components via venctl                                 |
-| `05.configure-demo`          | Creates policies and issuers                                            |
-| `06.create-sample-data`      | Deploys certs, sample workload apps (frontend, backend)                 |
-| `07.install-istio-csr`       | Enables workload SVID issuance using istio-csr                          |
-| `08.install-istio`           | Installs Istio with observability stack (Kiali, Grafana, Prometheus)    |
-| `09.deploy-public-gateway`   | Issues public TLS cert and sets up DNS + ingress gateway                |
+### Available Commands
+
+| Command                       | Description |
+|------------------------------|-------------|
+| `01.prep-env`                | Prepare environment. Create temporary directories |
+| `02.create-service-accounts` | Create CyberArk Certificate Manager Service Accounts |
+| `03.prep-kubernetes`         | Create namespaces, secrets required for demos |
+| `04.install [mode]`          | Install CyberArk Certificate Manager in the cluster <br> Supported modes:<br>• `venctl` (default) - Uses Helm and `venctl`<br>• `operator` - Uses OLM + VenafiInstall CR |
+| `05.configure-demo`          | Create Certificate policies and issuers |
+| `06.create-sample-data`      | Seed demo environment with sample workloads and certs |
+| `07.install-istio-csr [mode]`| Prepare and install Istio SPIFFE integration <br> Supported modes:<br>• `venctl` (default)<br>• `operator` |
+| `08.install-istio`           | Install and configure Istio Service Mesh |
+| `09.deploy-public-gateway`   | OPTIONAL - Deploy Gateway with TLS cert and DNS mapping |
+| `show`                       | Demonstrate CyberArk Certificate Manager capabilities <br> Subcommands: `issuers`, `policies`, `secrets`, `svid <app>`, `app-url`, `kiali-url` <br> Advanced: `port_forward_service <name> <namespace> <service> <target_port> <local_port>` |
+| `stop-port-forwards`         | Stop all background port forwards |
+| `clean`                      | OPTIONAL - Remove everything <br> Subcommands: `intermediates`, `configuration`, `configuration <config_name>` |
+
+---
+
+### Examples
+
+```bash
+./cloud-demo.sh 01.prep-env
+./cloud-demo.sh 04.install
+./cloud-demo.sh 04.install operator
+./cloud-demo.sh show issuers
+./cloud-demo.sh show svid frontend
+./cloud-demo.sh show app-url
 
 ---
 

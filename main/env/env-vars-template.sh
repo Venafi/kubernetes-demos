@@ -32,6 +32,3 @@ export CIDR=REPLACE_WITH_LOCAL_CIDR
 
 #Optional - If you prefer managing trust anchors using Conjur.
 export CYBR_CONJUR_WORKLOAD_APIKEY=REPLACE_WITH_WORKLOAD_APIKEY
-
-#Istio profile for install. demo should suffice for most cases. Change it to openshift if running on OpenShift
-export ISTIO_INSTALL_PROFILE=demo

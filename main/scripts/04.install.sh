@@ -1,8 +1,10 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -euo pipefail
 
-echo "[install] Generating Helm manifests and installing CyberArk components..."
+echo "[install] Installing CyberArk Certificate Manager..."
+
+# Accept optional install mode: venctl (default) or operator
+INSTALL_MODE="${1:-venctl}"
 
 # Validate required environment variables
 : "${ARTIFACTS_DIR:?ARTIFACTS_DIR is required}"
@@ -20,33 +22,67 @@ echo "[install] Generating Helm manifests and installing CyberArk components..."
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 mkdir -p "$INSTALL_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Override suffix if resource file exists
+# Override suffix if file exists
 SUFFIX_FILE="${ARTIFACTS_DIR}/resource-suffix.txt"
 if [ -f "$SUFFIX_FILE" ]; then
   RESOURCE_SUFFIX="$(<"$SUFFIX_FILE")"
   echo "Overriding RESOURCE_SUFFIX with value from file: $RESOURCE_SUFFIX"
 fi
 
-# Validate required files exist
-[[ -s templates/helm/cloud-vei-values.yaml ]] || { echo "[ERROR] Missing template: cloud-vei-values.yaml"; exit 1; }
-[[ -s templates/helm/venafi-agent.yaml ]] || { echo "[ERROR] Missing template: venafi-agent.yaml"; exit 1; }
-[[ -s templates/helm/firefly-values.yaml ]] || { echo "[ERROR] Missing template: firefly-values.yaml"; exit 1; }
+# Validate template inputs
+[[ -s templates/helm/cloud-vei-values.yaml ]] || { echo "[ERROR] Missing cloud-vei-values.yaml"; exit 1; }
+[[ -s templates/helm/venafi-agent.yaml ]] || { echo "[ERROR] Missing venafi-agent.yaml"; exit 1; }
+[[ -s templates/helm/firefly-values.yaml ]] || { echo "[ERROR] Missing firefly-values.yaml"; exit 1; }
 
-echo "Copying templates to ${INSTALL_DIR}..."
-# supply VEI helm
+echo "[install] Copying and templating Helm values..."
 cp templates/helm/cloud-vei-values.yaml "${INSTALL_DIR}/vei-values.yaml"
 
-# supply venafi agent helm 
 sed -e "s/REPLACE_WITH_CLUSTER_NAME/mis-demo-cluster-${RESOURCE_SUFFIX}/g" \
   templates/helm/venafi-agent.yaml > "${INSTALL_DIR}/venafi-agent-tmp.yaml"
-envsubst < ${INSTALL_DIR}/venafi-agent-tmp.yaml > "${INSTALL_DIR}/venafi-agent.yaml"
+envsubst < "${INSTALL_DIR}/venafi-agent-tmp.yaml" > "${INSTALL_DIR}/venafi-agent.yaml"
 
-# supply firefly helm
 envsubst < templates/helm/firefly-values.yaml > "${INSTALL_DIR}/firefly-values.yaml"
 
-# Generate manifest
-echo "[install] Generating manifest with venctl..."
+# Read client IDs
+CYBR_AGENT_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_agent_client_id.txt")"
+CYBR_FIREFLY_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_firefly_client_id.txt")"
+
+# Confirm Firefly service account has been linked in the UI
+while [ -z "${CONFIRM:-}" ]; do
+  read -r -p "Have you attached the Firefly service account to the config in the UI? [y/N] " CONFIRM
+done
+
+if [ "$(echo "$CONFIRM" | tr '[:upper:]' '[:lower:]')" != "y" ]; then
+  echo "######################################################################"
+  echo "The Firefly config must be associated with the client ID:"
+  echo "  ${CYBR_FIREFLY_SA_CLIENT_ID}"
+  echo "Do this in the CyberArk UI before continuing."
+  echo "######################################################################"
+  exit 1
+fi
+
+# If using Operator install, delegate and exit
+if [[ "$INSTALL_MODE" == "operator" ]]; then
+  if ! "$SCRIPTS_DIR/helper/redhat/is-openshift-cluster.sh"; then
+    echo "[install] ❌ Operator install is only supported on OpenShift clusters."
+    exit 1
+  fi
+  echo "[install] 🚀 Switching to operator-based install flow..."
+  # Export required variables for ccm-operator.sh
+  export INSTALL_DIR
+  export CYBR_AGENT_SA_CLIENT_ID
+  export CYBR_FIREFLY_SA_CLIENT_ID
+  export RESOURCE_SUFFIX
+  exec "$(dirname "$0")/ccm-operator.sh"
+fi
+
+# -------------------------
+# venctl-based install flow
+# -------------------------
+echo "[install] 🛠️ Generating manifest with venctl..."
+
 venctl components kubernetes manifest generate \
   --region "${CYBR_CLOUD_REGION}" \
   --vcp-region "${CYBR_CLOUD_REGION}" \
@@ -78,31 +114,13 @@ venctl components kubernetes manifest generate \
 
 echo "[install] Manifest generated at ${INSTALL_DIR}/venafi-manifests.yaml"
 
-# Read service account client IDs
-CYBR_AGENT_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_agent_client_id.txt")"
-CYBR_FIREFLY_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_firefly_client_id.txt")"
-
-# Prompt for confirmation
-while [ -z "${CONFIRM:-}" ]; do
-  read -r -p "Have you attached the Firefly service account to the config in the UI? [y/N] " CONFIRM
-done
-
-if [ "$(echo "$CONFIRM" | tr '[:upper:]' '[:lower:]')" != "y" ]; then
-  echo "######################################################################"
-  echo "The Firefly config must be associated with the client ID:"
-  echo "  ${CYBR_FIREFLY_SA_CLIENT_ID}"
-  echo "Do this in the CyberArk UI before continuing."
-  echo "######################################################################"
-  exit 1
-fi
-
 # Optionally allow override of trust domain
 : "${CSI_DRIVER_SPIFFE_TRUST_DOMAIN:=cluster.local}"
 
-echo "[install] Syncing manifests to cluster..."
+echo "[install] 📡 Syncing manifests to cluster..."
 VENAFI_KUBERNETES_AGENT_CLIENT_ID="${CYBR_AGENT_SA_CLIENT_ID}" \
 FIREFLY_VENAFI_CLIENT_ID="${CYBR_FIREFLY_SA_CLIENT_ID}" \
 CSI_DRIVER_SPIFFE_TRUST_DOMAIN="${CSI_DRIVER_SPIFFE_TRUST_DOMAIN}" \
 venctl components kubernetes manifest tool sync --file "${INSTALL_DIR}/venafi-manifests.yaml"
 
-echo "[install] Installation complete ✅"
+echo "[install] ✅ venctl-based install complete"

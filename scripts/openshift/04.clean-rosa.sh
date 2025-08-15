@@ -2,6 +2,13 @@
 set -euo pipefail
 source ./env-vars.sh
 
+abort_and_retry() {
+  echo "❌ Authentication failed."
+  echo "🔐 Please re-authenticate as needed (ROSA and/or AWS)."
+  echo "ℹ️  Then re-run this script: ./04.clean-rosa.sh"
+  exit 1
+}
+
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=true
@@ -29,6 +36,10 @@ if rosa describe cluster -c "$ROSA_CLUSTER_NAME" --region "$ROSA_REGION" --profi
       sleep 60
     done
     echo "✅ Cluster deleted."
+    # Check ROSA authentication before continuing 
+    rosa whoami --profile "$ROSA_PROFILE" &>/dev/null || abort_and_retry
+    # Check AWS authentication before continuing 
+    aws sts get-caller-identity --region "$ROSA_REGION" --profile "$ROSA_PROFILE" &>/dev/null || abort_and_retry    
   fi
 else
   echo "✅ Cluster does not exist. Skipping cluster deletion."

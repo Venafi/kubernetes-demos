@@ -11,6 +11,7 @@ echo "[install-istio-csr] Preparing environment for Istio service mesh..."
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
 VALUES_OUT="${INSTALL_DIR}/istio-csr-values.yaml"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Helm for istio-csr installation with venctl
 echo "[install-istio-csr] Templating istio-csr Helm values..."
@@ -68,6 +69,80 @@ spec:
       matchLabels:
          issuer: "cyberark-firefly"
 EOF
+
+if [[ "${1:-}" == "operator" ]]; then
+  if ! "$SCRIPTS_DIR/helper/redhat/is-openshift-cluster.sh"; then
+    echo "[install-istio-csr] ❌ Operator mode is only supported on OpenShift clusters."
+    exit 1
+  fi
+  echo "[install-istio-csr] 🚀 Operator install mode detected"
+
+  VENAFI_INSTALL_FILE="${INSTALL_DIR}/venafi-install-istio-csr.yaml"
+  ISTIO_CSR_VALUES=$(<"${INSTALL_DIR}/istio-csr-values.yaml")
+
+  cat <<EOF > "$VENAFI_INSTALL_FILE"
+apiVersion: installer.venafi.com/v1alpha1
+kind: VenafiInstall
+metadata:
+  name: ccm-istio-csr-install
+spec:
+  globals:
+    namespace: ${K8S_NAMESPACE}
+    enableDefaultApprover: false
+    useFIPSImages: false
+    region: US
+    vcpRegion: US
+    imagePullSecretNames:
+      - venafi-image-pull-secret
+
+  certManager:
+    install: false
+    skip: true
+
+  certManagerIstioCSR:
+    install: true
+    version: ${CERT_MANAGER_ISTIO_CSR}
+    trustDomain: cluster.local
+    runtimeConfigMapName: istio-csr-ca
+    values:
+$(echo "$ISTIO_CSR_VALUES" | sed 's/^/      /')
+EOF
+
+  echo "[install-istio-csr] Applying VenafiInstall CR for istio-csr..."
+  kubectl apply -f "$VENAFI_INSTALL_FILE"
+
+  VENAFI_INSTALL_NAME="ccm-istio-csr-install"
+  VENAFI_INSTALL_NS="cyberark"
+
+  echo "[install-istio-csr] ⏳ Waiting for VenafiInstall ${VENAFI_INSTALL_NAME} to reach state 'Synced'..."
+
+  for i in {1..24}; do
+    STATE=$(kubectl get VenafiInstall "$VENAFI_INSTALL_NAME" -n "$VENAFI_INSTALL_NS" -o jsonpath='{.status.state}' 2>/dev/null || true)
+    if [[ "$STATE" == "Synced" ]]; then
+      echo "[install-istio-csr] ✅ VenafiInstall state: Synced"
+      break
+    fi
+    echo "[install-istio-csr] ⏳ Current state: ${STATE:-<none>} (waiting...)"
+    sleep 5
+  done
+
+  # Always show a final status summary
+  echo "[install-istio-csr] 🔍 Final VenafiInstall status:"
+  kubectl get VenafiInstall "$VENAFI_INSTALL_NAME" -n "$VENAFI_INSTALL_NS" -o jsonpath='{.status.state}{" - "}{.status.reason}{"\n"}'
+
+  # Optional: fail if not Synced
+  if [[ "$STATE" != "Synced" ]]; then
+    echo "[install-istio-csr] ❌ VenafiInstall did not reach 'Synced' state in time"
+    exit 1
+  fi
+
+  echo "[install-istio-csr] Waiting for istiod-dynamic certificate to be ready..."
+  kubectl wait certificate istiod-dynamic -n istio-system \
+    --for=condition=Ready=True --timeout=90s
+
+  echo "[install-istio-csr] ✅ Operator-based istio-csr setup complete."
+  exit 0
+fi
 
 # Generate manifests for istio-csr component
 echo "[install-istio-csr] Generating manifests for istio-csr..."

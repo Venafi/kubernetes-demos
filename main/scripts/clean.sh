@@ -97,6 +97,32 @@ kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for
 kubectl delete certificaterequestpolicies.policy.cert-manager.io cert-policy-for-venafi-certs --ignore-not-found || true
 
 echo "[clean] Uninstall all Cyberark Certificate Manager components..."
+
+echo "[clean] 🧽 Removing Operator-based installation artifacts..."
+
+# Delete VenafiInstall CR
+kubectl -n "${K8S_NAMESPACE}" delete VenafiInstall cyberark-cm-for-kubernetes --ignore-not-found || true
+
+# Delete VenafiInstall CR
+kubectl -n "${K8S_NAMESPACE}" delete VenafiInstall ccm-istio-csr-install  --ignore-not-found || true
+
+# Delete Subscription
+kubectl -n "${K8S_NAMESPACE}" delete subscription vcp-operator --ignore-not-found || true
+
+# Delete OperatorGroup
+kubectl -n "${K8S_NAMESPACE}" delete operatorgroup cyberark-operator-group --ignore-not-found || true
+
+# Optionally delete the installed CSV (safely)
+CSV_NAME=$(kubectl get csv -n "${K8S_NAMESPACE}" -o jsonpath='{.items[?(@.metadata.name=="vcp-operator.*")].metadata.name}' 2>/dev/null || true)
+if [[ -n "$CSV_NAME" ]]; then
+  echo "[clean] 🗑️ Deleting installed CSV: $CSV_NAME"
+  kubectl delete csv "$CSV_NAME" -n "${K8S_NAMESPACE}" --ignore-not-found || true
+fi
+
+# (Optional) Remove CRDs installed by the operator
+# echo "[clean] (optional) Deleting operator-managed CRDs"
+# kubectl get crds | grep 'installer.venafi.com\|venafi.com' | awk '{print $1}' | xargs -r kubectl delete crd --ignore-not-found
+
 # Read service account client IDs
 CYBR_AGENT_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_agent_client_id.txt")"
 CYBR_FIREFLY_SA_CLIENT_ID="$(<"${INSTALL_DIR}/cybr_mis_firefly_client_id.txt")"

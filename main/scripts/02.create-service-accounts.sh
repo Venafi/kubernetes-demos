@@ -48,7 +48,7 @@ venctl iam service-account registry create \
   --output "secret" \
   --owning-team "${CYBR_TEAM_NAME}" \
   --validity 10 \
-  --scopes enterprise-cert-manager,enterprise-approver-policy,enterprise-venafi-issuer \
+  --scopes cert-manager-components,enterprise-approver-policy,enterprise-venafi-issuer,openshift-routes \
   --api-key "${CYBR_CLOUD_API_KEY}" \
   --vcp-region "${CYBR_CLOUD_REGION}"
 
