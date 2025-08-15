@@ -10,6 +10,7 @@ echo "[install-istio] Installing and configuring Istio service mesh..."
 command -v istioctl >/dev/null || { echo "[ERROR] istioctl not found in PATH"; exit 1; }
 
 INSTALL_DIR="${ARTIFACTS_DIR}/cyberark-install"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # -------- Random default for security group used for ingress load balancer --------
 CIDR_FALLBACK="1.2.3.4/32"
@@ -31,6 +32,13 @@ if [[ -z "${CIDR:-}" || "$CIDR" == "REPLACE_WITH_LOCAL_CIDR" ]]; then
 else
   echo "[install-istio] ✅ Using provided CIDR: $CIDR"
 fi
+
+if "$SCRIPTS_DIR/helper/redhat/is-openshift-cluster.sh"; then
+  export ISTIO_INSTALL_PROFILE="openshift"
+else
+  export ISTIO_INSTALL_PROFILE="demo"
+fi
+echo "[install-istio] Selected Istio profile: ${ISTIO_INSTALL_PROFILE}"
 
 # Install Istio control plane with venafi-integrated CSR
 echo "[install-istio] Installing Istio with custom config..."
