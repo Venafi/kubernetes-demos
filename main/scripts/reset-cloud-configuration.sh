@@ -9,9 +9,9 @@ CONFIG_NAME="${1:-firefly-config-built-in-ca}"
 # Optional: support list of configs via env var
 CONFIG_LIST=(
   "firefly-config-built-in-ca"
-  "WIM-config-for-builtin-ca"
-  "WIM-config-CCM-self-hosted"
-  "WIM-config-for-ZTPKI"
+  "CCM-SaaS-Builtin-CA"
+  "CCM-Self-Hosted-MSCA"
+  "CCM-SaaS-ZTPKI"
 )
 
 # Helper: reset a single config name
