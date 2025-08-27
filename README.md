@@ -1,34 +1,72 @@
-# Getting started with CyberArk Certificate Manager
+# Kubernetes Demos
+
+This repository contains demos that show how to secure Kubernetes workloads with **CyberArk Certificate Manager**
+
+> ⚠️ These are demos for learning. They are simplified and not production-ready.
+
+---
 
 ## Assumptions
 - You have access to CyberArk Certificate Manager and have the entitlements to use **Workload Identity Manager** and **Kubernetes add-on**
 - If you do not, sign up for an account at https://ui.venafi.cloud . 
 
-## Self paced walkthroughs
+## Comprehensive Use Cases
 
-### Full installation - all capabilities with Istio
-Change to `main` directory and follow the [documentation](main/README.md)
+The [`main/`](main) directory contains **full, end-to-end scenarios**, such as:
+- SaaS quick path
+- Certificate Discovery
+- Istio service mesh with mTLS and cert issuance
+- Workload Identity Manager for SPIFFE compliant certs with enterprise PKI for service mesh
+- Cyberark CLI based mechanism (`venctl`) to install and manage Kubernetes components 
+- Redhat Operator based mechanism (as an alternate path to `venctl`) to manage Kubernetes components in OpenShift 
 
-### CyberArk Certificate Manager and AWS PCA 
-To install CyberArk Certificate Manager and use it with AWS PCA , follow the instructions written [here](projects/awspca/README.md)
+Refer to the [README](main/README.md) to get started with configurations in the SaaS and runtime instructions provided [here](main/CLOUD-DEMO.md)
 
-### CyberArk Certificate Manager Self Hosted
-To use CyberArk Certificate Manager Self-Hosted in your cluster , follow the instructions written [here](projects/ven02/README.md)
+If you prefer to use a ready-to-use EC2 machine with a cluster along with all the dependencies, just reach out. 
 
-### Installing the Venafi Kuberentes components in cluster with an existing cert-manager installation
-To install Venafi components without cert-manager (assumes you have a functional cert-manager in cluster), follow the instructions written [here](projects/ven03/README.md)
+---
 
-### CyberArk Certificate Manager SaaS
-For a simple usecase of using CyberArk Certificate Manager SaaS for your cluster , follow the instructions written [here](projects/ven04/README.md)
+## Projects
 
-### Installing the Venafi Kubernetes discovery component in cluster
-To install only the Venafi Kubernetes discovery component in your cluster, follow the instructions written [here](projects/cert-discovery/README.md)
+The [`projects/`](projects) directory contains smaller, focused demos.  
+Each project folder has its own README with setup instructions (or will have one soon).
 
-### CyberArk Certificate Manager SaaS with Kong Mesh
-For using CyberArk Certificate Manager SaaS with Workload Identity Manager for Kong Mesh , follow the instructions written [here](projects/kong-mesh/README.md)
+| Project (folder) | Description | README |
+|------------------|-------------|--------|
+| `awspca`        | AWS Private CA integration | [README](projects/aws-pca/README.md) |
+| `ccm-agent` | Discover and inventory Kubernetes certificates using Federated Identity | [README](projects/ccm-agent/README.md) |
+| `ccm-idp` | Issue TLS certs with service accounts using Org Identity Provider without APIKEY | [README](projects/ccm-idp/README.md) |
+| `kong-mesh`      | Kong Mesh integration example | [README](projects/kong-mesh/README.md) |
+| `secrets-manager`      | CyberArk Secrets Manager & Certificate Manager Integration | [README](projects/secrets-manager/README.md) |
+| `ccm-vault`      | Certificate Manager Integration with HashiCorp Vault | [README](projects/ccm-vault/README.md) |
+| `self-hosted`    | Self-hosted Certificate Manager example | [README](projects/self-hosted/README.md) |
+| `spiffe-integration` | SPIFFE/SPIRE workload identity integration | [README](projects/spiffe-integration/README.md) |
 
-### Condensed usecases
-Change to `projects` directory and you will find different folders with specific README. 
+---
+
+## Clusters
+
+The [`scripts/`](scripts) directory contains cloud provider specific scripts to stand up a cluster. 
+
+| Scripts (folder) | Description | README |
+|------------------|-------------|--------|
+| `EKS (AWS)`        | Full end to end EKS cluster build and destroy | [README](scripts/aws/README.md) |
+| `AKS (Azure)` | Full end to end AKS cluster build and destroy | [README](scripts/azure/README.md) |
+| `GKE (Google Cloud)` | Full end to end GKE cluster build and destroy | [README](scripts/gcp/README.md) |
+| `OpenShift (RedHat)` | Full end to end OpenShift (ROSA) cluster build and destroy | [README](scripts/openshift/README.md) |
+| `Kind (for local)` | Kind cluster for quick testing | [Script](main/create-cluster.sh) |
 
 
-**NOTE** This repo is for demos only.  
+
+
+## Contributing
+
+- Keep demos simple and reproducible.  
+- Add/update README.md files in each `projects/<name>/` directory.  
+- Update this table when new projects are added.  
+
+---
+
+## License
+
+[Apache 2.0](LICENSE)
