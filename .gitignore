@@ -68,3 +68,4 @@ projects/ccm-vault/LICENSE.txt
 subnet-ids-*.env
 kubeconfig-*.yaml
 .oidc-id
+env-mirror.sh

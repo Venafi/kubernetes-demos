@@ -139,6 +139,9 @@ for ns in sandbox cyberark; do
   kubectl delete namespace "$ns" --ignore-not-found || true
 done
 
+kubectl get crds | grep 'jetstack.io' |   xargs -n1 -I{} sh -c "kubectl delete crd {}" || true
+kubectl get crds | grep 'cert-manager.io' |   xargs -n1 -I{} sh -c "kubectl delete crd {}" || true
+
 # Handle suffix override from file
 SUFFIX_FILE="${ARTIFACTS_DIR}/resource-suffix.txt"
 if [ -f "$SUFFIX_FILE" ]; then

@@ -1,0 +1,4 @@
+# trust-manager default CA package image (tag like 20230311.0)
+trust-manager;defaultPackageImage.repository;trust-pkg
+# if a chart exposed a sidecar:
+# some-chart;sidecar.image.repository;sidecar-name

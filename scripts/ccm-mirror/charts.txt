@@ -1,0 +1,87 @@
+# Cyberark Certificate Manager for Kubernetes components
+# Create a Service account in CyberArk Certificate Manager with all scopes to access these charts and images
+
+# https://docs.venafi.cloud/vaas/k8s-components/c-tlspk-enterprise-components/
+
+# Approver Policy cert-manager
+# https://docs.venafi.cloud/vaas/k8s-components/c-ap-releases/
+oci://registry.venafi.cloud/charts/cert-manager-approver-policy:${APPROVER_POLICY_ENTERPRISE}
+    private-registry.venafi.cloud/cert-manager-approver-policy/cert-manager-approver-policy
+
+# Approver Policy Enterprise (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-ape-releases/
+oci://registry.venafi.cloud/charts/approver-policy-enterprise:${APPROVER_POLICY_ENTERPRISE}
+    private-registry.venafi.cloud/venafi-approver-policy/approver-policy-enterprise
+    private-registry.venafi.cloud/venafi-approver-policy/approver-policy-enterprise-fips
+
+# CSI Driver (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-csi-releases/
+oci://registry.venafi.cloud/charts/cert-manager-csi-driver:${CERT_MANAGER_CSI_DRIVER}
+    private-registry.venafi.cloud/csi-driver/cert-manager-csi-driver
+    private-registry.venafi.cloud/csi-driver/csi-driver-fips
+    private-registry.venafi.cloud/csi-driver/csi-node-driver-registrar:v2.14.0
+    private-registry.venafi.cloud/csi-driver/livenessprobe:v2.16.0
+
+# CSI Driver for SPIFFE (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-csispiffe-releases/
+oci://registry.venafi.cloud/charts/cert-manager-csi-driver-spiffe:${CERT_MANAGER_CSI_DRIVER_SPIFFE}
+    private-registry.venafi.cloud/csi-driver-spiffe/cert-manager-csi-driver-spiffe
+    private-registry.venafi.cloud/csi-driver-spiffe/cert-manager-csi-driver-spiffe-approver
+    private-registry.venafi.cloud/csi-driver-spiffe/csi-driver-spiffe-fips
+    private-registry.venafi.cloud/csi-driver-spiffe/csi-driver-spiffe-approver-fips
+    private-registry.venafi.cloud/csi-driver-spiffe/csi-node-driver-registrar:v2.14.0
+    private-registry.venafi.cloud/csi-driver-spiffe/livenessprobe:v2.16.0
+
+# cert-manager Enterprise (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-cm-releases/
+oci://registry.venafi.cloud/charts/cert-manager:${CERT_MANAGER}
+    private-registry.venafi.cloud/cert-manager/cert-manager-controller
+    private-registry.venafi.cloud/cert-manager/cert-manager-controller-fips
+    private-registry.venafi.cloud/cert-manager/cert-manager-acmesolver
+    private-registry.venafi.cloud/cert-manager/cert-manager-acmesolver-fips
+    private-registry.venafi.cloud/cert-manager/cert-manager-cainjector
+    private-registry.venafi.cloud/cert-manager/cert-manager-cainjector-fips
+    private-registry.venafi.cloud/cert-manager/cert-manager-webhook
+    private-registry.venafi.cloud/cert-manager/cert-manager-webhook-fips
+    private-registry.venafi.cloud/cert-manager/cert-manager-startupapicheck
+    private-registry.venafi.cloud/cert-manager/cert-manager-startupapicheck-fips
+
+# Workload Identity Manager
+# https://docs.venafi.cloud/firefly/deploy/releases/
+oci://private-registry.venafi.cloud/charts/firefly:${FIREFLY}
+    private-registry.venafi.cloud/firefly/firefly
+
+# Istio CSR (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-istiocsr-releases/
+oci://registry.venafi.cloud/charts/cert-manager-istio-csr:${CERT_MANAGER_ISTIO_CSR}
+    private-registry.venafi.cloud/istio-csr/cert-manager-istio-csr
+    private-registry.venafi.cloud/istio-csr/istio-csr-fips
+
+# OpenShift Routes (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-osr-releases/
+oci://registry.venafi.cloud/charts/openshift-routes:${OPENSHIFT_ROUTES}
+    private-registry.venafi.cloud/openshift-routes/cert-manager-openshift-routes
+    private-registry.venafi.cloud/openshift-routes/openshift-routes-fips
+
+# Trust Manager (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-tm-releases/
+oci://registry.venafi.cloud/charts/trust-manager:${TRUST_MANAGER}
+    private-registry.venafi.cloud/trust-manager/trust-manager
+    private-registry.venafi.cloud/trust-manager/trust-manager-fips
+    private-registry.venafi.cloud/trust-manager/trust-pkg-debian-bookworm:20230311.0
+
+# CRDs only
+# https://docs.venafi.cloud/vaas/k8s-components/c-vc-releases/
+oci://registry.venafi.cloud/charts/venafi-connection:${VENAFI_CONNECTION}
+
+# CyberArk Enterprise Issuer (+FIPS)
+# https://docs.venafi.cloud/vaas/k8s-components/c-vei-releases/
+oci://registry.venafi.cloud/charts/venafi-enhanced-issuer:${VENAFI_ENHANCED_ISSUER}
+    private-registry.venafi.cloud/venafi-issuer/venafi-enhanced-issuer
+    private-registry.venafi.cloud/venafi-issuer/venafi-enhanced-issuer-fips
+
+# Discovery Agent
+# https://docs.venafi.cloud/vaas/k8s-components/c-agent-releases/
+oci://registry.venafi.cloud/charts/venafi-kubernetes-agent:${VENAFI_KUBERNETES_AGENT}
+    private-registry.venafi.cloud/venafi-agent/venafi-agent
+
