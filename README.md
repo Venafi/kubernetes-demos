@@ -56,7 +56,13 @@ The [`scripts/`](scripts) directory contains cloud provider specific scripts to 
 | `OpenShift (RedHat)` | Full end to end OpenShift (ROSA) cluster build and destroy | [README](scripts/openshift/README.md) |
 | `Kind (for local)` | Kind cluster for quick testing | [Script](main/create-cluster.sh) |
 
+## Misc
+The [`scripts/`](scripts) directory miscellaeous work for supporting usecases. 
 
+| Scripts (folder) | Description | README |
+|------------------|-------------|--------|
+| `registry`        | Full setup and configuration for Harbor Registry | [README](scripts/registry/README.md) |
+| `ccm-mirror` | Scripts to mirror charts and images to target regisry | [README](scripts/ccm-mirror/README.md) |
 
 
 ## Contributing

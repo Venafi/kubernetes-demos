@@ -1,0 +1,277 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Harbor on EC2 with HTTPS (CyberArk CM via vcert), VPC/Subnet dropdowns, single root EBS, SSM-only, and 443 allowlist.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select the VPC to launch into.
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Select a subnet (must have outbound internet via NAT/IGW).
+  AllowedHttpsCidr1:
+    Type: String
+    Description: Primary CIDR allowed to reach Harbor over 443 (e.g., 203.0.113.0/24 or 198.51.100.12/32).
+    Default: 198.51.100.12/32
+  AllowedHttpsCidr2:
+    Type: String
+    Default: ''
+    Description: Optional additional allowed CIDR.
+  AllowedHttpsCidr3:
+    Type: String
+    Default: ''
+    Description: Optional additional allowed CIDR.
+  InstanceType:
+    Type: String
+    Default: t3.large
+    AllowedValues: [t3.large, t3.xlarge, t3a.large, t3a.xlarge, m6a.large, m6a.xlarge]
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: ''
+    Description: If you later open SSH.
+  AdminPassword:
+    NoEcho: true
+    Type: String
+    MinLength: 8
+    Description: Harbor admin password.
+  HarborHostname:
+    Type: String
+    Default: harbor.mis.mimlab.io
+    Description: FQDN you will point at this instance (A record).
+  RootVolumeSizeGiB:
+    Type: Number
+    Default: 100
+    MinValue: 40
+    Description: Root EBS volume size for the instance (/dev/sda1).
+  UbuntuAmiId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-04f167a56786e4b09
+    Description: >
+      Ubuntu Server 24.04 LTS (amd64, HVM, gp3) for us-east-2. Change per region if needed.
+  AllocateElasticIP:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true','false']
+    Description: If true, attach an Elastic IP.
+  CMApiKey:
+    NoEcho: true
+    Type: String
+    Description: CyberArk Certificate Manager (SaaS) API Key for vcert enroll.
+  CMZone:
+    Type: String
+    Description: Certificate Manager Zone (e.g., Application\IssuingTemplate) used by vcert enroll.
+    Default: SKI-Apps\\digicert
+
+Conditions:
+  UseEIP: !Equals [!Ref AllocateElasticIP, 'true']
+  HasKey: !Not [!Equals [!Ref KeyName, '']]
+  HasCIDR2: !Not [!Equals [!Ref AllowedHttpsCidr2, '']]
+  HasCIDR3: !Not [!Equals [!Ref AllowedHttpsCidr3, '']]
+
+Resources:
+  HarborSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Harbor SG - 443 only from allowlist; full egress for updates/scans.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref AllowedHttpsCidr1
+        - !If
+          - HasCIDR2
+          - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: !Ref AllowedHttpsCidr2 }
+          - { Ref: AWS::NoValue }
+        - !If
+          - HasCIDR3
+          - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: !Ref AllowedHttpsCidr3 }
+          - { Ref: AWS::NoValue }
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  HarborEIP:
+    Condition: UseEIP
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  HarborRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  HarborProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref HarborRole]
+
+  HarborInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref HarborProfile
+      ImageId: !Ref UbuntuAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: [!Ref HarborSG]
+      KeyName: !If [HasKey, !Ref KeyName, !Ref AWS::NoValue]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref RootVolumeSizeGiB
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: "Harbor-Registry"
+      UserData:
+        Fn::Base64: !Sub |
+          #!/usr/bin/env bash
+          set -euxo pipefail
+
+          # ===== CFN params injected as shell vars =====
+          HARBOR_HOST="${HarborHostname}"
+          ADMIN_PW="${AdminPassword}"
+          CM_API_KEY="${CMApiKey}"
+          CM_ZONE="${CMZone}"
+
+          # ===== Local vars (reference with ${!VAR} below) =====
+          HARBOR_VER="v2.13.2"
+          VCERT_VER="5.11.1"
+          INSTALL_DIR="/opt/harbor"
+          DATA_DIR="/data"
+          CERT_DIR="${!INSTALL_DIR}/certs"
+
+          # ===== OS prep =====
+          apt-get update -y
+          apt-get install -y ca-certificates curl gnupg lsb-release jq openssl tar unzip apt-transport-https software-properties-common
+
+          # SSM agent
+          snap install amazon-ssm-agent || true
+          systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service || true
+          systemctl start  snap.amazon-ssm-agent.amazon-ssm-agent.service || true
+
+          # Docker CE + compose plugin
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          . /etc/os-release
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${!VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list
+          apt-get update -y
+          apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          systemctl enable docker
+          systemctl start docker
+
+          # ===== Harbor install =====
+          mkdir -p "${!INSTALL_DIR}" "${!DATA_DIR}" "${!CERT_DIR}"
+          cd /tmp
+          curl -fL -o harbor.tgz "https://github.com/goharbor/harbor/releases/download/${!HARBOR_VER}/harbor-online-installer-${!HARBOR_VER}.tgz"
+          tar -C "${!INSTALL_DIR}" -xzf harbor.tgz
+          cd "${!INSTALL_DIR}/harbor"
+
+          # ===== vcert install (ZIP) =====
+          cd /usr/local/bin
+          curl -fL -o vcert.zip "https://github.com/Venafi/vcert/releases/download/v${!VCERT_VER}/vcert_v${!VCERT_VER}_linux.zip"
+          unzip -o vcert.zip
+          chmod +x vcert
+          /usr/local/bin/vcert --version || true
+
+          # ===== Obtain public TLS cert from CyberArk Certificate Manager via vcert =====
+          /usr/local/bin/vcert enroll \
+            -k "${CMApiKey}" \
+            -z "${CMZone}" \
+            -cn "${!HARBOR_HOST}" \
+            --san-dns "${!HARBOR_HOST}" \
+            --csr service \
+            --key-file   "${!CERT_DIR}/harbor.key" \
+            --cert-file  "${!CERT_DIR}/harbor.crt" \
+            --chain-file "${!CERT_DIR}/harbor.chain.crt" \
+            --no-prompt
+
+          cat "${!CERT_DIR}/harbor.crt" "${!CERT_DIR}/harbor.chain.crt" > "${!CERT_DIR}/harbor.fullchain.crt"
+
+          # ===== Configure Harbor =====
+          # back in the Harbor dir
+          cd "${!INSTALL_DIR}/harbor"
+          test -f harbor.yml.tmpl || { echo "harbor.yml.tmpl missing in $(pwd)"; ls -la; exit 1; }
+          cp harbor.yml.tmpl harbor.yml
+
+          # hostname + data volume (keep these)
+          sed -i "s/^hostname: .*/hostname: ${!HARBOR_HOST}/" harbor.yml
+          sed -i "s|^data_volume: .*|data_volume: ${!DATA_DIR}|" harbor.yml
+
+          # === Replace any existing HTTPS section with a clean one ===
+          # 1) Kill any existing 'https:' section (top-level key)
+          awk '
+            /^https:[[:space:]]*$/ { in=1; next }
+            in && /^[^[:space:]]/ { in=0 }   # next top-level key ends the https block
+            !in { print }
+          ' harbor.yml > harbor.yml.nossl && mv harbor.yml.nossl harbor.yml
+
+          # 2) Append our known-good https block
+          cat >> harbor.yml <<EOF
+          https:
+            port: 443
+            certificate: ${!CERT_DIR}/harbor.fullchain.crt
+            private_key: ${!CERT_DIR}/harbor.key
+          EOF
+
+          # enable ChartMuseum + Trivy
+          sed -i 's/^# with_chartmuseum: .*/with_chartmuseum: true/' harbor.yml
+          sed -i 's/^# with_trivy: .*/with_trivy: true/' harbor.yml
+
+          # sanity: cert files exist & non-empty
+          for f in "${!CERT_DIR}/harbor.key" "${!CERT_DIR}/harbor.crt" "${!CERT_DIR}/harbor.chain.crt" "${!CERT_DIR}/harbor.fullchain.crt"; do
+            [ -s "$f" ] || { echo "MISSING/EMPTY: $f"; ls -l "${!CERT_DIR}"; exit 1; }
+          done
+
+          echo "----- Dump of HTTPS block in harbor.yml -----"
+          awk '/^https:/{flag=1} flag{print} /^[^[:space:]]/{if(flag&&$0!~/^https:/){flag=0}}' harbor.yml
+
+          # now run installer (expects harbor.yml in CWD)
+          ./prepare
+          ./install.sh
+
+
+          # ===== systemd wrapper =====
+          cat >/etc/systemd/system/harbor-compose.service <<'UNIT'
+          [Unit]
+          Description=Harbor via docker compose
+          After=docker.service
+          Requires=docker.service
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          WorkingDirectory=/opt/harbor/harbor
+          ExecStart=/usr/bin/docker compose up -d
+          ExecStop=/usr/bin/docker compose down
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+          systemctl enable harbor-compose.service
+          systemctl start harbor-compose.service
+
+  AssocEIP:
+    Condition: UseEIP
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt HarborEIP.AllocationId
+      InstanceId: !Ref HarborInstance
+
+Outputs:
+  HarborURL:
+    Value: !Sub "https://${HarborHostname}"
+  InstancePublicIp:
+    Value: !If [UseEIP, !Ref HarborEIP, !GetAtt HarborInstance.PublicIp]
+  EffectiveVpcId:
+    Value: !Ref VpcId
+  EffectiveSubnetId:
+    Value: !Ref SubnetId

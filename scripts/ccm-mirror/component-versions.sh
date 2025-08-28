@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Versions based on `venctl components kubernetes manifest print-versions`
+export APPROVER_POLICY_ENTERPRISE=v0.21.0
+export AWS_PRIVATECA_ISSUER=v1.6.0
+export CERT_MANAGER=v1.18.2
+export CERT_MANAGER_APPROVER_POLICY=v0.21.0
+export CERT_MANAGER_CSI_DRIVER=v0.10.4
+export CERT_MANAGER_CSI_DRIVER_SPIFFE=v0.10.0
+export CERT_MANAGER_ISTIO_CSR=v0.14.2
+export FIREFLY=v1.8.1
+export OPENSHIFT_ROUTES=v0.8.1
+export TRUST_MANAGER=v0.18.0
+export VENAFI_CONNECTION=v0.4.0
+export VENAFI_ENHANCED_ISSUER=v0.16.0
+export VENAFI_KUBERNETES_AGENT=v1.6.0
