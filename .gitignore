@@ -8,8 +8,6 @@ archives/isolated-issuer/kubeconfig-for-isolated-issuer
 ca.crt
 .DS_Store
 archives/service-mesh/istio/Makefile
-archives/service-mesh/istio/common/.DS_Store
-scripts/vault/.DS_Store
 venafi-tpp-server-ca.crt
 venafi-tpp-server-ca.pem
 venafi-msca-ica-root.pem
@@ -46,7 +44,7 @@ projects/ven03/venafi-firefly-key.pem
 venafi-cloud-zkpki-root.pem
 projects/awspca/awspca-artifacts/
 venafi-dc-msca-root.pem
-main/cyberarkCA.pem
+cyberarkCA.pem
 env-vars.sh
 main/scripts/excluded-uuids.txt
 eks-config.sh
