@@ -39,8 +39,7 @@ Each project folder has its own README with setup instructions (or will have one
 | `kong-mesh`      | Kong Mesh integration example | [README](projects/kong-mesh/README.md) |
 | `secrets-manager`      | CyberArk Secrets Manager & Certificate Manager Integration | [README](projects/secrets-manager/README.md) |
 | `ccm-vault`      | Certificate Manager Integration with HashiCorp Vault | [README](projects/ccm-vault/README.md) |
-| `self-hosted`    | Self-hosted Certificate Manager example | [README](projects/self-hosted/README.md) |
-| `spiffe-integration` | SPIFFE/SPIRE workload identity integration | [README](projects/spiffe-integration/README.md) |
+| `nginx-plus`      | Certificate Manager Integration with F5 NGINX Plus | [README](projects/nginx-plus/README.md) |
 
 ---
 
