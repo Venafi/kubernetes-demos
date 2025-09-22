@@ -1,0 +1,456 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Demo: Single-node Vault on EC2 (Ubuntu 24.04) with HTTPS via vcert (CyberArk Certificate Manager).
+  
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC to launch the instance in.
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet with Internet/NAT egress
+  UbuntuAmiId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-04f167a56786e4b09
+    Description: Ubuntu Server 24.04 LTS AMI in us-east-2. IMPORTANT NOTE - Change for your region.
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [ t3.small, t3.medium, t3.large ]
+    Description: EC2 instance type.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: ""
+    Description: SSH keypair. Prefer SSM Session Manager.
+  VaultVersion:
+    Type: String
+    Default: 1.20.3
+    Description: Vault version to install.
+  DevMode:
+    Type: String
+    Default: "false"
+    AllowedValues: [ "true", "false" ]
+    Description: Must be false for TLS (dev mode disables TLS). true = "No TLS".
+  VaultHost:
+    Type: String
+    Default: vault02.mis.mimlab.io
+    Description: FQDN for Vault (e.g., vault.example.com). Create DNS entry with the EC2 Instance IP.
+  VCertVersion:
+    Type: String
+    Default: 5.12.0
+    Description: Cyberark vcert CLI version.
+  CMApiKey:
+    Type: String
+    Default: REPLACE_WITH_API_KEY_FROM_CM_SAAS
+    Description: CyberArk Certificate Manager SaaS API key.
+  CMZone:
+    Type: String
+    Default: REPLACE_WITH_ZONE_FROM_CM_SAAS
+    Description: CyberArk Certificate Manager SaaS Zone (e.g., CloudApps\\public-ca).
+  AllowedVaultCIDR1:
+    Type: String
+    Default: YOUR.LOCAL.IP.ADDR/32
+    Description: Primary CIDR allowed (e.g., yourIP/32). Security Group will be created with access only from this CIDR
+  AllowedVaultCIDR2:
+    Type: String
+    Default: ""
+    Description: Optional 2nd CIDR. Security Group will be created with access from this CIDR
+  AllowedVaultCIDR3:
+    Type: String
+    Default: ""
+    Description: Optional 3rd CIDR. Security Group will be created with access from this CIDR
+  SampleSecretsMountPath:
+    Type: String
+    Default: my-secrets
+    Description: Secrets Mount Path in Vault for sample secrets. 
+  SampleSecretsToCreate:
+    Type: Number
+    Default: 5
+    MinValue: 1
+    MaxValue: 15
+    Description: "Number of sample secrets to create in app1 and app2 under the secrets mount path"
+
+Conditions:
+  KeyProvided:     !Not [ !Equals [ !Ref KeyName, "" ] ]
+  IsDevMode:       !Equals [ !Ref DevMode, "true" ]
+  CIDR2Provided:   !Not [ !Equals [ !Ref AllowedVaultCIDR2, "" ] ]
+  CIDR3Provided:   !Not [ !Equals [ !Ref AllowedVaultCIDR3, "" ] ]
+
+Resources:
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: [ ec2.amazonaws.com ] }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [ !Ref InstanceRole ]
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: Security group for Vault instance
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: vault-tls-sg
+
+  IngressVault8200Primary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 8200
+      ToPort: 8200
+      CidrIp: !Ref AllowedVaultCIDR1
+      Description: Vault HTTPS (primary CIDR)
+
+  IngressVault8200Secondary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: CIDR2Provided
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 8200
+      ToPort: 8200
+      CidrIp: !Ref AllowedVaultCIDR2
+      Description: Vault HTTPS (secondary CIDR)
+
+  IngressVault8200Tertiary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: CIDR3Provided
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 8200
+      ToPort: 8200
+      CidrIp: !Ref AllowedVaultCIDR3
+      Description: Vault HTTPS (tertiary CIDR)
+
+  # === NEW: 443 rules mirroring 8200 ===
+  IngressVault443Primary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Ref AllowedVaultCIDR1
+      Description: Vault HTTPS (443) primary CIDR
+
+  IngressVault443Secondary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: CIDR2Provided
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Ref AllowedVaultCIDR2
+      Description: Vault HTTPS (443) secondary CIDR
+
+  IngressVault443Tertiary:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: CIDR3Provided
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Ref AllowedVaultCIDR3
+      Description: Vault HTTPS (443) tertiary CIDR
+
+  IngressSSH22:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: KeyProvided
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref AllowedVaultCIDR1
+      Description: SSH (prefer SSM). Uses CIDR1.
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
+        InstanceType: !Ref InstanceType
+        KeyName: !If [ KeyProvided, !Ref KeyName, !Ref "AWS::NoValue" ]
+        SecurityGroupIds: [ !Ref SecurityGroup ]
+        ImageId: !Ref UbuntuAmiId
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: vault-tls
+        UserData:
+          Fn::Base64: !Sub |
+            #!/usr/bin/env bash
+            set -euxo pipefail
+
+            # ===== CFN params injected as shell vars =====
+            VAULT_VERSION="${VaultVersion}"
+            DEV_MODE="${DevMode}"
+            VAULT_HOST="${VaultHost}"
+            VCERT_VER="${VCertVersion}"
+            CM_API_KEY="${CMApiKey}"
+            CM_ZONE="${CMZone}"
+            SAMPLE_SECRETS_PATH="${SampleSecretsMountPath}"
+            NUM_SECRETS="${SampleSecretsToCreate}"
+
+            # ===== Local vars (reference with ${!VAR} below) =====
+            CERT_DIR="/etc/vault.d/tls"
+            
+
+            # ----- OS prep (Ubuntu 24.04) -----
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -y
+            apt-get install -y unzip curl jq openssl snapd ca-certificates libcap2-bin
+
+            # SSM agent
+            snap install amazon-ssm-agent || true
+            systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent.service || true
+
+            # ----- Install Vault -----
+            cd /tmp
+            VAULT_ZIP="vault_${!VAULT_VERSION}_linux_amd64.zip"
+            curl -fsSLO "https://releases.hashicorp.com/vault/${!VAULT_VERSION}/${!VAULT_ZIP}"
+            unzip -o "${!VAULT_ZIP}"
+            install -m 0755 vault /usr/local/bin/vault
+            # allow binding :443 while running as 'vault'
+            setcap 'cap_net_bind_service=+ep' /usr/local/bin/vault
+            id -u vault >/dev/null 2>&1 || useradd --system --home /etc/vault.d --shell /usr/sbin/nologin vault
+            mkdir -p /etc/vault.d /var/lib/vault /var/log/vault "${!CERT_DIR}"
+            chown -R vault:vault /etc/vault.d /var/lib/vault /var/log/vault "${!CERT_DIR}"
+            chmod 700 "${!CERT_DIR}"
+
+            # ----- Install vcert (ZIP) -----
+            cd /usr/local/bin
+            curl -fL -o vcert.zip "https://github.com/Venafi/vcert/releases/download/v${!VCERT_VER}/vcert_v${!VCERT_VER}_linux.zip"
+            unzip -o vcert.zip
+            chmod +x vcert
+            /usr/local/bin/vcert --version || true
+
+            # ----- Obtain TLS cert from CyberArk CM -----
+            /usr/local/bin/vcert enroll \
+              -k "${CMApiKey}" \
+              -z "${CMZone}" \
+              -cn "${!VAULT_HOST}" \
+              --san-dns "${!VAULT_HOST}" \
+              --csr service \
+              --key-file   "${!CERT_DIR}/vault.key" \
+              --cert-file  "${!CERT_DIR}/vault.crt" \
+              --chain-file "${!CERT_DIR}/vault.chain.crt" \
+              --no-prompt
+
+            chmod 600 "${!CERT_DIR}/vault.key"
+            chown -R vault:vault "${!CERT_DIR}"
+
+            # Build fullchain for clients
+            cat "${!CERT_DIR}/vault.crt" "${!CERT_DIR}/vault.chain.crt" > "${!CERT_DIR}/vault.fullchain.crt"
+
+            if [ "${!DEV_MODE}" = "true" ]; then
+              # ----- Dev mode (INSECURE, no TLS) -----
+              cat >/etc/systemd/system/vault.service <<'EOF'
+            [Unit]
+            Description=Vault dev server (INSECURE - no TLS)
+            After=network-online.target
+            Wants=network-online.target
+            [Service]
+            Type=simple
+            User=ubuntu
+            ExecStart=/usr/local/bin/vault server -dev -dev-listen-address=0.0.0.0:8200 -dev-root-token-id=root
+            Restart=on-failure
+            LimitNOFILE=65536
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+              systemctl daemon-reload
+              systemctl enable --now vault
+
+              echo "export VAULT_ADDR=http://127.0.0.1:8200" >> /etc/profile.d/vault.sh
+              echo "export VAULT_TOKEN=root" >> /etc/profile.d/vault.sh
+
+              export VAULT_ADDR=http://127.0.0.1:8200
+              export VAULT_TOKEN=root
+
+              # Bootstrap 10 random secrets
+              for i in $(seq 1 ${!NUM_SECRETS}); do
+                k=$(openssl rand -hex 8)
+                v=$(openssl rand -hex 16)
+                vault kv put "${!SAMPLE_SECRETS_PATH}/app1/${!i}" "key=${!k}" "value=${!v}" || true
+                vault kv put "${!SAMPLE_SECRETS_PATH}/app2/${!i}" "key=${!k}" "value=${!v}" || true
+
+              done
+
+            else
+              # ----- TLS mode (demo-only init/unseal) -----
+              cat >/etc/vault.d/vault.hcl <<EOF
+            ui = true
+            api_addr = "https://${!VAULT_HOST}:8200"
+
+            listener "tcp" {
+              address         = "0.0.0.0:8200"
+              tls_disable     = 0
+              tls_cert_file   = "${!CERT_DIR}/vault.fullchain.crt"
+              tls_key_file    = "${!CERT_DIR}/vault.key"
+            }
+
+            listener "tcp" {
+              address         = "0.0.0.0:443"
+              tls_disable     = 0
+              tls_cert_file   = "${!CERT_DIR}/vault.fullchain.crt"
+              tls_key_file    = "${!CERT_DIR}/vault.key"
+            }
+
+            storage "file" {
+              path = "/var/lib/vault/data"
+            }
+            disable_mlock = true
+            EOF
+
+              chown -R vault:vault /etc/vault.d
+
+              cat >/etc/systemd/system/vault.service <<'EOF'
+            [Unit]
+            Description=Vault server (TLS, demo only)
+            After=network-online.target
+            Wants=network-online.target
+            [Service]
+            User=vault
+            Group=vault
+            ProtectSystem=full
+            ProtectHome=read-only
+            PrivateTmp=yes
+            PrivateDevices=yes
+            SecureBits=keep-caps
+            AmbientCapabilities=CAP_IPC_LOCK CAP_NET_BIND_SERVICE
+            CapabilityBoundingSet=CAP_IPC_LOCK CAP_NET_BIND_SERVICE
+            NoNewPrivileges=yes
+            ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl
+            ExecReload=/bin/kill --signal HUP $MAINPID
+            KillMode=process
+            KillSignal=SIGINT
+            Restart=on-failure
+            RestartSec=5
+            LimitNOFILE=65536
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+              systemctl daemon-reload
+              systemctl enable --now vault
+
+              # Ensure FQDN resolves locally for bootstrap (SAN match)
+              grep -q " ${!VAULT_HOST}$" /etc/hosts || echo "127.0.0.1 ${!VAULT_HOST}" >> /etc/hosts
+
+              # Wait for HTTPS using hostname + chain (8200)
+              for i in {1..30}; do
+                sleep 2
+                if curl -fsSIk "https://${!VAULT_HOST}:8200/v1/sys/health" \
+                    --resolve "${!VAULT_HOST}:8200:127.0.0.1" \
+                    --cacert "${!CERT_DIR}/vault.chain.crt" >/dev/null 2>&1; then
+                  break
+                fi
+              done
+
+              # Also sanity-check HTTPS on 443
+              for i in {1..30}; do
+                sleep 2
+                if curl -fsSIk "https://${!VAULT_HOST}:443/v1/sys/health" \
+                     --resolve "${!VAULT_HOST}:443:127.0.0.1" \
+                     --cacert "${!CERT_DIR}/vault.chain.crt" >/dev/null 2>&1; then
+                  break
+                fi
+              done
+
+              # Use FQDN + CA for init/unseal so TLS verification passes
+              export VAULT_ADDR="https://${!VAULT_HOST}:8200"
+              export VAULT_CACERT="${!CERT_DIR}/vault.chain.crt"
+
+              # Init + unseal (DEMO ONLY)
+              INIT_JSON=$(vault operator init -format=json -key-shares=1 -key-threshold=1 || true)
+              echo "${!INIT_JSON}" > /root/vault-init.json
+              chmod 600 /root/vault-init.json
+              UNSEAL_KEY=$(echo "${!INIT_JSON}" | jq -r '.unseal_keys_b64[0]')
+              ROOT_TOKEN=$(echo "${!INIT_JSON}" | jq -r '.root_token')
+              vault operator unseal "${!UNSEAL_KEY}" || true
+
+              # Use root token for bootstrap
+              export VAULT_TOKEN="${!ROOT_TOKEN}"
+
+              # KV bootstrap over verified TLS
+              vault secrets enable -path=${!SAMPLE_SECRETS_PATH} -version=2 kv || true
+              for i in $(seq 1 ${!NUM_SECRETS}); do
+                k=$(openssl rand -hex 8)
+                v=$(openssl rand -hex 16)
+                vault kv put "${!SAMPLE_SECRETS_PATH}/app1/${!i}" "key=${!k}" "value=${!v}" || true
+                vault kv put "${!SAMPLE_SECRETS_PATH}/app2/${!i}" "key=${!k}" "value=${!v}" || true
+              done
+
+              # Persist env for later with real host & TLS verify
+              echo "export VAULT_ADDR=https://${!VAULT_HOST}:8200" >> /etc/profile.d/vault.sh
+              echo "export VAULT_CACERT=${!CERT_DIR}/vault.chain.crt" >> /etc/profile.d/vault.sh
+              echo "export VAULT_TOKEN=${!ROOT_TOKEN}" >> /etc/profile.d/vault.sh
+              echo "${!ROOT_TOKEN}" > /root/vault-root-token.txt
+              chmod 600 /root/vault-root-token.txt
+            fi
+
+            echo "Vault setup complete" | tee /var/log/vault-setup.done
+
+
+  VaultInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      SubnetId: !Ref SubnetId
+      Tags:
+        - Key: Name
+          Value: vault-tls
+        - Key: App
+          Value: Vault
+    DependsOn:
+      - SecurityGroup
+
+Outputs:
+  InstanceId:
+    Value: !Ref VaultInstance
+    Description: This is the ID of the EC2 instance
+  VaultInstancePublicIp:
+    Description: Public IPv4 address of the EC2 instance (empty if no public IP)
+    Value: !GetAtt VaultInstance.PublicIp
+  VaultInstancePublicDns:
+    Description: Public DNS name (if assigned)
+    Value: !GetAtt VaultInstance.PublicDnsName    
+  VaultURL:
+    Value: !Sub "https://${VaultHost}:8200"
+    Description: "Works if your CIDR(s) allow and Route53 is set."
+  VaultURL443:
+    Value: !Sub "https://${VaultHost}/ui/"
+    Description: "UI over 443. Works if your CIDR(s) allow and Route53 is set."
+  SecretsPath:
+    Value: !Sub "${SampleSecretsMountPath}/app1/<n> and ${SampleSecretsMountPath}/app2/<n> (n=1..${SampleSecretsToCreate})"
+    Description: "Two sample apps are created with random secrets"
+  SampleSecretsMountPath:
+    Value: !Sub "${SampleSecretsMountPath} is the mount path to use for creating policies and roles"
+    Description: "Secrets Mount Path"
+  AccessNote:
+    Value: "Use SSM Session Manager; SSH allowed only if KeyName is set (CIDR1). This for demo only. See /etc/profile.d/vault.sh for remote access"
