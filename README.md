@@ -36,10 +36,11 @@ Each project folder has its own README with setup instructions (or will have one
 | `awspca`        | AWS Private CA integration | [README](projects/aws-pca/README.md) |
 | `ccm-agent` | Discover and inventory Kubernetes certificates using Federated Identity | [README](projects/ccm-agent/README.md) |
 | `ccm-idp` | Issue TLS certs with service accounts using Org Identity Provider without APIKEY | [README](projects/ccm-idp/README.md) |
-| `kong-mesh`      | Kong Mesh integration example | [README](projects/kong-mesh/README.md) |
-| `secrets-manager`      | CyberArk Secrets Manager & Certificate Manager Integration | [README](projects/secrets-manager/README.md) |
 | `ccm-vault`      | Certificate Manager Integration with HashiCorp Vault | [README](projects/ccm-vault/README.md) |
-| `nginx-plus`      | Certificate Manager Integration with F5 NGINX Plus | [README](projects/nginx-plus/README.md) |
+| `kong-mesh`      | Cyberark Workload Identity Manager + Kong Mesh | [README](projects/kong-mesh/README.md) |
+| `nginx-plus`      | Cyberark Certificate Manager with F5 NGINX Plus | [README](projects/nginx-plus/README.md) |
+| `secrets-hub`      | Discover Hashicorp Vault secrets from Cyberark Secrets Hub | [README](projects/secrets-hub/README.md) |
+| `secrets-manager`   | Issue certs from CyberArk Secrets Manager with Certificate Manager Integration | [README](projects/secrets-manager/README.md) |
 
 ---
 
@@ -53,13 +54,14 @@ The [`scripts/`](scripts) directory contains cloud provider specific scripts to 
 | `AKS (Azure)` | Full end to end AKS cluster build and destroy | [README](scripts/azure/README.md) |
 | `GKE (Google Cloud)` | Full end to end GKE cluster build and destroy | [README](scripts/gcp/README.md) |
 | `OpenShift (RedHat)` | Full end to end OpenShift (ROSA) cluster build and destroy | [README](scripts/openshift/README.md) |
-| `Kind (for local)` | Kind cluster for quick testing | [Script](main/create-cluster.sh) |
+| `Kind (for local)` | Kind cluster for quick testing | [README](scripts/kind/README.md) |
 
 ## Misc
 The [`scripts/`](scripts) directory miscellaeous work for supporting usecases. 
 
 | Scripts (folder) | Description | README |
 |------------------|-------------|--------|
+| `HashiCorp Vault` | TLS Enabled Hashicorp Vault Instance on EC2 using CloudFormation | [README](scripts/vault/README.md) |
 | `registry`        | Full setup and configuration for Harbor Registry | [README](scripts/registry/README.md) |
 | `ccm-mirror` | Scripts to mirror charts and images to target regisry | [README](scripts/ccm-mirror/README.md) |
 
