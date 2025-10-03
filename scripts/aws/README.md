@@ -57,6 +57,49 @@ https://oidc.eks.us-east-2.amazonaws.com/id/XXXXXXXXXXXXXXXXXXXXX
 
 ```
 
+## Delete the cluster and cleanup
+
+To delete the cluster and remove all resources run `./eks-cluster.sh delete`
+
+This will remove all nodegroups, cluster, VPC, etc..
+
+```
+❯ ./eks-cluster.sh delete
+📄 Using config file: ./env-vars.sh
+🔐 Verifying AWS authentication (profile: default, region: us-east-2)...
+⚠️ About to delete cluster 'my-eks'. Use --force to skip this prompt.
+Type 'yes' to continue: yes
+🔥 Deleting EKS cluster 'my-eks'...
+2025-08-22 13:55:10 [ℹ]  deleting EKS cluster "my-eks"
+2025-08-22 13:55:11 [ℹ]  will drain 0 unmanaged nodegroup(s) in cluster "my-eks"
+2025-08-22 13:55:11 [ℹ]  starting parallel draining, max in-flight of 1
+2025-08-22 13:55:11 [ℹ]  deleted 0 Fargate profile(s)
+2025-08-22 13:55:12 [✔]  kubeconfig has been updated
+2025-08-22 13:55:12 [ℹ]  cleaning up AWS load balancers created by Kubernetes objects of Kind Service or Ingress
+2025-08-22 13:55:14 [ℹ]  
+4 sequential tasks: { 
+    2 parallel sub-tasks: { 
+        delete nodegroup "my-win-workers",
+        delete nodegroup "my-workers",
+    }, delete IAM OIDC provider, delete addon IAM "eksctl-my-eks-addon-vpc-cni", delete cluster control plane "my-eks" 
+}
+2025-08-22 13:55:14 [ℹ]  will delete stack "eksctl-my-eks-nodegroup-my-workers"
+2025-08-22 13:55:14 [ℹ]  waiting for stack "eksctl-my-eks-nodegroup-my-workers" to get deleted
+2025-08-22 13:55:14 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-nodegroup-my-workers"
+2025-08-22 13:55:14 [ℹ]  will delete stack "eksctl-my-eks-nodegroup-my-win-workers"
+2025-08-22 13:55:14 [ℹ]  waiting for stack "eksctl-my-eks-nodegroup-my-win-workers" to get deleted
+....
+....
+....
+....
+2025-08-22 14:04:00 [ℹ]  will delete stack "eksctl-my-eks-cluster"
+2025-08-22 14:04:00 [ℹ]  waiting for stack "eksctl-my-eks-cluster" to get deleted
+2025-08-22 14:04:00 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-cluster"
+2025-08-22 14:06:01 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-cluster"
+2025-08-22 14:06:01 [✔]  all cluster resources were deleted
+```
+
+# Support for Windows Nodegroup
 ## Adding a Windows NodeGroup
 
 To add a windows node group to the cluster that was just created, 
@@ -124,44 +167,62 @@ Events:
 
 Delete the test pod by running `kubectl delete pod my-win-pod`
 
-## Delete the cluster and cleanup
+## Remove the Windows Node group 
+To remove only the Windows node group and keep your cluster intact, run `./eks-windows-node.sh remove`. Deleting the entire cluster will remove the Windows nodegroup automatically.
 
-To delete the cluster and remove all resources run `./eks-cluster.sh delete`
 
-This will remove all nodegroups, cluster, VPC, etc..
+# Support for SNP (Secure Nested Paging) Capable Nodegroup for Confidential Computing
+
+## Adding a SNP NodeGroup 
+
+To add a snp node group to the cluster that was just created, 
+
+- Review `env-vars-snp.sh`. You don't neccessarily need to change anything in this file. 
+
+Run `./eks-snp-node.sh add` and after some time,  you will see
 
 ```
-❯ ./eks-cluster.sh delete
-📄 Using config file: ./env-vars.sh
-🔐 Verifying AWS authentication (profile: default, region: us-east-2)...
-⚠️ About to delete cluster 'my-eks'. Use --force to skip this prompt.
-Type 'yes' to continue: yes
-🔥 Deleting EKS cluster 'my-eks'...
-2025-08-22 13:55:10 [ℹ]  deleting EKS cluster "my-eks"
-2025-08-22 13:55:11 [ℹ]  will drain 0 unmanaged nodegroup(s) in cluster "my-eks"
-2025-08-22 13:55:11 [ℹ]  starting parallel draining, max in-flight of 1
-2025-08-22 13:55:11 [ℹ]  deleted 0 Fargate profile(s)
-2025-08-22 13:55:12 [✔]  kubeconfig has been updated
-2025-08-22 13:55:12 [ℹ]  cleaning up AWS load balancers created by Kubernetes objects of Kind Service or Ingress
-2025-08-22 13:55:14 [ℹ]  
-4 sequential tasks: { 
-    2 parallel sub-tasks: { 
-        delete nodegroup "my-win-workers",
-        delete nodegroup "my-workers",
-    }, delete IAM OIDC provider, delete addon IAM "eksctl-my-eks-addon-vpc-cni", delete cluster control plane "my-eks" 
+❯ ./eks-snp-node.sh add
+Adding SNP nodegroup 'snp-ng' to cluster 'my-eks' (us-east-2)
+Cluster version: 1.33
+Using eksctl-managed EKS AL2023 AMI (recommended)
+Instance type: c6a.large
+Creating Launch Template: my-eks-snp-ng-lt
+Launch Template: lt-0876ce692f9022beb (version 1)
+Creating managed nodegroup via eksctl...
+2025-10-03 12:04:31 [ℹ]  will use version 1.33 for new nodegroup(s) based on control plane version
+2025-10-03 12:04:35 [ℹ]  nodegroup "snp-ng" will use "" [AmazonLinux2023/1.33]
+2025-10-03 12:04:36 [ℹ]  1 existing nodegroup(s) (my-workers) will be excluded
+2025-10-03 12:04:36 [ℹ]  1 nodegroup (snp-ng) was included (based on the include/exclude rules)
+2025-10-03 12:04:36 [ℹ]  will create a CloudFormation stack for each of 1 managed nodegroups in cluster "my-eks"
+2025-10-03 12:04:36 [ℹ]  
+2 sequential tasks: { fix cluster compatibility, 1 task: { 1 task: { create managed nodegroup "snp-ng" } } 
 }
-2025-08-22 13:55:14 [ℹ]  will delete stack "eksctl-my-eks-nodegroup-my-workers"
-2025-08-22 13:55:14 [ℹ]  waiting for stack "eksctl-my-eks-nodegroup-my-workers" to get deleted
-2025-08-22 13:55:14 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-nodegroup-my-workers"
-2025-08-22 13:55:14 [ℹ]  will delete stack "eksctl-my-eks-nodegroup-my-win-workers"
-2025-08-22 13:55:14 [ℹ]  waiting for stack "eksctl-my-eks-nodegroup-my-win-workers" to get deleted
+2025-10-03 12:04:36 [ℹ]  checking cluster stack for missing resources
+2025-10-03 12:04:37 [ℹ]  cluster stack has all required resources
+2025-10-03 12:04:38 [ℹ]  building managed nodegroup stack "eksctl-my-eks-nodegroup-snp-ng"
+2025-10-03 12:04:38 [ℹ]  deploying stack "eksctl-my-eks-nodegroup-snp-ng"
 ....
 ....
-....
-....
-2025-08-22 14:04:00 [ℹ]  will delete stack "eksctl-my-eks-cluster"
-2025-08-22 14:04:00 [ℹ]  waiting for stack "eksctl-my-eks-cluster" to get deleted
-2025-08-22 14:04:00 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-cluster"
-2025-08-22 14:06:01 [ℹ]  waiting for CloudFormation stack "eksctl-my-eks-cluster"
-2025-08-22 14:06:01 [✔]  all cluster resources were deleted
+2025-10-03 12:08:26 [✔]  created 1 managed nodegroup(s) in cluster "my-eks"
+2025-10-03 12:08:27 [ℹ]  checking security group configuration for all nodegroups
+2025-10-03 12:08:27 [ℹ]  all nodegroups have up-to-date cloudformation templates
+Add complete.
+
 ```
+
+## Testing SNP node
+
+Run `./eks-snp-node.sh test` to check the CPU Options
+You will see
+
+```
+❯ ./eks-snp-node.sh test
+Testing SNP on nodegroup 'snp-ng'
+i-xxxxc897b8exxxxx	c6a.large	SNP=enabled
+All instances report AmdSevSnp=enabled.
+
+```
+## Remove the SNP Node group 
+
+To remove only the SNP node group and keep your cluster intact, run `./eks-snp-node.sh remove`. Deleting the entire cluster will remove SNP nodegroup automatically.
