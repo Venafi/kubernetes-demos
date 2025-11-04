@@ -116,9 +116,13 @@ spec:
   tls:
     secret: ${VS3_HOST}
     cert-manager:
-      cluster-issuer: ${CLUSTER_ISSUER_NAME}
+      issuer: ${CLUSTER_ISSUER_NAME}
       issuer-kind: VenafiClusterIssuer
       issuer-group: ${ISSUER_GROUP}
+      common-name: ${VS3_HOST}
+      duration: 720h
+      renew-before: 480h
+      usages: digital signature,server auth,client auth  
   upstreams:
   - name: ${APP_NAME}-svc
     service: ${APP_NAME}

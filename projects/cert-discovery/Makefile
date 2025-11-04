@@ -76,9 +76,13 @@ un-install:
 remove-secrets:
 	@kubectl -n venafi delete -f artifacts/venafi-install/venafi_agent_secret.yaml || true
 
-clean: un-install remove-secrets
+clean: un-install remove-secrets remove-sa
 	@kubectl delete -f namespaces/venafi.yaml || true
 
+remove-sa:
+	@venctl iam service-accounts delete --api-key "${VEN_CLOUD_API_KEY}" --name "${VEN_CLUSTER_NAME}" --no-prompts
+
+	
 #helper target to generate a public/private key pair for routing discoverd certs from VCP to TPP
 
 generate-key-pair:

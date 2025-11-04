@@ -41,6 +41,7 @@ Each project folder has its own README with setup instructions (or will have one
 | `nginx-plus`      | Cyberark Certificate Manager with F5 NGINX Plus | [README](projects/nginx-plus/README.md) |
 | `secrets-hub`      | Discover Hashicorp Vault secrets from Cyberark Secrets Hub | [README](projects/secrets-hub/README.md) |
 | `secrets-manager`   | Issue certs from CyberArk Secrets Manager with Certificate Manager Integration | [README](projects/secrets-manager/README.md) |
+| `discovery-and-context`   | Configure Cyberark Discovery and Context service for Kubernetes Secrets | [README](projects/discovery-context/README.md) |
 
 ---
 
