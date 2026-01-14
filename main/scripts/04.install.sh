@@ -98,17 +98,17 @@ venctl components kubernetes manifest generate \
   --accept-firefly-tos \
   --firefly \
   --firefly-version "${FIREFLY}" \
-  --firefly-values-files firefly-values.yaml \
+  --firefly-values-files ${INSTALL_DIR}/firefly-values.yaml \
   --trust-manager \
   --trust-manager-version "${TRUST_MANAGER}" \
   --venafi-connection \
   --venafi-connection-version "${VENAFI_CONNECTION}" \
   --venafi-enhanced-issuer \
   --venafi-enhanced-issuer-version "${VENAFI_ENHANCED_ISSUER}" \
-  --venafi-enhanced-issuer-values-files vei-values.yaml \
+  --venafi-enhanced-issuer-values-files ${INSTALL_DIR}/vei-values.yaml \
   --venafi-kubernetes-agent \
   --venafi-kubernetes-agent-version "${VENAFI_KUBERNETES_AGENT}" \
-  --venafi-kubernetes-agent-values-files venafi-agent.yaml \
+  --venafi-kubernetes-agent-values-files ${INSTALL_DIR}/venafi-agent.yaml \
   --image-pull-secret-names venafi-image-pull-secret \
   > "${INSTALL_DIR}/venafi-manifests.yaml"
 

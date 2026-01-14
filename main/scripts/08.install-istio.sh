@@ -91,7 +91,8 @@ EOF
 
 # Install sample microservices demo
 echo "[install-istio] Deploying CyberArk swag shop demo..."
-kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
+#kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml
+kubectl -n mesh-apps apply -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/c11da444de264e91a80380ebad330eaa32ed0a83/release/kubernetes-manifests.yaml
 
 # Install Istio observability addons
 echo "[install-istio] Deploying observability tools..."
