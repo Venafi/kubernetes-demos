@@ -150,7 +150,7 @@ venctl components kubernetes manifest generate \
   --namespace "${K8S_NAMESPACE}" \
   --istio-csr \
   --istio-csr-version "${CERT_MANAGER_ISTIO_CSR}" \
-  --istio-csr-values-files istio-csr-values.yaml \
+  --istio-csr-values-files ${INSTALL_DIR}/istio-csr-values.yaml \
   --ignore-dependencies \
   --image-pull-secret-names venafi-image-pull-secret \
   > "${INSTALL_DIR}/venafi-manifests-istio.yaml"

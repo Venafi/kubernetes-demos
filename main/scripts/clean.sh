@@ -36,7 +36,8 @@ done
 
 # remove sample microservices demo
 echo "[clean] removing CyberArk swag shop demo...:"
-kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml || true
+#kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/refs/heads/main/release/kubernetes-manifests.yaml || true
+kubectl -n mesh-apps delete -f https://raw.githubusercontent.com/sitaramkm/microservices-demo/c11da444de264e91a80380ebad330eaa32ed0a83/release/kubernetes-manifests.yaml || true
 
 # uninstall istio
 istioctl uninstall -y --purge || true

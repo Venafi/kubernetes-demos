@@ -173,8 +173,9 @@ write_yaml_and_apply() {
   SNP_MAX="$(sanitize "$SNP_MAX")"
 
   tmp_yaml="$(mktemp)"
-  {
-    cat <<YAML
+
+  if [ -n "$SNP_AMI_ID" ]; then
+    cat <<YAML > "$tmp_yaml"
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
@@ -182,7 +183,6 @@ metadata:
   region: "${AWS_REGION}"
 managedNodeGroups:
   - name: "${SNP_NODEGROUP_NAME}"
-    amiFamily: AmazonLinux2023
     minSize: ${SNP_MIN}
     desiredCapacity: ${SNP_DESIRED}
     maxSize: ${SNP_MAX}
@@ -191,19 +191,33 @@ managedNodeGroups:
       id: "${lt_id}"
       version: "${lt_ver}"
 YAML
-    # If a custom AMI was pinned in the LT, eksctl considers it "custom".
-    # Provide bootstrap so it doesn't fail.
-    if [ -n "$SNP_AMI_ID" ]; then
-      # Minimal bootstrap; add flags if you need (e.g., kubelet extra args)
-      echo "    overrideBootstrapCommand: |"
-      echo "      /etc/eks/bootstrap.sh \"${CLUSTER_NAME}\""
-    fi
-  } > "$tmp_yaml"
+
+  else
+    # CASE 2: eksctl-managed EKS AMI (AL2023 or Ubuntu family)
+    cat <<YAML > "$tmp_yaml"
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: "${CLUSTER_NAME}"
+  region: "${AWS_REGION}"
+managedNodeGroups:
+  - name: "${SNP_NODEGROUP_NAME}"
+    amiFamily: ${SNP_AMI_FAMILY}
+    minSize: ${SNP_MIN}
+    desiredCapacity: ${SNP_DESIRED}
+    maxSize: ${SNP_MAX}
+    privateNetworking: true
+    launchTemplate:
+      id: "${lt_id}"
+      version: "${lt_ver}"
+YAML
+  fi
 
   print_msg "Creating managed nodegroup via eksctl..."
   eksctl create nodegroup -f "$tmp_yaml"
   rm -f "$tmp_yaml"
 }
+
 
 add_cmd() {
   print_msg "Adding SNP nodegroup '${SNP_NODEGROUP_NAME}' to cluster '${CLUSTER_NAME}' (${AWS_REGION})"

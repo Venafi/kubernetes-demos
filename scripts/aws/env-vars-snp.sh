@@ -12,9 +12,10 @@
 # SNP_DISK_SIZE_GIB="80"
 
 # Instance / AMI
-# SNP_INSTANCE_TYPE="m6a.xlarge"   # leave empty to auto-pick SNP-capable
-# SNP_FAMILY_PREFERENCES="m6a c6a r6a"
-# SNP_AMI_ID=""                     # leave empty to auto-resolve AL2023 EKS AMI
+SNP_INSTANCE_TYPE="c6a.xlarge"   # leave empty to auto-pick SNP-capable
+SNP_FAMILY_PREFERENCES="c6a m6a r6a"
+SNP_AMI_ID="ami-0c5ddb3560e768732"                     # leave empty to auto-resolve AL2023 EKS AMI
+SNP_AMI_FAMILY="${SNP_AMI_FAMILY:-AmazonLinux2023}"
 
 # Networking (usually omit and let EKS manage)
 # SNP_SUBNET_IDS="subnet-aaa,subnet-bbb"
