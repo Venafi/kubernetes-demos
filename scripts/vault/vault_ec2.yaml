@@ -40,6 +40,7 @@ Parameters:
     Default: 5.12.0
     Description: Cyberark vcert CLI version.
   CMApiKey:
+    NoEcho: true
     Type: String
     Default: REPLACE_WITH_API_KEY_FROM_CM_SAAS
     Description: CyberArk Certificate Manager SaaS API key.
