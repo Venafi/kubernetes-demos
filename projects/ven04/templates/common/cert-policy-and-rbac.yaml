@@ -32,12 +32,17 @@ spec:
 #    venafi:
 #      values:
 #        venafiConnectionName: "venafi-*-connection"
-#        zone: "application-name\\issuing-template-name"      
+#        zone: "application-name\\issuing-template-name"
   selector:
     issuerRef:
       name: "venafi*issuer"
       kind: "Venafi*Issuer"
       group: "jetstack.io"
+    # CWE-863 mitigation: Restrict policy to specific namespaces
+    namespace:
+      matchNames:
+        - "cyberark"
+        - "sandbox"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
