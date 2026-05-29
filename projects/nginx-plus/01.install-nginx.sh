@@ -32,9 +32,9 @@ helm upgrade --install "${RELEASE_NAME}" "${NGINX_PLUS_CHART}" \
   --version "${NGINX_PLUS_VERSION}" \
   --namespace "${NAMESPACE}" --create-namespace \
   --set controller.nginxplus=true \
-  --set controller.image.repository="${IMG_REPO}" \
-  --set controller.serviceAccount.imagePullSecretName="${PULL_SECRET_NAME}" \
-  --set controller.mgmt.licenseTokenSecretName="${LICENSE_SECRET_NAME}" \
+  --set-string controller.image.repository="${IMG_REPO}" \
+  --set-string controller.serviceAccount.imagePullSecretName="${PULL_SECRET_NAME}" \
+  --set-string controller.mgmt.licenseTokenSecretName="${LICENSE_SECRET_NAME}" \
   --set controller.service.type=LoadBalancer \
   --set controller.enableCertManager=true    # <<< enable cert-manager integration
 

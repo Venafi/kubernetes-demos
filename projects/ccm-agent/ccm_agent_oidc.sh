@@ -16,13 +16,13 @@ install_agent() {
   helm upgrade --install ccm-kubernetes-agent oci://registry.venafi.cloud/charts/venafi-kubernetes-agent \
     --namespace "${KUBERNETES_NAMESPACE}" \
     --set authentication.venafiConnection.enabled="true" \
-    --set authentication.venafiConnection.name="venafi-connection" \
-    --set authentication.venafiConnection.namespace="${KUBERNETES_NAMESPACE}" \
+    --set-string authentication.venafiConnection.name="venafi-connection" \
+    --set-string authentication.venafiConnection.namespace="${KUBERNETES_NAMESPACE}" \
     --set crds.venafiConnection.include=true \
-    --set config.clusterName="${CLUSTER_NAME}" \
-    --set config.clusterDescription="${CLUSTER_DESCRIPTION}" \
-    --set config.clientId="${CYBR_SVC_AC_CLIENT_ID}" \
-    --set serviceAccount.name="${KUBERNETES_SVC_ACCOUNT}" \
+    --set-string config.clusterName="${CLUSTER_NAME}" \
+    --set-string config.clusterDescription="${CLUSTER_DESCRIPTION}" \
+    --set-string config.clientId="${CYBR_SVC_AC_CLIENT_ID}" \
+    --set-string serviceAccount.name="${KUBERNETES_SVC_ACCOUNT}" \
     --version ${CCM_AGENT_VERSION} \
     --create-namespace
 
