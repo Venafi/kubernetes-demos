@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+umask 077
 
 source ./env-vars.sh
 
@@ -50,8 +51,9 @@ issue_cert() {
   local provider="$2"
 
   local cn="$provider-$CERT_NAME"
-  local tmp_dir="/tmp/$cn"
-  mkdir -p "$tmp_dir"
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  trap 'rm -rf "$tmp_dir"' EXIT
 
   echo "🔐 Requesting certificate for CN: $cn"
 
