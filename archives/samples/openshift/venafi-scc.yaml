@@ -1,7 +1,7 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: venafi-privileged
+  name: venafi-restricted
 annotations:
     include.release.openshift.io/ibm-cloud-managed: "true"
     include.release.openshift.io/self-managed-high-availability: "true"
@@ -16,14 +16,14 @@ allowHostPID: false
 allowHostNetwork: false
 allowHostDirVolumePlugin: true
 readOnlyRootFilesystem: false
-allowPrivilegeEscalation: true
-allowPrivilegedContainer: true
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
 allowedUnsafeSysctls: null
 allowHostIPC: false
-allowedCapabilities:
-  - '*'
+allowedCapabilities: []
 defaultAddCapabilities: null
-requiredDropCapabilities: null
+requiredDropCapabilities:
+  - ALL
 seccompProfiles:
   - '*'
 seLinuxContext:
