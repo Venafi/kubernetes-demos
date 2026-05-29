@@ -208,6 +208,9 @@ Resources:
           sed -i "s/^hostname: .*/hostname: ${!HARBOR_HOST}/" harbor.yml
           sed -i "s|^data_volume: .*|data_volume: ${!DATA_DIR}|" harbor.yml
 
+          # Set admin password from CloudFormation parameter (CWE-1188 remediation)
+          sed -i "s/^harbor_admin_password: .*/harbor_admin_password: ${!ADMIN_PW}/" harbor.yml
+
           # === Replace any existing HTTPS section with a clean one ===
           # 1) Kill any existing 'https:' section (top-level key)
           awk '

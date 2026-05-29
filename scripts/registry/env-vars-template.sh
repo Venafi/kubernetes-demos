@@ -2,7 +2,7 @@
 # ===== Harbor =====
 export HARBOR_HOST="REPLACE_WITH_DNS" #for e.g harbor.example.com
 export HARBOR_USERNAME="admin" #default user
-export HARBOR_PASSWORD="Harbor12345" #default password
+export HARBOR_PASSWORD="REPLACE_WITH_ADMIN_PASSWORD" #must match AdminPassword from CloudFormation stack
 export HARBOR_VERIFY_TLS="true"   # set "false" only if using untrusted certs
 
 # ===== Project =====
