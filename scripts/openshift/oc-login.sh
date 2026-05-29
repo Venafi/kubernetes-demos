@@ -10,7 +10,7 @@ username="cluster-admin"
 password="${ROSA_ADMIN_PASSWORD}"
 
 echo "📥 Logging in with oc..."
-oc login "$api_url" -u "$username" -p "$password" --insecure-skip-tls-verify=true
+oc login "$api_url" -u "$username" -p "$password" --certificate-authority="${CLUSTER_CA_CERT}"
 
 kcfg="kubeconfig-${ROSA_CLUSTER_NAME}.yaml"
 oc config view --raw > "$kcfg"

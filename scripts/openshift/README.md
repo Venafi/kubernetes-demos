@@ -121,6 +121,31 @@ The status check will continue till the cluster is ready or the token expires. I
 
 > **NOTE** - After the cluster is created a bunch of security groups are updated to only allow access from the local IP as opposed to `0.0.0.0` 
 
+### Logging into the Cluster
+
+After cluster creation, you can log in using the `oc-login.sh` script. Before using it, you must obtain the cluster CA certificate:
+
+1. **Option 1 - From OpenShift Console:**
+   - Access the OpenShift web console
+   - Download the CA certificate from the cluster details
+
+2. **Option 2 - Extract from existing kubeconfig:**
+   ```bash
+   # If you have a working kubeconfig, extract the CA cert:
+   kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 -d > cluster-ca.crt
+   ```
+
+3. **Update env-vars.sh:**
+   - Set `CLUSTER_CA_CERT` to point to your downloaded/extracted CA certificate file
+   - Example: `export CLUSTER_CA_CERT="/path/to/cluster-ca.crt"`
+
+4. **Run the login script:**
+   ```bash
+   ./oc-login.sh
+   ```
+
+> **SECURITY NOTE:** The login script uses `--certificate-authority` to verify the cluster's TLS certificate, protecting against man-in-the-middle attacks.
+
 ### Cleanup 
 To cleanup simply run `./04.clean-rosa.sh`
 

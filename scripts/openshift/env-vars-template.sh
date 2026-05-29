@@ -19,6 +19,11 @@ export MY_PUBLIC_IP=$(curl -s https://checkip.amazonaws.com)
 export ROSA_ALLOWED_CIDRS="${MY_PUBLIC_IP}/32"
 export ROSA_ADMIN_PASSWORD="REPLACE_WITH_ANYTHING"
 
+# Path to cluster CA certificate for secure oc login
+# Obtain via: rosa describe cluster -c <name> --region <region> | grep "API URL"
+# Then download the CA cert from the OpenShift console or extract from kubeconfig
+export CLUSTER_CA_CERT="/path/to/cluster-ca.crt"
+
 # === Tagging ===
 export ROSA_TAGS="CreatedBy me,cluster rosa"
 
