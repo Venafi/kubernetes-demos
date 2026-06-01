@@ -1,3 +1,5 @@
+As of June 1, 2026 this project is deprecated and will no longer be maintained.
+
 # Kubernetes Demos
 
 This repository contains demos that show how to secure Kubernetes workloads with **CyberArk Certificate Manager**
