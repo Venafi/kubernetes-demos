@@ -41,7 +41,14 @@ mkdirs:
 # Install venctl if the preferred mode of interacting with Venafi Control Plane is CLI. This will install
 # venctl in /usr/local/bin . Tested on MacOS ARM
 install-venctl:
-	@curl -sSfL https://dl.venafi.cloud/venctl/latest/installer.sh | bash
+	@echo "Downloading venctl installer with integrity verification..."
+	@installer=$$(mktemp --suffix=.sh) && \
+	checksum=$$(mktemp) && \
+	curl -sSfL https://dl.venafi.cloud/venctl/latest/installer.sh -o "$$installer" && \
+	curl -sSfL https://dl.venafi.cloud/venctl/latest/installer.sh.sha256 -o "$$checksum" && \
+	echo "$$(cat $$checksum)  $$installer" | sha256sum -c - && \
+	bash "$$installer" && \
+	rm -f "$$installer" "$$checksum"
 
 create-vcp-service-account: create-sa-for-discovery create-sa-for-registry
 
