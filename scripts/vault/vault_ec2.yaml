@@ -385,6 +385,7 @@ Resources:
               export VAULT_CACERT="${!CERT_DIR}/vault.chain.crt"
 
               # Init + unseal (DEMO ONLY)
+              umask 077
               INIT_JSON=$(vault operator init -format=json -key-shares=1 -key-threshold=1 || true)
               echo "${!INIT_JSON}" > /root/vault-init.json
               chmod 600 /root/vault-init.json
@@ -408,6 +409,7 @@ Resources:
               echo "export VAULT_ADDR=https://${!VAULT_HOST}:8200" >> /etc/profile.d/vault.sh
               echo "export VAULT_CACERT=${!CERT_DIR}/vault.chain.crt" >> /etc/profile.d/vault.sh
               echo "export VAULT_TOKEN=${!ROOT_TOKEN}" >> /etc/profile.d/vault.sh
+              umask 077
               echo "${!ROOT_TOKEN}" > /root/vault-root-token.txt
               chmod 600 /root/vault-root-token.txt
             fi

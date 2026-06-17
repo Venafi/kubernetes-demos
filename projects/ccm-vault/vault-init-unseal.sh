@@ -6,6 +6,7 @@ export VAULT_ADDR
 
 if $VAULT_BIN status -format=json | jq -e '.initialized' | grep false >/dev/null; then
   echo "🔑 Initializing Vault..."
+  umask 077
   $VAULT_BIN operator init -format=json -key-shares=1 -key-threshold=1 > "$KEYS_FILE"
 else
   echo "✅ Vault already initialized."
