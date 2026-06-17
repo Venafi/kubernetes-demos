@@ -23,10 +23,10 @@ install_agent() {
 
   helm upgrade --install cyberark-discovery-agent "${CYBR_ARK_CHART_REPOSITORY}" \
     --namespace "${KUBERNETES_NAMESPACE}" \
-    --set image.repository="${CYBR_ARK_IMAGE_REPOSITORY}" \
-    --set config.clusterName="${CLUSTER_NAME}" \
-    --set config.clusterDescription="${CLUSTER_DESCRIPTION}" \
-    --set serviceAccount.name="${KUBERNETES_SVC_ACCOUNT}" \
+    --set-string image.repository="${CYBR_ARK_IMAGE_REPOSITORY}" \
+    --set-string config.clusterName="${CLUSTER_NAME}" \
+    --set-string config.clusterDescription="${CLUSTER_DESCRIPTION}" \
+    --set-string serviceAccount.name="${KUBERNETES_SVC_ACCOUNT}" \
     --version ${DISCOVERY_AGENT_VERSION} \
     --create-namespace
 

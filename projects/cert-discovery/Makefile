@@ -66,9 +66,9 @@ install-agent:
 	@helm upgrade venafi-kubernetes-agent oci://registry.venafi.cloud/charts/venafi-kubernetes-agent \
 	--install \
 	--namespace "venafi" \
-	--set config.clientId="${VEN_AGENT_SA_CLIENT_ID}" \
-	--set config.clusterName="${VEN_CLUSTER_NAME}" \
-	--set config.clusterDescription="${VEN_CLUSTER_NAME}"
+	--set-string config.clientId="${VEN_AGENT_SA_CLIENT_ID}" \
+	--set-string config.clusterName="${VEN_CLUSTER_NAME}" \
+	--set-string config.clusterDescription="${VEN_CLUSTER_NAME}"
 
 un-install:
 	@@helm uninstall venafi-kubernetes-agent --namespace venafi  
