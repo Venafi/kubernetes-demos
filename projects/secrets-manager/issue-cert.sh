@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 # === Auto-load vars.sh if present ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,8 +23,8 @@ IFS=' ' read -r -a URI_NAMES <<< "$URI_NAMES"
 # === Derived values ===
 CSM_SAAS_URL="https://${CSM_TENANT}.secretsmgr.cyberark.cloud"
 ENCODED_WRKLD_ID=$(printf '%s' "$CSM_WORKLOAD_ID" | sed 's/\//%2F/g')
-TMP_DIR="/tmp/${CERT_NAME}"
-mkdir -p "$TMP_DIR"
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 # === JSON Payload ===
 PAYLOAD=$(jq -n \
