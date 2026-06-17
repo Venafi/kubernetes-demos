@@ -28,6 +28,10 @@ spec:
       name: "awspca-issuer"
       kind: "AWSPCAIssuer"
       group: "awspca.cert-manager.io"
+    # CWE-863 mitigation: Restrict policy to specific namespaces
+    namespace:
+      matchNames:
+        - "sandbox"
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
